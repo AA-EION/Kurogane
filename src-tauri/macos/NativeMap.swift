@@ -21,7 +21,7 @@ struct MapLayout {
         for tenant in topology.rows("tenants") {
             let hosts = topology.rows("hosts").filter { $0.text("tenantId") == tenant.text("id") }
             let start = y
-            let maxServices = hosts.map { host in topology.rows("services").filter { $0.text("hostId") == host.text("id") }.count }.max() ?? 0
+            let maxServices = hosts.map { host in topology.rows("services").filter { $0.text("hostId") == host.text("id") }.count + topology.rows("proxies").filter { $0.text("hostId") == host.text("id") }.count }.max() ?? 0
             let extra = CGFloat(max(0, maxServices - 3)) * 40
             nodes.append(MapNode(item: NativeItem(kind: "tenant", id: tenant.text("id")), row: tenant, rect: CGRect(x: 48, y: y, width: 220, height: 42)))
             y += 70
@@ -32,6 +32,10 @@ struct MapLayout {
                 let services = topology.rows("services").filter { $0.text("hostId") == host.text("id") }
                 for (n, service) in services.enumerated() {
                     nodes.append(MapNode(item: NativeItem(kind: "service", id: service.text("id")), row: service, rect: CGRect(x: x + 22, y: hostY + 95 + CGFloat(n) * 40, width: 218, height: 34)))
+                }
+                let proxies = topology.rows("proxies").filter { $0.text("hostId") == host.text("id") }
+                for (n, proxy) in proxies.enumerated() {
+                    nodes.append(MapNode(item:NativeItem(kind:"proxy",id:proxy.text("id")),row:proxy,rect:CGRect(x:x+22,y:hostY+95+CGFloat(services.count+n)*40,width:218,height:34)))
                 }
             }
             // Rows expand for machines with many services so cards never overlap.
@@ -45,7 +49,7 @@ struct MapLayout {
     func connectors(_ topology: Row) -> [(CGPoint, CGPoint, Bool)] {
         topology.rows("proxies").flatMap { proxy in
             proxy.rows("routes").compactMap { route -> (CGPoint, CGPoint, Bool)? in
-                guard let from = point("host", proxy.text("hostId")), let to = point("service", route.text("serviceId")) ?? point("host", route.text("targetHostId")), from != to else { return nil }
+                guard let from = point("proxy", proxy.text("id")) ?? point("host", proxy.text("hostId")), let to = point("service", route.text("serviceId")) ?? point("host", route.text("targetHostId")), from != to else { return nil }
                 return (from, to, route.flag("enabled"))
             }
         }
@@ -53,6 +57,7 @@ struct MapLayout {
 }
 struct NativeMap: View {
     @ObservedObject var model: NativeModel
+    @Environment(\.colorScheme) private var colorScheme
     @State private var zoom: CGFloat = 1
     @GestureState private var magnification: CGFloat = 1
     var body: some View {
@@ -63,7 +68,7 @@ struct NativeMap: View {
                     NativeMapDrawing(model: model, layout: layout)
                         .scaleEffect(zoom * magnification, anchor: .topLeading)
                         .frame(width: layout.size.width * zoom * magnification, height: layout.size.height * zoom * magnification, alignment: .topLeading)
-                }.background(Color(nsColor: .underPageBackgroundColor))
+                }.background(colorScheme == .dark ? Color(red:0.065,green:0.065,blue:0.07) : Color(red:0.933,green:0.925,blue:0.906))
                 .gesture(MagnificationGesture().updating($magnification) { v, s, _ in s = v }.onEnded { zoom = min(2, max(0.35, zoom * $0)) })
                 HStack {
                     Image(systemName: "minus.magnifyingglass")
@@ -73,7 +78,7 @@ struct NativeMap: View {
                     Spacer(); Text("Select a machine or service to inspect").font(.caption).foregroundStyle(.secondary)
                 }.padding(10)
             }.onChange(of: model.fit) { _ in zoom = max(0.35, min(1, (geometry.size.width - 20) / layout.size.width)) }
-            .onAppear { zoom = max(0.35, min(1, (geometry.size.width - 20) / layout.size.width)) }
+            .onAppear { zoom = 1 }
         }
     }
 }
@@ -121,8 +126,8 @@ struct NativeMapDrawing: View {
             HStack(spacing: 10) {
                 Image(systemName: model.icon(node.item.kind)).foregroundStyle(node.item.kind == "service" ? .blue : .secondary).font(.system(size: node.item.kind == "host" ? 22 : 12))
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(node.row.text("name")).font(.system(size: node.item.kind == "host" ? 13 : 11, weight: .semibold)).lineLimit(1)
-                    if node.item.kind == "host" { Text(node.row.text("fqdn", node.row.rows("interfaces").first?.text("internalIp") ?? node.row.text("category"))).font(.system(size: 10, design: .monospaced)).foregroundStyle(.secondary).lineLimit(1) }
+                    Text(node.row.text("name")).font(.system(size: node.item.kind == "host" ? 15 : 13, weight: .semibold)).lineLimit(1)
+                    if node.item.kind == "host" { Text(node.row.text("fqdn", node.row.rows("interfaces").first?.text("internalIp") ?? node.row.text("category"))).font(.system(size: 12, design: .monospaced)).foregroundStyle(.secondary).lineLimit(1) }
                 }; Spacer(minLength: 0)
                 if node.item.kind == "service" { Circle().fill(.secondary).frame(width: 5, height: 5).accessibilityHidden(true) }
             }.padding(.horizontal, 12).frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -156,7 +161,18 @@ func xml(_ value: String) -> String { value.replacingOccurrences(of: "&", with: 
 }
 @MainActor func exportNativeFoss(_ model: NativeModel) {
     let layout = MapLayout(model.topology)
-    let nodes: [Row] = layout.nodes.map { ["id": $0.id, "name":$0.row.text("name"), "type":$0.item.kind, "position":["x":$0.rect.minX,"y":$0.rect.minY]] }
-    let object: Row = ["version":"1.0", "name":model.topology.text("vaultName"), "nodes":nodes, "connections":[]]
+    let items: [Row] = layout.nodes.map { ["id":$0.id,"name":$0.row.text("name"),"description":model.title($0.item.kind),"icon":"kurogane-cube"] }
+    let viewItems: [Row] = layout.nodes.map { ["id":$0.id,"tile":["x":Int($0.rect.midX/40),"y":-Int($0.rect.midY/40)]] }
+    var connectors: [Row] = []
+    func connect(_ id: String,_ from: String,_ to: String,_ label: String,_ dashed: Bool = false) {
+        guard layout.nodes.contains(where:{$0.id == from}),layout.nodes.contains(where:{$0.id == to}) else { return }
+        connectors.append(["id":id,"description":label,"color":"steel","width":6,"style":dashed ? "DASHED":"SOLID","anchors":[["id":id+":a","ref":["item":from]],["id":id+":b","ref":["item":to]]]])
+    }
+    for service in model.rows("service") { connect("runs:"+service.text("id"),"host"+service.text("hostId"),"service"+service.text("id"),"Runs on") }
+    for host in model.rows("host") { if !host.text("parentHostId").isEmpty { connect("parent:"+host.text("id"),"host"+host.text("parentHostId"),"host"+host.text("id"),"Parent",true) } }
+    for proxy in model.rows("proxy") { for route in proxy.rows("routes") { connect("route:"+route.text("id"),"host"+proxy.text("hostId"),route.text("serviceId").isEmpty ? "host"+route.text("targetHostId") : "service"+route.text("serviceId"),route.text("domain"),!route.flag("enabled")) } }
+    let rectangles: [Row] = layout.zones.map { ["id":$0.id,"color":"zone","from":["x":Int($0.rect.minX/40),"y":-Int($0.rect.minY/40)],"to":["x":Int($0.rect.maxX/40),"y":-Int($0.rect.maxY/40)]] }
+    let icon = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\"><path fill=\"#343a40\" d=\"M16 2 30 10v14L16 32 2 24V10z\"/><path fill=\"none\" stroke=\"white\" d=\"m2 10 14 8 14-8M16 18v14\"/></svg>"
+    let object: Row = ["version":"","title":model.topology.text("vaultName"),"description":"Generated by Kurogane native auto-layout","colors":[["id":"steel","value":"#868e96"],["id":"zone","value":"#d1cec6"]],"icons":[["id":"kurogane-cube","name":"Kurogane","url":"data:image/svg+xml;base64,"+Data(icon.utf8).base64EncodedString(),"collection":"kurogane","isIsometric":false]],"items":items,"views":[["id":"kurogane-auto","name":"Topology (auto)","lastUpdated":ISO8601DateFormatter().string(from:Date()),"items":viewItems,"rectangles":rectangles,"connectors":connectors,"textBoxes":[]]]]
     if let data = try? JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys]) { saveNativeBytes(model, data, "kurogane-fossflow.json", "json") }
 }

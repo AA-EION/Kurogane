@@ -25,7 +25,7 @@ struct NativeSettings: View {
         Form {
             Section("Appearance") {
                 Picker("Theme",selection:$model.appearance) { Text("Light").tag("light"); Text("Dark").tag("dark"); Text("System").tag("system") }.pickerStyle(.segmented)
-                Text("Native glass navigation and tactile inventory surfaces.").font(.caption).foregroundStyle(.secondary)
+                Text("Light by default. Choose the appearance that feels comfortable.").font(.caption).foregroundStyle(.secondary)
             }
             Section("Vault") {
                 TextField("Name",text:Binding(get:{ settings.text("displayName") },set:{ settings["displayName"] = $0 }))

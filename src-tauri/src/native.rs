@@ -1,5 +1,5 @@
 //! Native macOS command boundary. Swift owns presentation; Rust owns the vault.
-use std::ffi::{c_char, CStr, CString};
+use std::ffi::{c_char, CStr};
 use std::sync::OnceLock;
 
 use serde::de::DeserializeOwned;
@@ -17,10 +17,11 @@ extern "C" {
 }
 
 fn deliver(value: Value) {
-    if let Ok(bytes) = CString::new(value.to_string()) {
-        // Swift copies the bytes synchronously, before this allocation is freed.
-        unsafe { kurogane_native_receive_json(bytes.as_ptr()) };
-    }
+    let mut bytes = Zeroizing::new(value.to_string().into_bytes());
+    bytes.push(0);
+    // JSON escapes interior NULs. Swift copies synchronously and the transport
+    // buffer (including explicitly revealed secrets) is wiped on return.
+    unsafe { kurogane_native_receive_json(bytes.as_ptr().cast()) };
 }
 
 pub fn install(app: &AppHandle, window: usize) -> tauri::Result<()> {

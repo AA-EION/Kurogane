@@ -117,7 +117,7 @@ public func receiveNativeJSON(_ pointer: UnsafePointer<CChar>) {
         else { clearVault() }
         loading = false
     }
-    func clearVault() { vaultGeneration += 1; topology = [:]; selected = nil; sheet = nil; query = ""; notice = nil }
+    func clearVault() { vaultGeneration += 1; topology = [:]; sync = [:]; selected = nil; sheet = nil; query = ""; notice = nil; cloudStep = "" }
     func start() {
         NativeBridge.shared.event = { [weak self] name, payload in
             guard let self else { return }
@@ -145,7 +145,9 @@ public func receiveNativeJSON(_ pointer: UnsafePointer<CChar>) {
         }
     }
     func save(_ kind: String, _ row: Row) async throws {
+        let generation = vaultGeneration
         let saved = try await call("save_\(kind)", [kind: row]) as? Row ?? [:]
+        guard unlocked && generation == vaultGeneration else { return }
         topology = saved.row("topology"); selected = NativeItem(kind: kind, id: saved.text("id")); sheet = nil
     }
     func edit(_ kind: String, _ row: Row = [:]) { sheet = NativeSheet(kind: "edit:\(kind)", item: row) }
@@ -172,10 +174,10 @@ struct NativeRoot: View {
             else if model.unlocked { NativeWorkspace(model: model) }
             else { NativeVaultScreen(model: model) }
         }.background(Color(nsColor: .windowBackgroundColor)).frame(minWidth: 920, minHeight: 640)
-        .sheet(item: $model.sheet) { sheet in NativeSheetView(model: model, sheet: sheet).id(sheet.id).interactiveDismissDisabled(model.busy) }
+        .sheet(item: $model.sheet) { sheet in NativeSheetView(model: model, sheet: sheet).background(Color(nsColor: .windowBackgroundColor)).id(sheet.id).interactiveDismissDisabled(model.busy) }
         .alert("Operation failed", isPresented: Binding(get: { model.error != nil }, set: { if !$0 { model.error = nil } })) {
             Button("OK") { model.error = nil }
-            if model.loading { Button("Retry") { model.perform { try await model.refresh() } } }
+            if model.status.isEmpty { Button("Retry") { model.perform { try await model.refresh() } } }
         } message: { Text(model.error ?? "") }
     }
 }
@@ -219,7 +221,7 @@ struct NativeWorkspace: View {
                         }
                     }.listStyle(.sidebar)
                     Text("Encrypted infrastructure inventory").font(.caption2).foregroundStyle(.secondary).padding(12)
-                }.frame(minWidth: 185, idealWidth: 220, maxWidth: 330)
+                }.frame(minWidth: 185, idealWidth: 220, maxWidth: 240)
                 VStack(spacing: 0) {
                     HStack {
                         Picker("View", selection: $model.mapMode) { Text("Map").tag(true); Text("Inventory").tag(false) }.pickerStyle(.segmented).frame(width: 180)
@@ -238,7 +240,7 @@ struct NativeWorkspace: View {
                         else { Text(model.notice ?? model.sync.text("lastOutcome", "Saved locally")).font(.caption).foregroundStyle(.secondary) }
                     }.padding(12)
                 }.frame(minWidth: 360, maxWidth: .infinity, maxHeight: .infinity)
-                if let selected = model.selected { NativeInspector(model: model, item: selected).frame(minWidth: 240, idealWidth: 285, maxWidth: 380) }
+                if let selected = model.selected { NativeInspector(model: model, item: selected).frame(minWidth: 240, idealWidth: 285, maxWidth: 320) }
             }
         }
     }
@@ -264,5 +266,8 @@ public func installShell(_ pointer: UnsafeMutableRawPointer) {
         window.contentView = NSHostingView(rootView: NativeRoot(model: model))
         window.title = "Kurogane"; window.titlebarAppearsTransparent = true; window.toolbarStyle = .unified
         window.minSize = NSSize(width: 920, height: 640); model.applyAppearance(); model.start()
+        #if NATIVE_SMOKE
+        startNativeSmoke(model)
+        #endif
     }
 }

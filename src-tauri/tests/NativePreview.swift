@@ -31,6 +31,7 @@ import SwiftUI
         model.window = window
         window.contentView = NSHostingView(rootView:NativeRoot(model:model))
         window.makeKeyAndOrderFront(nil)
+        window.setContentSize(NSSize(width:1440,height:900))
         Task { @MainActor in
             do {
                 // Check missing required relations and numeric limits, not merely
@@ -40,7 +41,7 @@ import SwiftUI
                 var port = blankEntity("port"); port["containerPort"] = "70000"
                 do { _ = try normalized("port",port); fatalError("Invalid port was accepted") } catch {}
                 let valid = try normalized("port",blankEntity("port")); precondition(valid.number("containerPort") == 80)
-                let layout = MapLayout(NativeFixture.topology); precondition(layout.nodes.count == 3 && layout.size.height >= 500)
+                let layout = MapLayout(NativeFixture.topology); precondition(layout.nodes.count == 4 && layout.size.height >= 500)
                 let folder = CommandLine.arguments[1]
                 for theme in ["light","dark"] {
                     model.appearance = theme; model.applyAppearance()
@@ -60,13 +61,13 @@ import SwiftUI
                     ("create-vault",AnyView(NativeCreateVault(model:model)))
                 ]
                 for (name,view) in cases {
-                    window.contentView = NSHostingView(rootView:view)
+                    window.contentView = NSHostingView(rootView:view.frame(maxWidth:.infinity,maxHeight:.infinity).background(Color(nsColor:.windowBackgroundColor)))
                     window.setContentSize(NSSize(width:720,height:740))
                     try await Task.sleep(nanoseconds:350_000_000)
                     try capture(window,folder+"/"+name+".png")
                 }
                 model.status = ["stage":"locked","vaultName":"Issen Infrastructure","vaultPath":"/Users/issen/Infrastructure.kurogane","totpRequired":true]
-                window.contentView = NSHostingView(rootView:NativeVaultScreen(model:model))
+                window.contentView = NSHostingView(rootView:NativeVaultScreen(model:model).background(Color(nsColor:.windowBackgroundColor)))
                 try await Task.sleep(nanoseconds:350_000_000)
                 try capture(window,folder+"/locked-vault.png")
                 print("Native SwiftUI validation and 12 view captures passed")
@@ -82,5 +83,6 @@ import SwiftUI
         view.cacheDisplay(in:view.bounds,to:bitmap)
         guard let data = bitmap.representation(using:.png,properties:[:]), data.count > 1000 else { throw NativeFailure(message:"Empty capture") }
         try data.write(to:URL(fileURLWithPath:path))
+        print("Captured \(URL(fileURLWithPath:path).lastPathComponent): \(Int(view.bounds.width)) × \(Int(view.bounds.height)) points")
     }
 }

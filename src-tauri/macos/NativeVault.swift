@@ -94,6 +94,7 @@ struct NativeCloud: View {
     @State private var email = ""
     @State private var password = ""
     @State private var candidates: [String] = []
+    @State private var message = ""
     var body: some View {
         VStack(alignment:.leading,spacing:18) {
             Text(linking ? "Link a sync destination" : "Connect a cloud vault").font(.title2)
@@ -101,13 +102,14 @@ struct NativeCloud: View {
             Picker("Provider",selection:$provider) { Text("Google Drive").tag("drive"); Text("OneDrive").tag("onedrive"); Text("MEGA").tag("mega"); Text("Synced folder").tag("folder") }
             if provider == "mega" { TextField("MEGA email",text:$email); SecureField("MEGA password",text:$password) }
             if model.busy { HStack { ProgressView().controlSize(.small); Text(model.cloudStep.isEmpty ? "Connecting…" : model.cloudStep) } }
+            if !message.isEmpty { Text(message).foregroundStyle(.secondary) }
             ForEach(candidates,id:\.self) { candidate in Button(candidate) { model.perform { _ = try await model.call("connect_cloud_finish",["remotePath":candidate]); model.sheet = nil; try await model.refresh() } }.disabled(model.busy) }
             HStack { Spacer(); Button("Cancel") { password = ""; model.sheet = nil }.disabled(model.busy); Button("Connect") { connect() }.buttonStyle(.borderedProminent).disabled(model.busy || provider == "mega" && (email.isEmpty || password.isEmpty)) }
         }.padding(24).frame(width:500).textFieldStyle(.roundedBorder).onDisappear { password = "" }
     }
     func connect() {
         let credentials: Any = provider == "mega" ? ["user":email,"password":password] : NSNull()
-        password = ""; model.cloudStep = ""
+        password = ""; model.cloudStep = ""; message = ""
         model.perform {
             if linking {
                 model.sync = try await model.call(provider == "folder" ? "link_folder" : "link_remote",["provider":provider,"mega":credentials]) as? Row ?? model.sync
@@ -116,7 +118,7 @@ struct NativeCloud: View {
                 let result = try await model.call("connect_cloud",["provider":provider,"mega":credentials]) as? Row ?? [:]
                 candidates = result["candidates"] as? [String] ?? []
                 if !result.text("vaultPath").isEmpty { model.sheet = nil; try await model.refresh() }
-                else if candidates.isEmpty && !result.isEmpty { model.notice = "No vaults found in that account." }
+                else if candidates.isEmpty && !result.isEmpty { message = "No vaults found in that account. Create a vault locally, then link this account in Sync settings." }
             }
         }
     }

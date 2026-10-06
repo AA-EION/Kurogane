@@ -101,3 +101,17 @@ jobs:
       - run: cargo build -p kurogane-app --features custom-protocol --release
         env:
           MACOSX_DEPLOYMENT_TARGET: "13.0"
+      - name: Native SwiftUI integration smoke
+        if: runner.os == 'macOS'
+        timeout-minutes: 8
+        run: |
+          mkdir -p native-integration
+          KUROGANE_NATIVE_SMOKE_DIR="$PWD/native-integration" cargo run -p kurogane-app --features custom-protocol,native-smoke --release
+        env:
+          MACOSX_DEPLOYMENT_TARGET: "13.0"
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'macOS'
+        with:
+          name: native-bridge-review
+          path: native-integration/*.png
+          if-no-files-found: error

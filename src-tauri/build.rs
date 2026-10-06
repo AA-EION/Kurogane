@@ -25,8 +25,13 @@ fn build_swift_shell() {
     assert!(sdk.status.success(), "could not locate macOS SDK");
     let sdk = String::from_utf8(sdk.stdout).unwrap();
     let library = output.join("libKuroganeNative.a");
-    let status = Command::new("xcrun")
-        .args(["swiftc", "-emit-library", "-static", "-parse-as-library", "-O", "-module-name", "KuroganeNative", "-target"])
+    let mut compiler_command = Command::new("xcrun");
+    compiler_command.args(["swiftc", "-emit-library", "-static", "-parse-as-library", "-O", "-module-name", "KuroganeNative"]);
+    if std::env::var_os("CARGO_FEATURE_NATIVE_SMOKE").is_some() {
+        compiler_command.args(["-D", "NATIVE_SMOKE"]);
+    }
+    let status = compiler_command
+        .arg("-target")
         .arg(format!("{arch}-apple-macosx13.0"))
         .args(["-sdk", sdk.trim()])
         .args(&sources)

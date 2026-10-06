@@ -2,6 +2,8 @@
 
 pub mod models;
 mod repo;
+
+pub use repo::{NewSyncRemote, RouteTrace, SyncRemoteMeta, TotpRecord, VaultSettings};
 pub mod seed;
 
 use std::path::Path;
@@ -45,8 +47,7 @@ impl Database {
     }
 
     fn init(conn: Connection, key: &Key256) -> Result<Self> {
-        let cipher_version: Option<String> =
-            conn.query_row("PRAGMA cipher_version", [], |r| r.get(0)).optional()?;
+        let cipher_version: Option<String> = conn.query_row("PRAGMA cipher_version", [], |r| r.get(0)).optional()?;
         if cipher_version.as_deref().map_or(true, str::is_empty) {
             return Err(Error::SqlCipherMissing);
         }
@@ -57,8 +58,7 @@ impl Database {
         // Wipe/lock SQLCipher's own page buffers.
         conn.execute_batch("PRAGMA cipher_memory_security = ON;")?;
         // First read verifies the key (HMAC failure → "file is not a database").
-        conn.query_row("SELECT count(*) FROM sqlite_master", [], |r| r.get::<_, i64>(0))
-            .map_err(|_| Error::AuthFailed)?;
+        conn.query_row("SELECT count(*) FROM sqlite_master", [], |r| r.get::<_, i64>(0)).map_err(|_| Error::AuthFailed)?;
         conn.execute_batch(
             "PRAGMA foreign_keys = ON;
              PRAGMA journal_mode = DELETE;

@@ -137,8 +137,7 @@ impl<'a> Provisioner<'a> {
         let mut found = false;
         for i in 0..archive.len() {
             let mut entry = archive.by_index(i).map_err(|e| SyncError::Download(e.to_string()))?;
-            let is_binary = entry.is_file()
-                && Path::new(entry.name()).file_name().is_some_and(|n| n == self.asset.binary_name);
+            let is_binary = entry.is_file() && Path::new(entry.name()).file_name().is_some_and(|n| n == self.asset.binary_name);
             if !is_binary {
                 continue;
             }

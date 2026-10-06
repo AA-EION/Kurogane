@@ -75,9 +75,7 @@ impl Host {
             return Some(f);
         }
         let primary = self.interfaces.iter().find(|n| n.is_primary).or_else(|| self.interfaces.first());
-        primary
-            .and_then(|n| n.internal_ip.as_deref())
-            .or_else(|| self.interfaces.iter().find_map(|n| n.public_ip.as_deref()))
+        primary.and_then(|n| n.internal_ip.as_deref()).or_else(|| self.interfaces.iter().find_map(|n| n.public_ip.as_deref()))
     }
 }
 

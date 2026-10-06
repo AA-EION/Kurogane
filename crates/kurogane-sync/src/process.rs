@@ -40,8 +40,19 @@ fn tail(s: &str, n: usize) -> String {
 /// Environment variables forwarded from the host into the sandbox: only what
 /// is needed for networking (proxies, custom CAs) and for Windows' network stack.
 pub const PASSTHROUGH_ENV: &[&str] = &[
-    "HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY", "https_proxy", "http_proxy", "no_proxy",
-    "SSL_CERT_FILE", "SSL_CERT_DIR", "SystemRoot", "SYSTEMROOT", "windir", "ComSpec", "PATHEXT",
+    "HTTPS_PROXY",
+    "HTTP_PROXY",
+    "NO_PROXY",
+    "https_proxy",
+    "http_proxy",
+    "no_proxy",
+    "SSL_CERT_FILE",
+    "SSL_CERT_DIR",
+    "SystemRoot",
+    "SYSTEMROOT",
+    "windir",
+    "ComSpec",
+    "PATHEXT",
 ];
 
 pub fn run(mut cmd: Command, stdin: Option<&[u8]>, timeout: Duration) -> Result<Output> {

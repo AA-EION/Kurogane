@@ -1,4 +1,32 @@
 [package]
 name = "kurogane-app"
+description = "KUROGANE desktop shell (Tauri v2)"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "kurogane-desktop"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2.7", features = [] }
+
+[dependencies]
+kurogane-core.workspace = true
+kurogane-sync.workspace = true
+tauri = { version = "2.12", features = [] }
+tauri-plugin-dialog = "2.8"
+tauri-plugin-opener = "2.7"
+serde.workspace = true
+serde_json.workspace = true
+zeroize.workspace = true
+arboard.workspace = true
+sha2.workspace = true
+which.workspace = true
+uuid.workspace = true
+
+[features]
+# Tauri's dev server integration; `cargo tauri dev` enables it.
+custom-protocol = ["tauri/custom-protocol"]

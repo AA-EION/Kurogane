@@ -72,7 +72,17 @@ fn host(db: &Database, h: HostSpec<'_>) -> Result<String> {
     })
 }
 
-fn svc(db: &Database, slug: &str, host: &str, name: &str, runtime: &str, image: Option<&str>, scheme: &str, ports: Vec<ServicePort>) -> Result<String> {
+#[allow(clippy::too_many_arguments)]
+fn svc(
+    db: &Database,
+    slug: &str,
+    host: &str,
+    name: &str,
+    runtime: &str,
+    image: Option<&str>,
+    scheme: &str,
+    ports: Vec<ServicePort>,
+) -> Result<String> {
     db.insert_service(&Service {
         id: demo_id(slug),
         host_id: demo_id(host),
@@ -86,7 +96,16 @@ fn svc(db: &Database, slug: &str, host: &str, name: &str, runtime: &str, image: 
 }
 
 #[allow(clippy::too_many_arguments)]
-fn route(slug: &str, domain: &str, target_host: &str, target_ip: &str, target_port: u16, service: &str, tls_expiry: Option<&str>, tls_mode: &str) -> ProxyRoute {
+fn route(
+    slug: &str,
+    domain: &str,
+    target_host: &str,
+    target_ip: &str,
+    target_port: u16,
+    service: &str,
+    tls_expiry: Option<&str>,
+    tls_mode: &str,
+) -> ProxyRoute {
     ProxyRoute {
         id: demo_id(slug),
         domain: domain.into(),
@@ -144,24 +163,143 @@ pub fn seed_demo(db: &Database, field_key: &Key256) -> Result<DemoSecrets> {
     }
 
     // -------------------------------------------------------- Kurogane Corp
-    host(db, HostSpec { slug: "h-edge-01", tenant: "t-corp", name: "edge-01", category: "vps", os: Some("linux"), ssh: Some(22), rdp: None, web: None, provider: Some("Hetzner FSN1"),
-        nic: nic("i-edge-01", "eth0", "172.16.0.10", Some("172.16.0.1"), Some("203.0.113.10"), Some("n-corp-edge")), parent: None })?;
-    host(db, HostSpec { slug: "h-app-01", tenant: "t-corp", name: "app-01", category: "local_server", os: Some("linux"), ssh: Some(2222), rdp: None, web: None, provider: Some("Rack A · U12"),
-        nic: nic("i-app-01", "ens18", "10.10.0.21", Some("10.10.0.1"), None, Some("n-corp-lan")), parent: None })?;
-    host(db, HostSpec { slug: "h-win-01", tenant: "t-corp", name: "dc-01", category: "local_server", os: Some("windows"), ssh: None, rdp: Some(3389), web: None, provider: Some("Rack A · U14"),
-        nic: nic("i-win-01", "Ethernet0", "10.10.0.5", Some("10.10.0.1"), None, Some("n-corp-lan")), parent: None })?;
-    host(db, HostSpec { slug: "h-core-sw", tenant: "t-corp", name: "core-sw", category: "switch", os: Some("embedded"), ssh: Some(22), rdp: None, web: Some("https://10.10.0.2"), provider: None,
-        nic: nic("i-core-sw", "mgmt0", "10.10.0.2", Some("10.10.0.1"), None, Some("n-corp-lan")), parent: None })?;
-    host(db, HostSpec { slug: "h-gw", tenant: "t-corp", name: "gw-fw", category: "firewall", os: Some("bsd"), ssh: Some(22), rdp: None, web: Some("https://10.10.0.1"), provider: None,
-        nic: nic("i-gw", "igb0", "10.10.0.1", None, Some("198.51.100.4"), Some("n-corp-lan")), parent: None })?;
-    host(db, HostSpec { slug: "h-nvr", tenant: "t-corp", name: "nvr-01", category: "nvr", os: Some("embedded"), ssh: None, rdp: None, web: Some("http://10.10.50.10"), provider: None,
-        nic: nic("i-nvr", "eth0", "10.10.50.10", Some("10.10.50.1"), None, Some("n-corp-cctv")), parent: None })?;
-    host(db, HostSpec { slug: "h-ap-lobby", tenant: "t-corp", name: "ap-lobby", category: "access_point", os: Some("embedded"), ssh: Some(22), rdp: None, web: Some("https://10.10.0.40"), provider: None,
-        nic: nic("i-ap-lobby", "br0", "10.10.0.40", Some("10.10.0.1"), None, Some("n-corp-lan")), parent: None })?;
+    host(
+        db,
+        HostSpec {
+            slug: "h-edge-01",
+            tenant: "t-corp",
+            name: "edge-01",
+            category: "vps",
+            os: Some("linux"),
+            ssh: Some(22),
+            rdp: None,
+            web: None,
+            provider: Some("Hetzner FSN1"),
+            nic: nic("i-edge-01", "eth0", "172.16.0.10", Some("172.16.0.1"), Some("203.0.113.10"), Some("n-corp-edge")),
+            parent: None,
+        },
+    )?;
+    host(
+        db,
+        HostSpec {
+            slug: "h-app-01",
+            tenant: "t-corp",
+            name: "app-01",
+            category: "local_server",
+            os: Some("linux"),
+            ssh: Some(2222),
+            rdp: None,
+            web: None,
+            provider: Some("Rack A · U12"),
+            nic: nic("i-app-01", "ens18", "10.10.0.21", Some("10.10.0.1"), None, Some("n-corp-lan")),
+            parent: None,
+        },
+    )?;
+    host(
+        db,
+        HostSpec {
+            slug: "h-win-01",
+            tenant: "t-corp",
+            name: "dc-01",
+            category: "local_server",
+            os: Some("windows"),
+            ssh: None,
+            rdp: Some(3389),
+            web: None,
+            provider: Some("Rack A · U14"),
+            nic: nic("i-win-01", "Ethernet0", "10.10.0.5", Some("10.10.0.1"), None, Some("n-corp-lan")),
+            parent: None,
+        },
+    )?;
+    host(
+        db,
+        HostSpec {
+            slug: "h-core-sw",
+            tenant: "t-corp",
+            name: "core-sw",
+            category: "switch",
+            os: Some("embedded"),
+            ssh: Some(22),
+            rdp: None,
+            web: Some("https://10.10.0.2"),
+            provider: None,
+            nic: nic("i-core-sw", "mgmt0", "10.10.0.2", Some("10.10.0.1"), None, Some("n-corp-lan")),
+            parent: None,
+        },
+    )?;
+    host(
+        db,
+        HostSpec {
+            slug: "h-gw",
+            tenant: "t-corp",
+            name: "gw-fw",
+            category: "firewall",
+            os: Some("bsd"),
+            ssh: Some(22),
+            rdp: None,
+            web: Some("https://10.10.0.1"),
+            provider: None,
+            nic: nic("i-gw", "igb0", "10.10.0.1", None, Some("198.51.100.4"), Some("n-corp-lan")),
+            parent: None,
+        },
+    )?;
+    host(
+        db,
+        HostSpec {
+            slug: "h-nvr",
+            tenant: "t-corp",
+            name: "nvr-01",
+            category: "nvr",
+            os: Some("embedded"),
+            ssh: None,
+            rdp: None,
+            web: Some("http://10.10.50.10"),
+            provider: None,
+            nic: nic("i-nvr", "eth0", "10.10.50.10", Some("10.10.50.1"), None, Some("n-corp-cctv")),
+            parent: None,
+        },
+    )?;
+    host(
+        db,
+        HostSpec {
+            slug: "h-ap-lobby",
+            tenant: "t-corp",
+            name: "ap-lobby",
+            category: "access_point",
+            os: Some("embedded"),
+            ssh: Some(22),
+            rdp: None,
+            web: Some("https://10.10.0.40"),
+            provider: None,
+            nic: nic("i-ap-lobby", "br0", "10.10.0.40", Some("10.10.0.1"), None, Some("n-corp-lan")),
+            parent: None,
+        },
+    )?;
 
-    svc(db, "s-traefik", "h-edge-01", "traefik", "docker", Some("traefik:v3.1"), "https", vec![port(443, Some(443)), ServicePort { container_port: 80, host_port: Some(80), protocol: "tcp".into(), ..Default::default() }])?;
+    svc(
+        db,
+        "s-traefik",
+        "h-edge-01",
+        "traefik",
+        "docker",
+        Some("traefik:v3.1"),
+        "https",
+        vec![port(443, Some(443)), ServicePort { container_port: 80, host_port: Some(80), protocol: "tcp".into(), ..Default::default() }],
+    )?;
     svc(db, "s-grafana", "h-edge-01", "grafana", "docker", Some("grafana/grafana:11.2.0"), "http", vec![port(3000, Some(3000))])?;
-    svc(db, "s-gitea", "h-app-01", "gitea", "docker", Some("gitea/gitea:1.22"), "http", vec![port(3000, Some(8081)), ServicePort { container_port: 22, host_port: Some(2223), protocol: "tcp".into(), ..Default::default() }])?;
+    svc(
+        db,
+        "s-gitea",
+        "h-app-01",
+        "gitea",
+        "docker",
+        Some("gitea/gitea:1.22"),
+        "http",
+        vec![
+            port(3000, Some(8081)),
+            ServicePort { container_port: 22, host_port: Some(2223), protocol: "tcp".into(), ..Default::default() },
+        ],
+    )?;
     svc(db, "s-wiki", "h-app-01", "wiki.js", "docker", Some("requarks/wiki:2"), "http", vec![port(3000, Some(8082))])?;
     svc(db, "s-postgres", "h-app-01", "postgres", "docker", Some("postgres:16"), "tcp", vec![port(5432, None)])?;
     svc(db, "s-ad", "h-win-01", "Active Directory", "windows_service", None, "tcp", vec![port(389, Some(389))])?;
@@ -176,19 +314,79 @@ pub fn seed_demo(db: &Database, field_key: &Key256) -> Result<DemoSecrets> {
         routes: vec![
             route("r-git", "git.corp.example", "h-app-01", "10.10.0.21", 8081, "s-gitea", Some("2026-12-02T00:00:00Z"), "letsencrypt"),
             route("r-wiki", "wiki.corp.example", "h-app-01", "10.10.0.21", 8082, "s-wiki", Some("2026-10-19T00:00:00Z"), "letsencrypt"),
-            route("r-grafana", "grafana.corp.example", "h-edge-01", "172.16.0.10", 3000, "s-grafana", Some("2027-01-15T00:00:00Z"), "letsencrypt"),
+            route(
+                "r-grafana",
+                "grafana.corp.example",
+                "h-edge-01",
+                "172.16.0.10",
+                3000,
+                "s-grafana",
+                Some("2027-01-15T00:00:00Z"),
+                "letsencrypt",
+            ),
         ],
     })?;
 
     // ---------------------------------------------------------- Client Alpha
-    host(db, HostSpec { slug: "h-alpha-vps", tenant: "t-alpha", name: "alpha-web", category: "vps", os: Some("linux"), ssh: Some(22), rdp: None, web: None, provider: Some("OVH GRA"),
-        nic: nic("i-alpha-vps", "eth0", "10.0.0.5", Some("10.0.0.1"), Some("192.0.2.45"), None), parent: None })?;
-    host(db, HostSpec { slug: "h-alpha-nas", tenant: "t-alpha", name: "alpha-nas", category: "nas", os: Some("linux"), ssh: Some(22), rdp: None, web: Some("https://192.168.20.10:5001"), provider: Some("Client office"),
-        nic: nic("i-alpha-nas", "eth0", "192.168.20.10", Some("192.168.20.1"), None, Some("n-alpha-lan")), parent: None })?;
-    host(db, HostSpec { slug: "h-alpha-rtr", tenant: "t-alpha", name: "alpha-router", category: "router", os: Some("routeros"), ssh: Some(22), rdp: None, web: Some("https://192.168.20.1"), provider: None,
-        nic: nic("i-alpha-rtr", "ether1", "192.168.20.1", None, Some("192.0.2.200"), Some("n-alpha-lan")), parent: None })?;
+    host(
+        db,
+        HostSpec {
+            slug: "h-alpha-vps",
+            tenant: "t-alpha",
+            name: "alpha-web",
+            category: "vps",
+            os: Some("linux"),
+            ssh: Some(22),
+            rdp: None,
+            web: None,
+            provider: Some("OVH GRA"),
+            nic: nic("i-alpha-vps", "eth0", "10.0.0.5", Some("10.0.0.1"), Some("192.0.2.45"), None),
+            parent: None,
+        },
+    )?;
+    host(
+        db,
+        HostSpec {
+            slug: "h-alpha-nas",
+            tenant: "t-alpha",
+            name: "alpha-nas",
+            category: "nas",
+            os: Some("linux"),
+            ssh: Some(22),
+            rdp: None,
+            web: Some("https://192.168.20.10:5001"),
+            provider: Some("Client office"),
+            nic: nic("i-alpha-nas", "eth0", "192.168.20.10", Some("192.168.20.1"), None, Some("n-alpha-lan")),
+            parent: None,
+        },
+    )?;
+    host(
+        db,
+        HostSpec {
+            slug: "h-alpha-rtr",
+            tenant: "t-alpha",
+            name: "alpha-router",
+            category: "router",
+            os: Some("routeros"),
+            ssh: Some(22),
+            rdp: None,
+            web: Some("https://192.168.20.1"),
+            provider: None,
+            nic: nic("i-alpha-rtr", "ether1", "192.168.20.1", None, Some("192.0.2.200"), Some("n-alpha-lan")),
+            parent: None,
+        },
+    )?;
 
-    svc(db, "s-npm", "h-alpha-vps", "nginx-proxy-manager", "docker", Some("jc21/nginx-proxy-manager:2"), "https", vec![port(443, Some(443)), ServicePort { container_port: 81, host_port: Some(81), protocol: "tcp".into(), ..Default::default() }])?;
+    svc(
+        db,
+        "s-npm",
+        "h-alpha-vps",
+        "nginx-proxy-manager",
+        "docker",
+        Some("jc21/nginx-proxy-manager:2"),
+        "https",
+        vec![port(443, Some(443)), ServicePort { container_port: 81, host_port: Some(81), protocol: "tcp".into(), ..Default::default() }],
+    )?;
     svc(db, "s-wp", "h-alpha-vps", "wordpress", "docker", Some("wordpress:6.6"), "http", vec![port(80, Some(8080))])?;
     svc(db, "s-mariadb", "h-alpha-vps", "mariadb", "docker", Some("mariadb:11"), "tcp", vec![port(3306, None)])?;
     svc(db, "s-shop", "h-alpha-vps", "odoo", "docker", Some("odoo:17"), "http", vec![port(8069, Some(8069))])?;
@@ -203,23 +401,97 @@ pub fn seed_demo(db: &Database, field_key: &Key256) -> Result<DemoSecrets> {
         admin_url: s("http://10.0.0.5:81"),
         routes: vec![
             route("r-alpha-www", "www.alpha.example", "h-alpha-vps", "10.0.0.5", 8080, "s-wp", Some("2026-11-30T00:00:00Z"), "letsencrypt"),
-            route("r-alpha-shop", "shop.alpha.example", "h-alpha-vps", "10.0.0.5", 8069, "s-shop", Some("2026-10-12T00:00:00Z"), "letsencrypt"),
+            route(
+                "r-alpha-shop",
+                "shop.alpha.example",
+                "h-alpha-vps",
+                "10.0.0.5",
+                8069,
+                "s-shop",
+                Some("2026-10-12T00:00:00Z"),
+                "letsencrypt",
+            ),
         ],
     })?;
 
     // --------------------------------------------------------------- Homelab
-    host(db, HostSpec { slug: "h-pve", tenant: "t-home", name: "pve", category: "local_server", os: Some("linux"), ssh: Some(22), rdp: None, web: Some("https://192.168.1.10:8006"), provider: Some("Closet"),
-        nic: nic("i-pve", "vmbr0", "192.168.1.10", Some("192.168.1.1"), None, Some("n-home-lan")), parent: None })?;
-    host(db, HostSpec { slug: "h-docker-vm", tenant: "t-home", name: "docker-vm", category: "vm", os: Some("linux"), ssh: Some(22), rdp: None, web: None, provider: None,
-        nic: nic("i-docker-vm", "ens18", "192.168.1.20", Some("192.168.1.1"), None, Some("n-home-lan")), parent: Some("h-pve") })?;
-    host(db, HostSpec { slug: "h-rpi", tenant: "t-home", name: "rpi-tunnel", category: "edge_device", os: Some("linux"), ssh: Some(22), rdp: None, web: None, provider: None,
-        nic: nic("i-rpi", "wlan0", "192.168.1.30", Some("192.168.1.1"), None, Some("n-home-lan")), parent: None })?;
-    host(db, HostSpec { slug: "h-home-ap", tenant: "t-home", name: "u6-lite", category: "access_point", os: Some("embedded"), ssh: Some(22), rdp: None, web: None, provider: None,
-        nic: nic("i-home-ap", "br0", "192.168.1.4", Some("192.168.1.1"), None, Some("n-home-lan")), parent: None })?;
+    host(
+        db,
+        HostSpec {
+            slug: "h-pve",
+            tenant: "t-home",
+            name: "pve",
+            category: "local_server",
+            os: Some("linux"),
+            ssh: Some(22),
+            rdp: None,
+            web: Some("https://192.168.1.10:8006"),
+            provider: Some("Closet"),
+            nic: nic("i-pve", "vmbr0", "192.168.1.10", Some("192.168.1.1"), None, Some("n-home-lan")),
+            parent: None,
+        },
+    )?;
+    host(
+        db,
+        HostSpec {
+            slug: "h-docker-vm",
+            tenant: "t-home",
+            name: "docker-vm",
+            category: "vm",
+            os: Some("linux"),
+            ssh: Some(22),
+            rdp: None,
+            web: None,
+            provider: None,
+            nic: nic("i-docker-vm", "ens18", "192.168.1.20", Some("192.168.1.1"), None, Some("n-home-lan")),
+            parent: Some("h-pve"),
+        },
+    )?;
+    host(
+        db,
+        HostSpec {
+            slug: "h-rpi",
+            tenant: "t-home",
+            name: "rpi-tunnel",
+            category: "edge_device",
+            os: Some("linux"),
+            ssh: Some(22),
+            rdp: None,
+            web: None,
+            provider: None,
+            nic: nic("i-rpi", "wlan0", "192.168.1.30", Some("192.168.1.1"), None, Some("n-home-lan")),
+            parent: None,
+        },
+    )?;
+    host(
+        db,
+        HostSpec {
+            slug: "h-home-ap",
+            tenant: "t-home",
+            name: "u6-lite",
+            category: "access_point",
+            os: Some("embedded"),
+            ssh: Some(22),
+            rdp: None,
+            web: None,
+            provider: None,
+            nic: nic("i-home-ap", "br0", "192.168.1.4", Some("192.168.1.1"), None, Some("n-home-lan")),
+            parent: None,
+        },
+    )?;
 
     svc(db, "s-cloudflared", "h-rpi", "cloudflared", "systemd", None, "none", vec![])?;
     svc(db, "s-jellyfin", "h-docker-vm", "jellyfin", "docker", Some("jellyfin/jellyfin:10.9"), "http", vec![port(8096, Some(8096))])?;
-    svc(db, "s-ha", "h-docker-vm", "home-assistant", "docker", Some("ghcr.io/home-assistant/home-assistant:stable"), "http", vec![port(8123, Some(8123))])?;
+    svc(
+        db,
+        "s-ha",
+        "h-docker-vm",
+        "home-assistant",
+        "docker",
+        Some("ghcr.io/home-assistant/home-assistant:stable"),
+        "http",
+        vec![port(8123, Some(8123))],
+    )?;
     svc(db, "s-vault", "h-docker-vm", "vaultwarden", "docker", Some("vaultwarden/server:1.32"), "http", vec![port(80, Some(8000))])?;
 
     db.insert_proxy(&ReverseProxy {
@@ -237,7 +509,16 @@ pub fn seed_demo(db: &Database, field_key: &Key256) -> Result<DemoSecrets> {
     })?;
 
     // ----------------------------------------------------------- credentials
-    let mut cred = |slug: &str, kind: OwnerKind, owner: &str, ckind: &str, label: &str, user: Option<&str>, secret: Option<&str>, key: Option<&str>, url: Option<&str>| -> Result<()> {
+    let mut cred = |slug: &str,
+                    kind: OwnerKind,
+                    owner: &str,
+                    ckind: &str,
+                    label: &str,
+                    user: Option<&str>,
+                    secret: Option<&str>,
+                    key: Option<&str>,
+                    url: Option<&str>|
+     -> Result<()> {
         let id = demo_id(slug);
         db.insert_credential(
             field_key,
@@ -266,21 +547,121 @@ pub fn seed_demo(db: &Database, field_key: &Key256) -> Result<DemoSecrets> {
     cred("c-edge-ssh", OwnerKind::Host, "h-edge-01", "ssh_key", "deploy key", Some("deploy"), None, Some(DEMO_KEY), None)?;
     cred("c-app-ssh", OwnerKind::Host, "h-app-01", "ssh_password", "root shell", Some("root"), Some("Tama-hagane!42"), None, None)?;
     cred("c-dc-rdp", OwnerKind::Host, "h-win-01", "rdp", "domain admin", Some("CORP\\kadmin"), Some("Orochi-9-Heads#"), None, None)?;
-    cred("c-sw-web", OwnerKind::Host, "h-core-sw", "web_gui", "switch admin", Some("admin"), Some("sw1tch-Kurogane"), None, Some("https://10.10.0.2"))?;
-    cred("c-gw-web", OwnerKind::Host, "h-gw", "web_gui", "pfSense", Some("admin"), Some("fw-Ironwall-77"), None, Some("https://10.10.0.1"))?;
-    cred("c-nvr-web", OwnerKind::Host, "h-nvr", "web_gui", "NVR viewer", Some("security"), Some("cam-Watcher-12"), None, Some("http://10.10.50.10"))?;
-    cred("c-traefik-dash", OwnerKind::Proxy, "p-traefik", "admin_login", "dashboard basic-auth", Some("ops"), Some("tr43fik-Dash"), None, None)?;
-    cred("c-gitea-admin", OwnerKind::Service, "s-gitea", "admin_login", "gitea admin", Some("kadmin"), Some("g1tea-Forge-2026"), None, None)?;
+    cred(
+        "c-sw-web",
+        OwnerKind::Host,
+        "h-core-sw",
+        "web_gui",
+        "switch admin",
+        Some("admin"),
+        Some("sw1tch-Kurogane"),
+        None,
+        Some("https://10.10.0.2"),
+    )?;
+    cred(
+        "c-gw-web",
+        OwnerKind::Host,
+        "h-gw",
+        "web_gui",
+        "pfSense",
+        Some("admin"),
+        Some("fw-Ironwall-77"),
+        None,
+        Some("https://10.10.0.1"),
+    )?;
+    cred(
+        "c-nvr-web",
+        OwnerKind::Host,
+        "h-nvr",
+        "web_gui",
+        "NVR viewer",
+        Some("security"),
+        Some("cam-Watcher-12"),
+        None,
+        Some("http://10.10.50.10"),
+    )?;
+    cred(
+        "c-traefik-dash",
+        OwnerKind::Proxy,
+        "p-traefik",
+        "admin_login",
+        "dashboard basic-auth",
+        Some("ops"),
+        Some("tr43fik-Dash"),
+        None,
+        None,
+    )?;
+    cred(
+        "c-gitea-admin",
+        OwnerKind::Service,
+        "s-gitea",
+        "admin_login",
+        "gitea admin",
+        Some("kadmin"),
+        Some("g1tea-Forge-2026"),
+        None,
+        None,
+    )?;
     cred("c-pg", OwnerKind::Service, "s-postgres", "db_user", "app database", Some("app"), Some("pg-Shirogane-55"), None, None)?;
-    cred("c-grafana-token", OwnerKind::Service, "s-grafana", "api_token", "provisioning token", None, Some("glsa_DEMO_8f3b2c1d9e0a7b6c5d4e3f2a1b0c9d8e"), None, None)?;
+    cred(
+        "c-grafana-token",
+        OwnerKind::Service,
+        "s-grafana",
+        "api_token",
+        "provisioning token",
+        None,
+        Some("glsa_DEMO_8f3b2c1d9e0a7b6c5d4e3f2a1b0c9d8e"),
+        None,
+        None,
+    )?;
     cred("c-alpha-ssh", OwnerKind::Host, "h-alpha-vps", "ssh_password", "ubuntu", Some("ubuntu"), Some("Alpha-Vps-2026!"), None, None)?;
-    cred("c-npm-admin", OwnerKind::Proxy, "p-npm", "admin_login", "NPM admin", Some("admin@alpha.example"), Some("npm-Changeme-Not"), None, Some("http://10.0.0.5:81"))?;
+    cred(
+        "c-npm-admin",
+        OwnerKind::Proxy,
+        "p-npm",
+        "admin_login",
+        "NPM admin",
+        Some("admin@alpha.example"),
+        Some("npm-Changeme-Not"),
+        None,
+        Some("http://10.0.0.5:81"),
+    )?;
     cred("c-wp-admin", OwnerKind::Service, "s-wp", "admin_login", "wp-admin", Some("alpha-editor"), Some("Wp-Press-Ink-8"), None, None)?;
     cred("c-maria", OwnerKind::Service, "s-mariadb", "db_user", "wordpress db", Some("wp"), Some("maria-Db-Alpha-3"), None, None)?;
     cred("c-smb", OwnerKind::Service, "s-smb", "smb", "office share", Some("ALPHA\\scanner"), Some("Scan-To-Folder-1"), None, None)?;
-    cred("c-alpha-rtr", OwnerKind::Host, "h-alpha-rtr", "web_gui", "RouterOS", Some("admin"), Some("mikro-Tik-Alpha"), None, Some("https://192.168.20.1"))?;
-    cred("c-registrar", OwnerKind::Tenant, "t-alpha", "web_gui", "domain registrar", Some("billing@alpha.example"), Some("Registrar-Lock-99"), None, Some("https://registrar.example"))?;
-    cred("c-pve", OwnerKind::Host, "h-pve", "web_gui", "Proxmox root@pam", Some("root"), Some("pve-Homelab-Root"), None, Some("https://192.168.1.10:8006"))?;
+    cred(
+        "c-alpha-rtr",
+        OwnerKind::Host,
+        "h-alpha-rtr",
+        "web_gui",
+        "RouterOS",
+        Some("admin"),
+        Some("mikro-Tik-Alpha"),
+        None,
+        Some("https://192.168.20.1"),
+    )?;
+    cred(
+        "c-registrar",
+        OwnerKind::Tenant,
+        "t-alpha",
+        "web_gui",
+        "domain registrar",
+        Some("billing@alpha.example"),
+        Some("Registrar-Lock-99"),
+        None,
+        Some("https://registrar.example"),
+    )?;
+    cred(
+        "c-pve",
+        OwnerKind::Host,
+        "h-pve",
+        "web_gui",
+        "Proxmox root@pam",
+        Some("root"),
+        Some("pve-Homelab-Root"),
+        None,
+        Some("https://192.168.1.10:8006"),
+    )?;
     cred("c-docker-ssh", OwnerKind::Host, "h-docker-vm", "ssh_key", "homelab key", Some("kuro"), None, Some(DEMO_KEY), None)?;
     cred("c-cf-token", OwnerKind::Proxy, "p-cf", "api_token", "tunnel token", None, Some("eyJhIjoiREVNTyJ9.DEMO.TUNNEL"), None, None)?;
     cred("c-jf", OwnerKind::Service, "s-jellyfin", "admin_login", "jellyfin admin", Some("kuro"), Some("Jelly-Fin-Movie"), None, None)?;

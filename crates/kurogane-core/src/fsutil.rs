@@ -117,7 +117,11 @@ mod tests {
         atomic_write(&p, b"two", true).unwrap();
         assert_eq!(fs::read(&p).unwrap(), b"two");
         assert_eq!(fs::read(backup_path(&p)).unwrap(), b"one");
-        let leftovers: Vec<_> = fs::read_dir(dir.path()).unwrap().filter_map(|e| e.ok()).filter(|e| e.file_name().to_string_lossy().ends_with(".tmp")).collect();
+        let leftovers: Vec<_> = fs::read_dir(dir.path())
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.file_name().to_string_lossy().ends_with(".tmp"))
+            .collect();
         assert!(leftovers.is_empty());
     }
 }

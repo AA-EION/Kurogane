@@ -49,6 +49,29 @@ pub struct VaultSettings {
     pub lock_on_suspend: bool,
 }
 
+/// Input for creating or updating a sync remote.
+pub struct NewSyncRemote<'a> {
+    /// `None` creates a new remote.
+    pub id: Option<&'a str>,
+    pub provider: &'a str,
+    pub label: &'a str,
+    pub remote_path: &'a str,
+    /// rclone.conf section body (sealed before storage).
+    pub rclone_section: &'a str,
+    pub transport: &'a str,
+}
+
+/// One row of the `v_route_traces` view.
+#[derive(Clone, Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RouteTrace {
+    pub route_id: String,
+    pub domain: String,
+    pub edge_public_ip: Option<String>,
+    pub target_ip: String,
+    pub target_port: u16,
+}
+
 #[derive(Clone, Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SyncRemoteMeta {
@@ -63,10 +86,7 @@ impl Database {
     // ----------------------------------------------------------------- meta
 
     pub fn init_meta(&self, vault_id: &str, display_name: &str) -> Result<()> {
-        self.conn().execute(
-            "INSERT INTO vault_meta (id, vault_id, display_name) VALUES (1, ?1, ?2)",
-            params![vault_id, display_name],
-        )?;
+        self.conn().execute("INSERT INTO vault_meta (id, vault_id, display_name) VALUES (1, ?1, ?2)", params![vault_id, display_name])?;
         self.conn().execute("INSERT INTO vault_security (id) VALUES (1)", [])?;
         Ok(())
     }
@@ -166,8 +186,21 @@ impl Database {
                                 winrm_port, web_admin_url, provider, location, icon, notes)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
             params![
-                id, h.tenant_id, h.parent_host_id, h.name, h.category, h.os_family, h.fqdn, h.ssh_port, h.rdp_port,
-                h.winrm_port, h.web_admin_url, h.provider, h.location, h.icon, h.notes
+                id,
+                h.tenant_id,
+                h.parent_host_id,
+                h.name,
+                h.category,
+                h.os_family,
+                h.fqdn,
+                h.ssh_port,
+                h.rdp_port,
+                h.winrm_port,
+                h.web_admin_url,
+                h.provider,
+                h.location,
+                h.icon,
+                h.notes
             ],
         )?;
         for n in &h.interfaces {
@@ -280,7 +313,8 @@ impl Database {
     /// Replace one sealed field of a credential (password rotation etc).
     pub fn update_credential_secret(&self, field_key: &Key256, id: &str, field: SecretField, value: &str) -> Result<()> {
         let sealed = crypto::seal(field_key, &field_aad(id, field), value.as_bytes())?;
-        let sql = format!("UPDATE credentials SET {} = ?1, rotated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE id = ?2", field.column());
+        let sql =
+            format!("UPDATE credentials SET {} = ?1, rotated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE id = ?2", field.column());
         if self.conn().execute(&sql, params![sealed, id])? == 0 {
             return Err(Error::NotFound(format!("credential {id}")));
         }
@@ -291,11 +325,8 @@ impl Database {
     /// keeping the plaintext's lifetime short.
     pub fn credential_secret(&self, field_key: &Key256, id: &str, field: SecretField) -> Result<Zeroizing<String>> {
         let sql = format!("SELECT {} FROM credentials WHERE id = ?1", field.column());
-        let blob: Option<Vec<u8>> = self
-            .conn()
-            .query_row(&sql, [id], |r| r.get(0))
-            .optional()?
-            .ok_or_else(|| Error::NotFound(format!("credential {id}")))?;
+        let blob: Option<Vec<u8>> =
+            self.conn().query_row(&sql, [id], |r| r.get(0)).optional()?.ok_or_else(|| Error::NotFound(format!("credential {id}")))?;
         let blob = blob.ok_or_else(|| Error::NotFound(format!("credential {id} has no {field:?}")))?;
         let plain = crypto::unseal(field_key, &field_aad(id, field), &blob)?;
         let s = std::str::from_utf8(&plain).map_err(|_| Error::Integrity("secret is not UTF-8".into()))?;
@@ -316,24 +347,15 @@ impl Database {
 
     // ----------------------------------------------------------- sync remotes
 
-    pub fn upsert_sync_remote(
-        &self,
-        sync_key: &Key256,
-        id: Option<&str>,
-        provider: &str,
-        label: &str,
-        remote_path: &str,
-        rclone_section: &str,
-        transport: &str,
-    ) -> Result<String> {
-        let id = id.map(str::to_owned).unwrap_or_else(new_id);
-        let sealed = crypto::seal(sync_key, &sync_aad(&id), rclone_section.as_bytes())?;
+    pub fn upsert_sync_remote(&self, sync_key: &Key256, r: &NewSyncRemote<'_>) -> Result<String> {
+        let id = r.id.map(str::to_owned).unwrap_or_else(new_id);
+        let sealed = crypto::seal(sync_key, &sync_aad(&id), r.rclone_section.as_bytes())?;
         self.conn().execute(
             "INSERT INTO sync_remotes (id, provider, label, remote_path, rclone_section_sealed, transport)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6)
              ON CONFLICT(id) DO UPDATE SET label = excluded.label, remote_path = excluded.remote_path,
                  rclone_section_sealed = excluded.rclone_section_sealed, transport = excluded.transport",
-            params![id, provider, label, remote_path, sealed, transport],
+            params![id, r.provider, r.label, r.remote_path, sealed, r.transport],
         )?;
         Ok(id)
     }
@@ -375,9 +397,9 @@ impl Database {
     pub fn load_topology(&self) -> Result<Topology> {
         let vault_name = self.settings()?.display_name;
         let tenants = {
-            let mut st = self.conn().prepare(
-                "SELECT id, name, environment, environment_label, color, sla_notes, admin_notes FROM tenants ORDER BY name",
-            )?;
+            let mut st = self
+                .conn()
+                .prepare("SELECT id, name, environment, environment_label, color, sla_notes, admin_notes FROM tenants ORDER BY name")?;
             let rows = st.query_map([], |r| {
                 Ok(Tenant {
                     id: r.get(0)?,
@@ -392,9 +414,8 @@ impl Database {
             rows.collect::<std::result::Result<Vec<_>, _>>()?
         };
         let networks = {
-            let mut st = self
-                .conn()
-                .prepare("SELECT id, tenant_id, name, kind, cidr, vlan_id, gateway FROM networks ORDER BY tenant_id, cidr")?;
+            let mut st =
+                self.conn().prepare("SELECT id, tenant_id, name, kind, cidr, vlan_id, gateway FROM networks ORDER BY tenant_id, cidr")?;
             let rows = st.query_map([], |r| {
                 Ok(Network {
                     id: r.get(0)?,
@@ -554,9 +575,8 @@ impl Database {
                 routes.entry(rt.proxy_id.clone()).or_default().push(rt);
             }
         }
-        let mut st = self
-            .conn()
-            .prepare("SELECT id, host_id, service_id, name, kind, admin_url FROM reverse_proxies ORDER BY host_id, name")?;
+        let mut st =
+            self.conn().prepare("SELECT id, host_id, service_id, name, kind, admin_url FROM reverse_proxies ORDER BY host_id, name")?;
         let rows = st.query_map([], |r| {
             Ok(ReverseProxy {
                 id: r.get(0)?,
@@ -575,12 +595,18 @@ impl Database {
         Ok(proxies)
     }
 
-    /// Route traces from the `v_route_traces` view: (route_id, domain, edge_public_ip, target_ip, target_port).
-    pub fn route_traces(&self) -> Result<Vec<(String, String, Option<String>, String, u16)>> {
-        let mut st = self
-            .conn()
-            .prepare("SELECT route_id, domain, edge_public_ip, target_ip, target_port FROM v_route_traces ORDER BY domain")?;
-        let rows = st.query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?)))?;
+    pub fn route_traces(&self) -> Result<Vec<RouteTrace>> {
+        let mut st =
+            self.conn().prepare("SELECT route_id, domain, edge_public_ip, target_ip, target_port FROM v_route_traces ORDER BY domain")?;
+        let rows = st.query_map([], |r| {
+            Ok(RouteTrace {
+                route_id: r.get(0)?,
+                domain: r.get(1)?,
+                edge_public_ip: r.get(2)?,
+                target_ip: r.get(3)?,
+                target_port: r.get(4)?,
+            })
+        })?;
         Ok(rows.collect::<std::result::Result<_, _>>()?)
     }
 }
@@ -632,7 +658,7 @@ mod tests {
         assert!(topo.hosts.len() >= 10);
         assert!(topo.proxies.iter().any(|p| !p.routes.is_empty()));
         let json = serde_json::to_string(&topo).unwrap();
-        for (_, (_, plain)) in secrets.iter() {
+        for (_, plain) in secrets.values() {
             assert!(!json.contains(plain.as_str()), "topology JSON must never contain secrets");
         }
         // Reveal round-trips.

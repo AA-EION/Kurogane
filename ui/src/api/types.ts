@@ -163,6 +163,7 @@ export interface CreateVaultArgs {
   password: string;
   kdf: KdfProfile;
   account: string;
+  seedDemo?: boolean;
 }
 
 export interface SyncStatus {

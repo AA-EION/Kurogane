@@ -161,10 +161,7 @@ pub fn linux_terminal_candidates(argv: &[String]) -> Vec<Vec<String>> {
 fn spawn_first(candidates: &[Vec<String>]) -> Result<String> {
     for c in candidates {
         if which::which(&c[0]).is_ok() {
-            Command::new(&c[0])
-                .args(&c[1..])
-                .spawn()
-                .map_err(|e| Error::Launch(format!("{}: {e}", c[0])))?;
+            Command::new(&c[0]).args(&c[1..]).spawn().map_err(|e| Error::Launch(format!("{}: {e}", c[0])))?;
             return Ok(c[0].clone());
         }
     }
@@ -179,11 +176,7 @@ pub fn launch_ssh(target: &SshTarget, scratch: &Path) -> Result<String> {
             Command::new("wt.exe").arg("new-tab").args(&argv).spawn().map_err(|e| Error::Launch(e.to_string()))?;
             return Ok("Windows Terminal".into());
         }
-        Command::new("cmd.exe")
-            .args(["/C", "start", "\"Kurogane SSH\""])
-            .args(&argv)
-            .spawn()
-            .map_err(|e| Error::Launch(e.to_string()))?;
+        Command::new("cmd.exe").args(["/C", "start", "\"Kurogane SSH\""]).args(&argv).spawn().map_err(|e| Error::Launch(e.to_string()))?;
         Ok("cmd.exe".into())
     } else if cfg!(target_os = "macos") {
         if target.identity_file.is_none() {
@@ -192,7 +185,11 @@ pub fn launch_ssh(target: &SshTarget, scratch: &Path) -> Result<String> {
             return Ok("ssh:// handler".into());
         }
         let script = scratch.join(format!("kurogane-ssh-{}.command", uuid::Uuid::new_v4().simple()));
-        let body = format!("#!/bin/sh\nrm -f {}\nexec {}\n", sh_quote(&script.display().to_string()), argv.iter().map(|a| sh_quote(a)).collect::<Vec<_>>().join(" "));
+        let body = format!(
+            "#!/bin/sh\nrm -f {}\nexec {}\n",
+            sh_quote(&script.display().to_string()),
+            argv.iter().map(|a| sh_quote(a)).collect::<Vec<_>>().join(" ")
+        );
         std::fs::write(&script, body)?;
         #[cfg(unix)]
         {

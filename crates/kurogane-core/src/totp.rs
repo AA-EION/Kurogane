@@ -99,14 +99,7 @@ pub fn code_at(secret: &[u8], cfg: &TotpConfig, unix_time: u64) -> String {
 /// Verify `code` within ±`window` steps of `unix_time`. Returns the matched
 /// counter. Counters `<= last_used_counter` are rejected (replay protection);
 /// the caller persists the returned counter.
-pub fn verify(
-    secret: &[u8],
-    cfg: &TotpConfig,
-    code: &str,
-    unix_time: u64,
-    window: u64,
-    last_used_counter: u64,
-) -> Option<u64> {
+pub fn verify(secret: &[u8], cfg: &TotpConfig, code: &str, unix_time: u64, window: u64, last_used_counter: u64) -> Option<u64> {
     let code = code.trim().replace(' ', "");
     if code.len() != cfg.digits as usize || !code.bytes().all(|b| b.is_ascii_digit()) {
         return None;

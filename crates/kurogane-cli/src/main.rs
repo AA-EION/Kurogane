@@ -8,7 +8,7 @@ use std::time::Duration;
 
 use anyhow::{bail, Context, Result};
 use clap::{Parser, Subcommand, ValueEnum};
-use kurogane_core::db::{seed, Database};
+use kurogane_core::db::{seed, Database, NewSyncRemote};
 use kurogane_core::kdf::KdfParams;
 use kurogane_core::secure::Key256;
 use kurogane_core::vault::{self, CreateOptions, UnlockedVault};
@@ -221,10 +221,8 @@ fn main() -> Result<()> {
             db.init_meta("00000000-0000-4000-8000-000000000000", "Demo Infrastructure")?;
             let field = Key256::random();
             let secrets = seed::seed_demo(&db, &field)?;
-            let secrets: serde_json::Map<String, serde_json::Value> = secrets
-                .into_iter()
-                .map(|(id, (f, v))| (id, serde_json::json!({ "field": f, "value": v })))
-                .collect();
+            let secrets: serde_json::Map<String, serde_json::Value> =
+                secrets.into_iter().map(|(id, (f, v))| (id, serde_json::json!({ "field": f, "value": v }))).collect();
             // Fixed, public demo TOTP seed so the browser mock can verify codes.
             let demo_seed = b"kurogane-demo-totp!!";
             let cfg = kurogane_core::totp::TotpConfig::default();
@@ -267,7 +265,11 @@ fn main() -> Result<()> {
                     let bin = p.ensure(|done, total| {
                         if done - last > 4 * 1024 * 1024 {
                             last = done;
-                            eprintln!("  {:.1} / {} MiB", done as f64 / 1048576.0, total.map(|t| format!("{:.1}", t as f64 / 1048576.0)).unwrap_or("?".into()));
+                            eprintln!(
+                                "  {:.1} / {} MiB",
+                                done as f64 / 1048576.0,
+                                total.map(|t| format!("{:.1}", t as f64 / 1048576.0)).unwrap_or("?".into())
+                            );
                         }
                     })?;
                     println!("rclone ready: {}", bin.display());
@@ -286,12 +288,30 @@ fn main() -> Result<()> {
                 }
                 LinkProvider::Drive | LinkProvider::Onedrive => {
                     let prov = if matches!(provider, LinkProvider::Drive) { Provider::Drive } else { Provider::OneDrive };
-                    let s = transport::authorize_oauth(&bin, &sb, prov, &mut |url| println!("Open this URL to grant access:\n  {url}"), Duration::from_secs(300))?;
+                    let s = transport::authorize_oauth(
+                        &bin,
+                        &sb,
+                        prov,
+                        &mut |url| println!("Open this URL to grant access:\n  {url}"),
+                        Duration::from_secs(300),
+                    )?;
                     (prov, s)
                 }
             };
             let sync_key = &v.keys().sync;
-            let id = v.db().upsert_sync_remote(sync_key, None, prov.rclone_type(), &format!("{prov:?}"), &remote_path, &section.to_body(), "auto")?;
+            let label = format!("{prov:?}");
+            let body = section.to_body();
+            let id = v.db().upsert_sync_remote(
+                sync_key,
+                &NewSyncRemote {
+                    id: None,
+                    provider: prov.rclone_type(),
+                    label: &label,
+                    remote_path: &remote_path,
+                    rclone_section: &body,
+                    transport: "auto",
+                },
+            )?;
             v.mark_dirty();
             v.save()?;
             println!("Linked {prov:?} as remote {id} → {remote_path}");
@@ -310,7 +330,12 @@ fn main() -> Result<()> {
                 let dir = std::fs::canonicalize(&dir).with_context(|| format!("{} must exist", dir.display()))?;
                 let section = RemoteSection::new(Provider::Local);
                 let remote_path = format!("{}/{}", dir.display(), path.file_name().context("vault file name")?.to_string_lossy());
-                let job = SyncJob { remote_id: &format!("local:{}", dir.display()), section: &section, remote_path: &remote_path, local_vault: &path };
+                let job = SyncJob {
+                    remote_id: &format!("local:{}", dir.display()),
+                    section: &section,
+                    remote_path: &remote_path,
+                    local_vault: &path,
+                };
                 let report = engine.sync_once(&job, &|_| Ok(()))?;
                 println!("{:?}: {}", report.decision, serde_json::to_string(&report.outcome)?);
                 return Ok(());
@@ -334,7 +359,18 @@ fn main() -> Result<()> {
                 }
                 // After any reload, so a pulled database cannot drop fresh tokens.
                 if let Some(fresh) = report.refreshed_section {
-                    v.db().upsert_sync_remote(&v.keys().sync, Some(&r.id), &r.provider, &r.label, &r.remote_path, &fresh.to_body(), &r.transport)?;
+                    let body = fresh.to_body();
+                    v.db().upsert_sync_remote(
+                        &v.keys().sync,
+                        &NewSyncRemote {
+                            id: Some(&r.id),
+                            provider: &r.provider,
+                            label: &r.label,
+                            remote_path: &r.remote_path,
+                            rclone_section: &body,
+                            transport: &r.transport,
+                        },
+                    )?;
                     v.mark_dirty();
                 }
             }

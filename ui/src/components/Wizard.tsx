@@ -42,6 +42,7 @@ export function Wizard({ backend, onCreated, onOpened }: Props) {
   const [pw2, setPw2] = useState('');
   const [kdf, setKdf] = useState<KdfProfile>('standard');
   const [path, setPath] = useState<string | null>(null);
+  const [seedDemo, setSeedDemo] = useState(false);
   const [enrol, setEnrol] = useState<TotpEnrollment | null>(null);
   const [code, setCode] = useState('');
   // cloud
@@ -105,7 +106,7 @@ export function Wizard({ backend, onCreated, onOpened }: Props) {
             e.preventDefault();
             run(async () => {
               if (pw !== pw2) throw new Error('Passwords do not match');
-              setEnrol(await backend.createVault({ path, displayName: name, password: pw, kdf, account: account || 'admin' }));
+              setEnrol(await backend.createVault({ path, displayName: name, password: pw, kdf, account: account || 'admin', seedDemo }));
               setStep('enroll');
             });
           }}
@@ -140,6 +141,10 @@ export function Wizard({ backend, onCreated, onOpened }: Props) {
               <b>Hardened</b> 1 GiB · 4 passes — for vaults synced to the cloud
             </label>
           </fieldset>
+          <label className="check">
+            <input type="checkbox" checked={seedDemo} onChange={(e) => setSeedDemo(e.target.checked)} />
+            Pre-load the demo topology (3 tenants, 14 hosts) to explore the canvas
+          </label>
           {backend.kind === 'tauri' && (
             <div className="field">
               <span>Location</span>

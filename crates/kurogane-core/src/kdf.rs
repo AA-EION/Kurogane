@@ -74,13 +74,11 @@ pub fn derive_mek(password: &[u8], salt: &[u8; SALT_LEN], params: &KdfParams) ->
     if password.is_empty() {
         return Err(Error::invalid("master password must not be empty"));
     }
-    let p = Params::new(params.m_cost_kib, params.t_cost, params.parallelism as u32, Some(32))
-        .map_err(|e| Error::KdfParams(e.to_string()))?;
+    let p =
+        Params::new(params.m_cost_kib, params.t_cost, params.parallelism as u32, Some(32)).map_err(|e| Error::KdfParams(e.to_string()))?;
     let argon = Argon2::new(Algorithm::Argon2id, Version::V0x13, p);
     let mut mek = Key256::new_zeroed();
-    argon
-        .hash_password_into(password, salt, mek.expose_mut())
-        .map_err(|e| Error::KdfParams(e.to_string()))?;
+    argon.hash_password_into(password, salt, mek.expose_mut()).map_err(|e| Error::KdfParams(e.to_string()))?;
     Ok(mek)
 }
 
@@ -125,9 +123,6 @@ mod tests {
         let a = Argon2::new_with_secret(&[3u8; 8], Algorithm::Argon2id, Version::V0x13, params).unwrap();
         let mut out = [0u8; 32];
         a.hash_password_into(&[1u8; 32], &[2u8; 16], &mut out).unwrap();
-        assert_eq!(
-            crate::crypto::hex(&out),
-            "0d640df58d78766c08c037a34a8b53c9d01ef0452d75b65eb52520e96b01e659"
-        );
+        assert_eq!(crate::crypto::hex(&out), "0d640df58d78766c08c037a34a8b53c9d01ef0452d75b65eb52520e96b01e659");
     }
 }

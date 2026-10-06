@@ -71,9 +71,7 @@ impl KeyRing {
     }
 
     pub fn all_memory_locked(&self) -> bool {
-        [&self.vdk, &self.payload, &self.database, &self.field, &self.totp, &self.sync]
-            .iter()
-            .all(|k| k.is_memory_locked())
+        [&self.vdk, &self.payload, &self.database, &self.field, &self.totp, &self.sync].iter().all(|k| k.is_memory_locked())
     }
 }
 

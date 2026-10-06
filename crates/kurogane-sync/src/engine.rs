@@ -26,7 +26,11 @@ pub enum TransportPreference {
 }
 
 /// Pick and prepare a transport. `progress` reports binary download bytes.
-pub fn select_transport(sandbox: &Sandbox, pref: TransportPreference, progress: impl FnMut(u64, Option<u64>)) -> Result<Box<dyn Transport>> {
+pub fn select_transport(
+    sandbox: &Sandbox,
+    pref: TransportPreference,
+    progress: impl FnMut(u64, Option<u64>),
+) -> Result<Box<dyn Transport>> {
     if pref != TransportPreference::Binary {
         match ContainerRuntime::detect() {
             Some(rt) => match rt.ensure_image(RCLONE_IMAGE) {

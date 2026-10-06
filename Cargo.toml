@@ -32,7 +32,7 @@ sha1 = "0.10"
 sha2 = "0.10"
 subtle = "2.6"
 getrandom = "0.2"
-zeroize = { version = "1.8", features = ["derive"] }
+zeroize = { version = "1.8", features = ["derive", "serde"] }
 region = "3"
 libc = "0.2"
 rusqlite = { version = "0.37", features = ["bundled-sqlcipher-vendored-openssl"] }

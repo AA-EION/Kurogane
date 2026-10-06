@@ -29,22 +29,12 @@ pub fn random_nonce() -> [u8; NONCE_LEN] {
 
 pub fn encrypt(key: &Key256, nonce: &[u8; NONCE_LEN], aad: &[u8], plaintext: &[u8]) -> Result<Vec<u8>> {
     let cipher = Aes256Gcm::new_from_slice(key.expose()).map_err(|_| Error::Crypto)?;
-    cipher
-        .encrypt(Nonce::from_slice(nonce), Payload { msg: plaintext, aad })
-        .map_err(|_| Error::Crypto)
+    cipher.encrypt(Nonce::from_slice(nonce), Payload { msg: plaintext, aad }).map_err(|_| Error::Crypto)
 }
 
-pub fn decrypt(
-    key: &Key256,
-    nonce: &[u8; NONCE_LEN],
-    aad: &[u8],
-    ciphertext: &[u8],
-) -> Result<Zeroizing<Vec<u8>>> {
+pub fn decrypt(key: &Key256, nonce: &[u8; NONCE_LEN], aad: &[u8], ciphertext: &[u8]) -> Result<Zeroizing<Vec<u8>>> {
     let cipher = Aes256Gcm::new_from_slice(key.expose()).map_err(|_| Error::Crypto)?;
-    cipher
-        .decrypt(Nonce::from_slice(nonce), Payload { msg: ciphertext, aad })
-        .map(Zeroizing::new)
-        .map_err(|_| Error::AuthFailed)
+    cipher.decrypt(Nonce::from_slice(nonce), Payload { msg: ciphertext, aad }).map(Zeroizing::new).map_err(|_| Error::AuthFailed)
 }
 
 /// Field-level sealing used for secret columns, the TOTP seed and sync tokens.

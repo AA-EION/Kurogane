@@ -374,7 +374,8 @@ impl Archive {
                 .collect(),
         };
         let manifest_json = serde_json::to_vec(&manifest)?;
-        let total: usize = 10 + self.entries.iter().map(|(p, d)| 10 + p.len() + d.len()).sum::<usize>() + 10 + MANIFEST_ENTRY.len() + manifest_json.len();
+        let total: usize =
+            10 + self.entries.iter().map(|(p, d)| 10 + p.len() + d.len()).sum::<usize>() + 10 + MANIFEST_ENTRY.len() + manifest_json.len();
         let mut out = Zeroizing::new(Vec::with_capacity(total));
         out.extend_from_slice(ARCHIVE_MAGIC);
         out.extend_from_slice(&ARCHIVE_VERSION.to_le_bytes());

@@ -124,7 +124,8 @@ impl RemoteSection {
             }
         }
         let t = opts.remove("type").ok_or_else(|| SyncError::Config("rclone section has no type".into()))?;
-        let provider = Provider::from_rclone_type(&t).ok_or_else(|| SyncError::Config(format!("unsupported rclone type {}", t.as_str())))?;
+        let provider =
+            Provider::from_rclone_type(&t).ok_or_else(|| SyncError::Config(format!("unsupported rclone type {}", t.as_str())))?;
         Ok(Self { provider, options: opts })
     }
 }
@@ -163,12 +164,18 @@ impl From<String> for Arg {
 pub fn common_flags() -> Vec<Arg> {
     [
         "--ask-password=false",
-        "--log-level", "NOTICE",
-        "--stats", "0",
-        "--retries", "3",
-        "--low-level-retries", "10",
-        "--contimeout", "30s",
-        "--timeout", "5m",
+        "--log-level",
+        "NOTICE",
+        "--stats",
+        "0",
+        "--retries",
+        "3",
+        "--low-level-retries",
+        "10",
+        "--contimeout",
+        "30s",
+        "--timeout",
+        "5m",
         "--use-mmap",
     ]
     .into_iter()
@@ -251,7 +258,10 @@ mod tests {
     #[test]
     fn parses_authorize_output() {
         let out = "2026/10/06 NOTICE: ...\nPaste the following into your remote machine --->\n{\"access_token\":\"a\",\"refresh_token\":\"r\",\"expiry\":\"2026-10-06T05:00:00Z\"}\n<---End paste\n";
-        assert_eq!(parse_authorize_output(out).unwrap().as_str(), r#"{"access_token":"a","refresh_token":"r","expiry":"2026-10-06T05:00:00Z"}"#);
+        assert_eq!(
+            parse_authorize_output(out).unwrap().as_str(),
+            r#"{"access_token":"a","refresh_token":"r","expiry":"2026-10-06T05:00:00Z"}"#
+        );
         assert!(parse_authorize_output("nothing").is_err());
         let line = "NOTICE: Log in and authorize rclone for access\nNOTICE: please go to the following link: http://127.0.0.1:53682/auth?state=abc123";
         assert_eq!(parse_auth_url(line).unwrap(), "http://127.0.0.1:53682/auth?state=abc123");

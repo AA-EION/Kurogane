@@ -132,15 +132,8 @@ impl UnlockedVault {
         let uri = totp::otpauth_uri(&secret, &cfg, TOTP_ISSUER, &opts.totp_account);
         let enrollment = TotpEnrollment { secret_base32: totp::secret_to_base32(&secret), qr_svg: totp::qr_svg(&uri)?, otpauth_uri: uri };
 
-        let mut vault = UnlockedVault {
-            path: path.to_path_buf(),
-            header,
-            keys,
-            db: Some(db),
-            work_db,
-            extra_entries: BTreeMap::new(),
-            dirty: false,
-        };
+        let mut vault =
+            UnlockedVault { path: path.to_path_buf(), header, keys, db: Some(db), work_db, extra_entries: BTreeMap::new(), dirty: false };
         vault.save()?;
         Ok((vault, enrollment))
     }
@@ -165,11 +158,8 @@ impl UnlockedVault {
             f.write_all(db_bytes)?;
             f.sync_all()?;
         }
-        let extra_entries = archive
-            .paths()
-            .filter(|p| *p != DB_ENTRY)
-            .map(|p| (p.to_string(), archive.get(p).unwrap_or_default().to_vec()))
-            .collect();
+        let extra_entries =
+            archive.paths().filter(|p| *p != DB_ENTRY).map(|p| (p.to_string(), archive.get(p).unwrap_or_default().to_vec())).collect();
 
         // Construct first so that any failure below drops (and shreds) it.
         let vault = UnlockedVault {
@@ -320,11 +310,8 @@ impl UnlockedVault {
             f.sync_all()?;
         }
         self.db = Some(Database::open(&self.work_db, &self.keys.database)?);
-        self.extra_entries = archive
-            .paths()
-            .filter(|p| *p != DB_ENTRY)
-            .map(|p| (p.to_string(), archive.get(p).unwrap_or_default().to_vec()))
-            .collect();
+        self.extra_entries =
+            archive.paths().filter(|p| *p != DB_ENTRY).map(|p| (p.to_string(), archive.get(p).unwrap_or_default().to_vec())).collect();
         self.header = header;
         self.dirty = false;
         Ok(())
@@ -363,7 +350,12 @@ mod tests {
     use super::*;
 
     fn opts(seed: bool) -> CreateOptions {
-        CreateOptions { display_name: "Test Vault".into(), kdf: KdfParams::insecure_for_tests(), totp_account: "ops@test".into(), seed_demo: seed }
+        CreateOptions {
+            display_name: "Test Vault".into(),
+            kdf: KdfParams::insecure_for_tests(),
+            totp_account: "ops@test".into(),
+            seed_demo: seed,
+        }
     }
 
     #[test]

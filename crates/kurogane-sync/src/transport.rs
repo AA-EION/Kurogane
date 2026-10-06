@@ -147,17 +147,24 @@ pub struct ContainerRunner {
     pub image: String,
 }
 
+/// (host directory, container mount point)
+type Mounts = Vec<(PathBuf, String)>;
+
 impl ContainerRunner {
     /// Map host paths to container mounts; returns (args, mounts).
-    fn map_args(args: &[Arg]) -> Result<(Vec<String>, Vec<(PathBuf, String)>)> {
-        let mut mounts: Vec<(PathBuf, String)> = Vec::new();
+    fn map_args(args: &[Arg]) -> Result<(Vec<String>, Mounts)> {
+        let mut mounts: Mounts = Vec::new();
         let mut mapped = Vec::with_capacity(args.len());
         for a in args {
             match a {
                 Arg::Lit(s) => mapped.push(s.clone()),
                 Arg::Local(p) => {
                     let parent = p.parent().ok_or_else(|| SyncError::Config(format!("no parent dir for {}", p.display())))?.to_path_buf();
-                    let name = p.file_name().ok_or_else(|| SyncError::Config(format!("no file name in {}", p.display())))?.to_string_lossy().into_owned();
+                    let name = p
+                        .file_name()
+                        .ok_or_else(|| SyncError::Config(format!("no file name in {}", p.display())))?
+                        .to_string_lossy()
+                        .into_owned();
                     let idx = match mounts.iter().position(|(d, _)| *d == parent) {
                         Some(i) => i,
                         None => {
@@ -176,10 +183,23 @@ impl ContainerRunner {
         let (mapped, mounts) = Self::map_args(args)?;
         let selinux = if self.runtime.flavor == RuntimeFlavor::Podman && cfg!(target_os = "linux") { ",Z" } else { "" };
         let mut v: Vec<String> = [
-            "run", "--rm", "--pull=never", "--network=bridge", "--read-only", "--cap-drop=ALL",
-            "--security-opt=no-new-privileges", "--pids-limit=256", "--memory=512m",
-            "--tmpfs", "/tmp:rw,size=64m,mode=1777",
-            "-e", "HOME=/tmp", "-e", "RCLONE_CONFIG=/config/rclone.conf", "-e", "RCLONE_CACHE_DIR=/tmp/cache",
+            "run",
+            "--rm",
+            "--pull=never",
+            "--network=bridge",
+            "--read-only",
+            "--cap-drop=ALL",
+            "--security-opt=no-new-privileges",
+            "--pids-limit=256",
+            "--memory=512m",
+            "--tmpfs",
+            "/tmp:rw,size=64m,mode=1777",
+            "-e",
+            "HOME=/tmp",
+            "-e",
+            "RCLONE_CONFIG=/config/rclone.conf",
+            "-e",
+            "RCLONE_CACHE_DIR=/tmp/cache",
         ]
         .into_iter()
         .map(String::from)

@@ -6,8 +6,7 @@ pub const RCLONE_DOWNLOAD_BASE: &str = "https://downloads.rclone.org";
 
 /// Multi-arch OCI index digest for `rclone/rclone:1.75.1`. Pinning by digest
 /// means a re-tagged or compromised tag on Docker Hub cannot change what runs.
-pub const RCLONE_IMAGE: &str =
-    "docker.io/rclone/rclone:1.75.1@sha256:45401ad7410db1d67ffdb58e19059ad20b0d8e0285a60e38bbec55cc1019c7a5";
+pub const RCLONE_IMAGE: &str = "docker.io/rclone/rclone:1.75.1@sha256:45401ad7410db1d67ffdb58e19059ad20b0d8e0285a60e38bbec55cc1019c7a5";
 
 /// (rust target_os, rust target_arch, rclone os, rclone arch, sha256 of zip)
 const PINNED: &[(&str, &str, &str, &str, &str)] = &[

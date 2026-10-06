@@ -70,7 +70,7 @@ struct NativeSecurity: View {
     var body: some View {
         Form {
             Section("Memory protection") {
-                Label(settings.flag("memoryLocked") ? "Key memory is locked" : "The OS refused to lock key memory",systemImage:settings.flag("memoryLocked") ? "checkmark.shield" : "exclamationmark.shield").foregroundStyle(settings.flag("memoryLocked") ? .secondary : .orange)
+                Label(settings.flag("memoryLocked") ? "Key memory is locked" : "The OS refused to lock key memory",systemImage:settings.flag("memoryLocked") ? "checkmark.shield" : "exclamationmark.shield").foregroundStyle(settings.flag("memoryLocked") ? Color.secondary : Color.orange)
                 Text("Key derivation: \(settings.text("kdfProfile")) · \(settings.row("kdf").number("mCostKib") / 1024) MiB · \(settings.row("kdf").number("tCost")) passes").font(.caption)
                 if !settings.flag("kdfMeetsFloor") { Text("Upgrade key derivation when changing your password.").foregroundStyle(.orange) }
             }

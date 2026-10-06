@@ -45,9 +45,19 @@ export function ServiceForm({ value, hostId, publish }: { value?: Service; hostI
     setError(null);
     try {
       const ports = s.ports.filter((p) => p.containerPort > 0);
+      const pending = domains.filter((d) => d.domain.trim());
+      if (pending.some((d) => !d.proxyId || !topo.proxies.some((p) => p.id === d.proxyId))) throw new Error('Choose a reverse proxy for each domain');
+      if (pending.length) {
+        const host = topo.hosts.find((h) => h.id === s.hostId);
+        if (!host || !primaryIp(host)) throw new Error('The machine needs a network card with a private IP before a proxy can route to it');
+        if (!ports.length) throw new Error('Add a port so the proxy knows where to send traffic');
+      }
       const saved = await backend.saveService({ ...s, image: blank(s.image), description: blank(s.description), ownerTenantId: blank(s.ownerTenantId), ports });
       let topology = saved.topology;
-      const pending = domains.filter((d) => d.domain.trim() && d.proxyId);
+      // Preserve the assigned ID immediately: a later proxy failure must not
+      // create another service on retry or hide successfully saved changes.
+      setS(topology.services.find((service) => service.id === saved.id)!);
+      applyTopology(topology, saved.id);
       if (pending.length) {
         const host = topology.hosts.find((h) => h.id === s.hostId);
         const svc = topology.services.find((x) => x.id === saved.id)!;
@@ -58,7 +68,7 @@ export function ServiceForm({ value, hostId, publish }: { value?: Service; hostI
         for (const proxyId of [...new Set(pending.map((d) => d.proxyId))]) {
           const proxy = topology.proxies.find((p) => p.id === proxyId)!;
           const routes: ProxyRoute[] = pending
-            .filter((d) => d.proxyId === proxyId)
+            .filter((d) => d.proxyId === proxyId && !proxy.routes.some((r) => r.serviceId === saved.id && r.domain === d.domain.trim() && r.pathPrefix === '/'))
             .map((d) => ({
               id: '',
               proxyId,
@@ -76,6 +86,7 @@ export function ServiceForm({ value, hostId, publish }: { value?: Service; hostI
               enabled: true,
             }));
           topology = (await backend.saveProxy({ ...proxy, routes: [...proxy.routes, ...routes] })).topology;
+          applyTopology(topology, saved.id);
         }
       }
       applyTopology(topology, saved.id);

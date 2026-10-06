@@ -84,6 +84,7 @@ public func receiveNativeJSON(_ pointer: UnsafePointer<CChar>) {
     weak var window: NSWindow?
     var eventMonitor: Any?
     private var lastTouch = Date.distantPast
+    private var vaultGeneration = 0
     var unlocked: Bool { status.text("stage") == "unlocked" }
     var items: [NativeItem] {
         ["tenant", "network", "host", "service", "proxy", "credential"].flatMap { kind in rows(kind).map { NativeItem(kind: kind, id: $0.text("id")) } }
@@ -103,12 +104,20 @@ public func receiveNativeJSON(_ pointer: UnsafePointer<CChar>) {
         Task { do { try await body() } catch { self.error = error.localizedDescription }; busy = false }
     }
     func refresh() async throws {
-        status = try await call("app_status") as? Row ?? [:]
-        if unlocked { topology = try await call("topology") as? Row ?? [:]; sync = try await call("sync_status") as? Row ?? [:] }
+        let generation = vaultGeneration
+        let next = try await call("app_status") as? Row ?? [:]
+        guard generation == vaultGeneration else { return }
+        status = next
+        if unlocked {
+            let picture = try await call("topology") as? Row ?? [:]
+            guard generation == vaultGeneration && unlocked else { return }
+            topology = picture
+            sync = try await call("sync_status") as? Row ?? [:]
+        }
         else { clearVault() }
         loading = false
     }
-    func clearVault() { topology = [:]; selected = nil; sheet = nil; query = ""; notice = nil }
+    func clearVault() { vaultGeneration += 1; topology = [:]; selected = nil; sheet = nil; query = ""; notice = nil }
     func start() {
         NativeBridge.shared.event = { [weak self] name, payload in
             guard let self else { return }
@@ -130,7 +139,8 @@ public func receiveNativeJSON(_ pointer: UnsafePointer<CChar>) {
             do { try await refresh() } catch { self.error = error.localizedDescription; loading = false }
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
-                if let next = try? await call("app_status") as? Row { let wasUnlocked = unlocked; status = next; if wasUnlocked && !unlocked { clearVault() } }
+                let generation = vaultGeneration
+                if let next = try? await call("app_status") as? Row, generation == vaultGeneration { let wasUnlocked = unlocked; status = next; if wasUnlocked && !unlocked { clearVault() } }
             }
         }
     }

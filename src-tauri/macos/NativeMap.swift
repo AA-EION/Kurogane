@@ -21,11 +21,13 @@ struct MapLayout {
         for tenant in topology.rows("tenants") {
             let hosts = topology.rows("hosts").filter { $0.text("tenantId") == tenant.text("id") }
             let start = y
+            let maxServices = hosts.map { host in topology.rows("services").filter { $0.text("hostId") == host.text("id") }.count }.max() ?? 0
+            let extra = CGFloat(max(0, maxServices - 3)) * 40
             nodes.append(MapNode(item: NativeItem(kind: "tenant", id: tenant.text("id")), row: tenant, rect: CGRect(x: 48, y: y, width: 220, height: 42)))
             y += 70
             for (index, host) in hosts.enumerated() {
                 let x: CGFloat = 80 + CGFloat(index % 2) * 310
-                let hostY = y + CGFloat(index / 2) * 255
+                let hostY = y + CGFloat(index / 2) * (255 + extra)
                 nodes.append(MapNode(item: NativeItem(kind: "host", id: host.text("id")), row: host, rect: CGRect(x: x, y: hostY, width: 245, height: 80)))
                 let services = topology.rows("services").filter { $0.text("hostId") == host.text("id") }
                 for (n, service) in services.enumerated() {
@@ -33,15 +35,6 @@ struct MapLayout {
                 }
             }
             // Rows expand for machines with many services so cards never overlap.
-            let maxServices = hosts.map { host in topology.rows("services").filter { $0.text("hostId") == host.text("id") }.count }.max() ?? 0
-            let extra = CGFloat(max(0, maxServices - 3)) * 40
-            if extra > 0 {
-                for index in nodes.indices where nodes[index].item.kind != "tenant" && nodes[index].rect.minY >= y {
-                    let node = nodes[index]
-                    let row = Int((node.rect.minY - y) / 255)
-                    nodes[index] = MapNode(item: node.item, row: node.row, rect: node.rect.offsetBy(dx: 0, dy: CGFloat(row) * extra))
-                }
-            }
             y += CGFloat(max(1, (hosts.count + 1) / 2)) * (255 + extra)
             zones.append(MapZone(id: tenant.text("id"), name: tenant.text("name"), rect: CGRect(x: 30, y: start - 18, width: 650, height: y - start)))
             y += 38
@@ -131,7 +124,7 @@ struct NativeMapDrawing: View {
                     Text(node.row.text("name")).font(.system(size: node.item.kind == "host" ? 13 : 11, weight: .semibold)).lineLimit(1)
                     if node.item.kind == "host" { Text(node.row.text("fqdn", node.row.rows("interfaces").first?.text("internalIp") ?? node.row.text("category"))).font(.system(size: 10, design: .monospaced)).foregroundStyle(.secondary).lineLimit(1) }
                 }; Spacer(minLength: 0)
-                if node.item.kind == "service" { Circle().fill(.green).frame(width: 5, height: 5) }
+                if node.item.kind == "service" { Circle().fill(.secondary).frame(width: 5, height: 5).accessibilityHidden(true) }
             }.padding(.horizontal, 12).frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(LinearGradient(colors: [Color(nsColor: .controlBackgroundColor), Color(nsColor: .windowBackgroundColor)], startPoint: .top, endPoint: .bottom), in: RoundedRectangle(cornerRadius: node.item.kind == "host" ? 12 : 7))
                 .overlay(RoundedRectangle(cornerRadius: node.item.kind == "host" ? 12 : 7).stroke(model.selected == node.item ? Color.accentColor : .gray.opacity(0.28), lineWidth: model.selected == node.item ? 2 : 1))

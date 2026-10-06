@@ -96,7 +96,11 @@ struct NativeAccount: View {
             }
             if !value.text("url").isEmpty { Button("Open URL") { model.perform { _ = try await model.call("launch_web",["url":value.text("url")]) } } }
             if value.row("owner").text("kind") == "host" {
-                HStack { Button("SSH with account") { model.perform { _ = try await model.call("launch_ssh",["hostId":value.row("owner").text("id"),"credentialId":value.text("id")]) } }; Button("RDP") { model.perform { _ = try await model.call("launch_rdp",["hostId":value.row("owner").text("id"),"credentialId":value.text("id")]) } } }
+                HStack {
+                    Button("SSH with account") { model.perform { _ = try await model.call("launch_ssh",["hostId":value.row("owner").text("id"),"credentialId":value.text("id")]) } }
+                    Button("RDP") { model.perform { _ = try await model.call("launch_rdp",["hostId":value.row("owner").text("id"),"credentialId":value.text("id")]) } }
+                }
+            }
         }
     }
 }

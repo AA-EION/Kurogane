@@ -42,7 +42,7 @@ Click anything on the map or in the sidebar to open its drawer. From there you c
 
 ### Import and export
 
-*Settings → Import & export* lets you **download an empty Excel template**. It has one sheet per kind of record, drop-down lists for every choice and a *Read me* sheet. Fill it in and import it. Kurogane checks every row first and shows what will be created or updated, and what is wrong (sheet and row). Nothing changes until you confirm.
+*Settings → Import & export* on Windows/Linux, or *Settings → Data* on macOS, lets you **download an empty Excel template**. It has one sheet per kind of record, drop-down lists for every choice and a *Read me* sheet. Fill it in and import it. Kurogane checks every row first and shows what will be created or updated, and what is wrong (sheet and row). Nothing changes until you confirm.
 
 You can also export the whole inventory to Excel or JSON, with or without passwords, save an encrypted backup of the vault, and export the map as PNG, SVG or a FossFLOW diagram. Map exports never contain passwords.
 
@@ -84,9 +84,9 @@ cd ui && npm test               # UI
 
 [`.github/workflows/release.yml`](.github/workflows/release.yml) builds Windows, universal macOS and Linux installers as GitHub Actions artifacts when manually dispatched. It has no release-creation step. CI verifies source changes separately.
 
-Appearance defaults to Light. Settings → General offers Light, Dark and System, saved on this computer. The material language follows Boundless and EION Studios. The [macOS port](docs/MACOS.md) uses SwiftUI for every visible view, including its native map, forms, inspectors, vault screens, and settings. Navigation uses native Liquid Glass on macOS 26 and newer. macOS source builds require Xcode 26+.
+Appearance defaults to Light. Settings → General offers Light, Dark and System, saved on this computer. The material language follows Boundless and EION Studios, with readable text in both appearances. The [macOS interface](docs/MACOS.md) uses SwiftUI for navigation, forms, inspectors, vault screens and settings. Its graph pane retains the original isometric renderer, including hosted services, VM relationships and proxy-route traces. Native navigation uses Liquid Glass on macOS 26 and newer. Native sheets fit their parent window, scroll their fields and retain visible action rows. macOS source builds require Xcode 26+.
 
-![Native SwiftUI map and service inspector](docs/img/macos-map.png)
+![Native navigation and service inspector around the shared isometric graph](docs/img/macos-map.png)
 
 ### Headless CLI
 
@@ -119,8 +119,8 @@ crates/kurogane-core/    encryption, vault file, SQLCipher database, editing, Ex
 crates/kurogane-sync/    pinned rclone, sandbox, folder sync, lineage and conflict handling
 crates/kurogane-cli/     `kurogane` headless tool
 src-tauri/               desktop shell: commands, sync scheduler, import/export, installer config
-  macos/                 complete SwiftUI presentation and direct Rust command bridge
-ui/src/                  React interface
+  macos/                 SwiftUI workspace, graph webview host and direct Rust command bridge
+ui/src/                  React interface and shared graph-only macOS entry
   canvas/                isometric layout, routing, map export
   components/            sidebar, drawer, settings, lock screen, first-run wizard, dialogs
   forms/                 company, network, machine, service, proxy, account forms

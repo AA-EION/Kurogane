@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-06T14:33:36.917616+00:00",
+  "generatedAt": "2026-10-06T15:30:29.569124+00:00",
   "title": "Design System: Kurogane",
   "extensions": {
     "colorMeta": {
@@ -120,14 +120,14 @@
         "role": "neutral",
         "displayName": "Quiet ink",
         "tonalRamp": [
-          "oklch(15.00% 0.00931 114.40)",
-          "oklch(26.43% 0.00931 114.40)",
-          "oklch(37.86% 0.00931 114.40)",
-          "oklch(49.29% 0.00931 114.40)",
-          "oklch(60.71% 0.00931 114.40)",
-          "oklch(72.14% 0.00931 114.40)",
-          "oklch(83.57% 0.00931 114.40)",
-          "oklch(95.00% 0.00931 114.40)"
+          "oklch(15.00% 0.00942 114.42)",
+          "oklch(26.43% 0.00942 114.42)",
+          "oklch(37.86% 0.00942 114.42)",
+          "oklch(49.29% 0.00942 114.42)",
+          "oklch(60.71% 0.00942 114.42)",
+          "oklch(72.14% 0.00942 114.42)",
+          "oklch(83.57% 0.00942 114.42)",
+          "oklch(95.00% 0.00942 114.42)"
         ]
       },
       "ember": {
@@ -162,14 +162,14 @@
         "role": "secondary",
         "displayName": "Health green",
         "tonalRamp": [
-          "oklch(15.00% 0.10690 155.49)",
-          "oklch(26.43% 0.10690 155.49)",
-          "oklch(37.86% 0.10690 155.49)",
-          "oklch(49.29% 0.10690 155.49)",
-          "oklch(60.71% 0.10690 155.49)",
-          "oklch(72.14% 0.10690 155.49)",
-          "oklch(83.57% 0.10690 155.49)",
-          "oklch(95.00% 0.10690 155.49)"
+          "oklch(15.00% 0.10041 154.98)",
+          "oklch(26.43% 0.10041 154.98)",
+          "oklch(37.86% 0.10041 154.98)",
+          "oklch(49.29% 0.10041 154.98)",
+          "oklch(60.71% 0.10041 154.98)",
+          "oklch(72.14% 0.10041 154.98)",
+          "oklch(83.57% 0.10041 154.98)",
+          "oklch(95.00% 0.10041 154.98)"
         ]
       },
       "warn": {
@@ -310,6 +310,34 @@
           "oklch(72.14% 0.00873 91.51)",
           "oklch(83.57% 0.00873 91.51)",
           "oklch(95.00% 0.00873 91.51)"
+        ]
+      },
+      "slab-text": {
+        "role": "neutral",
+        "displayName": "Machine label ink",
+        "tonalRamp": [
+          "oklch(15.00% 0.00400 128.64)",
+          "oklch(26.43% 0.00400 128.64)",
+          "oklch(37.86% 0.00400 128.64)",
+          "oklch(49.29% 0.00400 128.64)",
+          "oklch(60.71% 0.00400 128.64)",
+          "oklch(72.14% 0.00400 128.64)",
+          "oklch(83.57% 0.00400 128.64)",
+          "oklch(95.00% 0.00400 128.64)"
+        ]
+      },
+      "slab-muted": {
+        "role": "neutral",
+        "displayName": "Machine technical ink",
+        "tonalRamp": [
+          "oklch(15.00% 0.00855 116.02)",
+          "oklch(26.43% 0.00855 116.02)",
+          "oklch(37.86% 0.00855 116.02)",
+          "oklch(49.29% 0.00855 116.02)",
+          "oklch(60.71% 0.00855 116.02)",
+          "oklch(72.14% 0.00855 116.02)",
+          "oklch(83.57% 0.00855 116.02)",
+          "oklch(95.00% 0.00855 116.02)"
         ]
       },
       "route": {
@@ -690,6 +718,34 @@
           "oklch(95.00% 0.00337 286.24)"
         ]
       },
+      "dark-slab-text": {
+        "role": "neutral",
+        "displayName": "Charcoal appearance: Machine label ink",
+        "tonalRamp": [
+          "oklch(15.00% 0.00544 95.10)",
+          "oklch(26.43% 0.00544 95.10)",
+          "oklch(37.86% 0.00544 95.10)",
+          "oklch(49.29% 0.00544 95.10)",
+          "oklch(60.71% 0.00544 95.10)",
+          "oklch(72.14% 0.00544 95.10)",
+          "oklch(83.57% 0.00544 95.10)",
+          "oklch(95.00% 0.00544 95.10)"
+        ]
+      },
+      "dark-slab-muted": {
+        "role": "neutral",
+        "displayName": "Charcoal appearance: Machine technical ink",
+        "tonalRamp": [
+          "oklch(15.00% 0.00982 93.59)",
+          "oklch(26.43% 0.00982 93.59)",
+          "oklch(37.86% 0.00982 93.59)",
+          "oklch(49.29% 0.00982 93.59)",
+          "oklch(60.71% 0.00982 93.59)",
+          "oklch(72.14% 0.00982 93.59)",
+          "oklch(83.57% 0.00982 93.59)",
+          "oklch(95.00% 0.00982 93.59)"
+        ]
+      },
       "dark-route": {
         "role": "secondary",
         "displayName": "Charcoal appearance: Route copper",
@@ -758,34 +814,6 @@
           "oklch(72.14% 0.00400 128.64)",
           "oklch(83.57% 0.00400 128.64)",
           "oklch(95.00% 0.00400 128.64)"
-        ]
-      },
-      "native-map-ground": {
-        "role": "neutral",
-        "displayName": "Native warm map support",
-        "tonalRamp": [
-          "oklch(15.00% 0.00684 87.77)",
-          "oklch(26.43% 0.00684 87.77)",
-          "oklch(37.86% 0.00684 87.77)",
-          "oklch(49.29% 0.00684 87.77)",
-          "oklch(60.71% 0.00684 87.77)",
-          "oklch(72.14% 0.00684 87.77)",
-          "oklch(83.57% 0.00684 87.77)",
-          "oklch(95.00% 0.00684 87.77)"
-        ]
-      },
-      "native-dark-map-ground": {
-        "role": "neutral",
-        "displayName": "Native charcoal map support",
-        "tonalRamp": [
-          "oklch(15.00% 0.00260 286.13)",
-          "oklch(26.43% 0.00260 286.13)",
-          "oklch(37.86% 0.00260 286.13)",
-          "oklch(49.29% 0.00260 286.13)",
-          "oklch(60.71% 0.00260 286.13)",
-          "oklch(72.14% 0.00260 286.13)",
-          "oklch(83.57% 0.00260 286.13)",
-          "oklch(95.00% 0.00260 286.13)"
         ]
       }
     },
@@ -894,7 +922,7 @@
       "refersTo": "button-secondary",
       "description": "Web specimen. Standard workspace action with its implemented resting, hover, focus, pressed and disabled treatments.",
       "html": "<button class=\"ds-btn-secondary\">New company</button>",
-      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 14px;border-radius:9px;font:600 13px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);cursor:pointer;white-space:nowrap;background:linear-gradient(180deg,var(--surface-top,#fffefa),var(--surface-bottom,#e8e5de));color:var(--text, #20211f);border:1px solid var(--line-2, #b9b6ae);box-shadow:var(--raised, inset 0 1px 0 rgba(255,255,255,.9), 0 1px 2px rgba(38,35,28,.15));}.ds-btn-secondary:hover:not(:disabled){border-color:var(--text-3, #696a64);}.ds-btn-secondary:focus-visible{outline:2px solid var(--info,#315f91);outline-offset:3px;}.ds-btn-secondary:active:not(:disabled){box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));transform:translateY(1px);}.ds-btn-secondary:disabled{opacity:.45;cursor:not-allowed;}"
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 14px;border-radius:9px;font:600 13px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);cursor:pointer;white-space:nowrap;background:linear-gradient(180deg,var(--surface-top,#fffefa),var(--surface-bottom,#e8e5de));color:var(--text, #20211f);border:1px solid var(--line-2, #b9b6ae);box-shadow:var(--raised, inset 0 1px 0 rgba(255,255,255,.9), 0 1px 2px rgba(38,35,28,.15));}.ds-btn-secondary:hover:not(:disabled){border-color:var(--text-3, #62635d);}.ds-btn-secondary:focus-visible{outline:2px solid var(--info,#315f91);outline-offset:3px;}.ds-btn-secondary:active:not(:disabled){box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));transform:translateY(1px);}.ds-btn-secondary:disabled{opacity:.45;cursor:not-allowed;}"
     },
     {
       "name": "Ghost action",
@@ -902,7 +930,7 @@
       "refersTo": "button-ghost",
       "description": "Web specimen. Standard workspace action with its implemented resting, hover, focus, pressed and disabled treatments.",
       "html": "<button class=\"ds-btn-ghost\">Cancel</button>",
-      "css": ".ds-btn-ghost{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 14px;border-radius:9px;font:600 13px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);cursor:pointer;white-space:nowrap;background:transparent;color:var(--text-2, #52534e);border:1px solid transparent;box-shadow:none;}.ds-btn-ghost:hover:not(:disabled){background:var(--panel-2, #e5e3dd);border-color:var(--text-3, #696a64);}.ds-btn-ghost:focus-visible{outline:2px solid var(--info,#315f91);outline-offset:3px;}.ds-btn-ghost:active:not(:disabled){box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));transform:translateY(1px);}.ds-btn-ghost:disabled{opacity:.45;cursor:not-allowed;}"
+      "css": ".ds-btn-ghost{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 14px;border-radius:9px;font:600 13px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);cursor:pointer;white-space:nowrap;background:transparent;color:var(--text-2, #52534e);border:1px solid transparent;box-shadow:none;}.ds-btn-ghost:hover:not(:disabled){background:var(--panel-2, #e5e3dd);border-color:var(--text-3, #62635d);}.ds-btn-ghost:focus-visible{outline:2px solid var(--info,#315f91);outline-offset:3px;}.ds-btn-ghost:active:not(:disabled){box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));transform:translateY(1px);}.ds-btn-ghost:disabled{opacity:.45;cursor:not-allowed;}"
     },
     {
       "name": "Recessed field",
@@ -910,7 +938,7 @@
       "refersTo": "field",
       "description": "Web specimen. An inset editable value with explicit label and keyboard focus.",
       "html": "<label class=\"ds-field\"><span>Vault name</span><input class=\"ds-input\" value=\"Demo Infrastructure\" placeholder=\"Vault name\"></label>",
-      "css": ".ds-field{display:flex;flex-direction:column;gap:5px;font:600 12px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);color:var(--text-2, #52534e);}.ds-input{min-width:0;background:var(--panel, #fcfbf8);border:1px solid var(--line-2, #b9b6ae);border-radius:8px;padding:8px 10px;color:var(--text, #20211f);font:400 13px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));caret-color:var(--text, #20211f);}.ds-input::placeholder{color:var(--text-3, #696a64);opacity:1;}.ds-input:hover{border-color:var(--text-3, #696a64);}.ds-input:focus{border-color:var(--info,#315f91);box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));}.ds-input:focus-visible{outline:2px solid var(--info,#315f91);outline-offset:3px;}"
+      "css": ".ds-field{display:flex;flex-direction:column;gap:5px;font:600 12px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);color:var(--text-2, #52534e);}.ds-input{min-width:0;background:var(--panel, #fcfbf8);border:1px solid var(--line-2, #b9b6ae);border-radius:8px;padding:8px 10px;color:var(--text, #20211f);font:400 13px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));caret-color:var(--text, #20211f);}.ds-input::placeholder{color:var(--text-3, #62635d);opacity:1;}.ds-input:hover{border-color:var(--text-3, #62635d);}.ds-input:focus{border-color:var(--info,#315f91);box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));}.ds-input:focus-visible{outline:2px solid var(--info,#315f91);outline-offset:3px;}"
     },
     {
       "name": "Inventory navigation",
@@ -918,7 +946,7 @@
       "refersTo": "navigation",
       "description": "Web specimen. Inset tab support with a raised selected navigation button.",
       "html": "<nav class=\"ds-tabs\" aria-label=\"Workspace\"><button class=\"ds-tab ds-tab-selected\" aria-current=\"page\">Inventory</button><button class=\"ds-tab\">Accounts</button></nav>",
-      "css": ".ds-tabs{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:3px;border-radius:9px;background:var(--panel-2, #e5e3dd);box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));}.ds-tab{padding:8px 5px;border:0;border-radius:8px;background:transparent;color:var(--text-3, #696a64);font:600 12px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);cursor:pointer;}.ds-tab-selected{background:linear-gradient(180deg,var(--surface-top,#fffefa),var(--surface-bottom,#e8e5de));color:var(--text, #20211f);box-shadow:var(--raised, inset 0 1px 0 rgba(255,255,255,.9), 0 1px 2px rgba(38,35,28,.15));}.ds-tab:hover{color:var(--text, #20211f);}.ds-tab:focus-visible{outline:2px solid var(--info,#315f91);outline-offset:3px;}.ds-tab:active{box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));}"
+      "css": ".ds-tabs{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:3px;border-radius:9px;background:var(--panel-2, #e5e3dd);box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));}.ds-tab{padding:8px 5px;border:0;border-radius:8px;background:transparent;color:var(--text-3, #62635d);font:600 12px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);cursor:pointer;}.ds-tab-selected{background:linear-gradient(180deg,var(--surface-top,#fffefa),var(--surface-bottom,#e8e5de));color:var(--text, #20211f);box-shadow:var(--raised, inset 0 1px 0 rgba(255,255,255,.9), 0 1px 2px rgba(38,35,28,.15));}.ds-tab:hover{color:var(--text, #20211f);}.ds-tab:focus-visible{outline:2px solid var(--info,#315f91);outline-offset:3px;}.ds-tab:active{box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));}"
     },
     {
       "name": "Status and action chips",
@@ -926,7 +954,7 @@
       "refersTo": "badge-chip",
       "description": "Web specimen. Fine bordered annotation beside a compact secondary action.",
       "html": "<div class=\"ds-chips\"><span class=\"ds-badge ds-badge-ok\">HTTPS</span><button class=\"ds-chip-action\">+ Public domain</button></div>",
-      "css": ".ds-chips{display:flex;align-items:center;flex-wrap:wrap;gap:6px;}.ds-badge{padding:2px 7px;border-radius:99px;border:1px solid var(--line-2, #b9b6ae);color:var(--text-2, #52534e);font:600 10.5px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);}.ds-badge-ok{color:var(--ok,#25784b);border-color:rgba(60,207,142,.4);}.ds-chip-action{padding:2px 8px;border:1px solid var(--line-2, #b9b6ae);border-radius:99px;background:transparent;color:var(--text-2, #52534e);font:400 11px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);cursor:pointer;}.ds-chip-action:hover{border-color:var(--ember,#343d42);color:var(--text, #20211f);}.ds-chip-action:focus-visible{outline:2px solid var(--info,#315f91);outline-offset:3px;}.ds-chip-action:active{box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));}"
+      "css": ".ds-chips{display:flex;align-items:center;flex-wrap:wrap;gap:6px;}.ds-badge{padding:2px 7px;border-radius:99px;border:1px solid var(--line-2, #b9b6ae);color:var(--text-2, #52534e);font:600 10.5px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);}.ds-badge-ok{color:var(--ok,#206c42);border-color:rgba(60,207,142,.4);}.ds-chip-action{padding:2px 8px;border:1px solid var(--line-2, #b9b6ae);border-radius:99px;background:transparent;color:var(--text-2, #52534e);font:400 11px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);cursor:pointer;}.ds-chip-action:hover{border-color:var(--ember,#343d42);color:var(--text, #20211f);}.ds-chip-action:focus-visible{outline:2px solid var(--info,#315f91);outline-offset:3px;}.ds-chip-action:active{box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));}"
     },
     {
       "name": "Settings card",
@@ -934,7 +962,7 @@
       "refersTo": "card",
       "description": "Web specimen. A quiet contained settings group on warm secondary ground.",
       "html": "<section class=\"ds-card\"><h3>Appearance</h3><p>Saved on this computer.</p></section>",
-      "css": ".ds-card{display:flex;flex-direction:column;gap:10px;background:var(--bg-2, #f6f4f0);color:var(--text, #20211f);border:1px solid var(--line, #d1cec6);border-radius:12px;padding:14px;font:400 13.5px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);}.ds-card h3{margin:0;font-size:14px;font-weight:700;}.ds-card p{margin:0;color:var(--text-3, #696a64);font-size:12px;}"
+      "css": ".ds-card{display:flex;flex-direction:column;gap:10px;background:var(--bg-2, #f6f4f0);color:var(--text, #20211f);border:1px solid var(--line, #d1cec6);border-radius:12px;padding:14px;font:400 13.5px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);}.ds-card h3{margin:0;font-size:14px;font-weight:700;}.ds-card p{margin:0;color:var(--text-3, #62635d);font-size:12px;}"
     },
     {
       "name": "Appearance selector",
@@ -958,12 +986,12 @@
       "refersTo": "inspector",
       "description": "Web specimen. Floating ivory containment with satin title area and technical details.",
       "html": "<article class=\"ds-inspector\"><header><div><span class=\"ds-kicker\">Docker service · app-01</span><h2>gitea</h2></div><button class=\"ds-close\" aria-label=\"Close inspector\">×</button></header><div class=\"ds-inspector-body\"><span>Machine</span><code>app-01 · 10.10.0.21</code></div></article>",
-      "css": ".ds-inspector{width:380px;max-width:100%;overflow:hidden;background:var(--panel, #fcfbf8);border:1px solid var(--line, #d1cec6);border-radius:14px;box-shadow:var(--shadow, 0 2px 4px rgba(38,35,28,.08), 0 16px 36px -16px rgba(38,35,28,.25));color:var(--text, #20211f);font:400 13.5px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);}.ds-inspector header{display:flex;justify-content:space-between;gap:12px;padding:20px 18px;background:linear-gradient(var(--surface-top,#fffefa),var(--bg-2,#f6f4f0));border-bottom:1px solid var(--line, #d1cec6);}.ds-kicker{font-size:11px;color:var(--text-3, #696a64);}.ds-inspector h2{margin:2px 0 6px;font-size:18px;font-weight:700;letter-spacing:.01em;overflow-wrap:anywhere;}.ds-close{width:30px;height:30px;border:0;border-radius:7px;background:transparent;color:var(--text-3, #696a64);font:400 20px var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);cursor:pointer;}.ds-close:hover{background:var(--panel-2, #e5e3dd);color:var(--text, #20211f);}.ds-close:focus-visible{outline:2px solid var(--info,#315f91);outline-offset:3px;}.ds-close:active{box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));}.ds-inspector-body{display:grid;grid-template-columns:112px minmax(0,1fr);gap:10px;padding:18px;color:var(--text-3, #696a64);}.ds-inspector code{color:var(--text, #20211f);font:400 .92em/1.45 var(--mono,ui-monospace,Consolas,monospace);overflow-wrap:anywhere;user-select:text;}"
+      "css": ".ds-inspector{width:380px;max-width:100%;overflow:hidden;background:var(--panel, #fcfbf8);border:1px solid var(--line, #d1cec6);border-radius:14px;box-shadow:var(--shadow, 0 2px 4px rgba(38,35,28,.08), 0 16px 36px -16px rgba(38,35,28,.25));color:var(--text, #20211f);font:400 13.5px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);}.ds-inspector header{display:flex;justify-content:space-between;gap:12px;padding:20px 18px;background:linear-gradient(var(--surface-top,#fffefa),var(--bg-2,#f6f4f0));border-bottom:1px solid var(--line, #d1cec6);}.ds-kicker{font-size:11px;color:var(--text-3, #62635d);}.ds-inspector h2{margin:2px 0 6px;font-size:18px;font-weight:700;letter-spacing:.01em;overflow-wrap:anywhere;}.ds-close{width:30px;height:30px;border:0;border-radius:7px;background:transparent;color:var(--text-3, #62635d);font:400 20px var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);cursor:pointer;}.ds-close:hover{background:var(--panel-2, #e5e3dd);color:var(--text, #20211f);}.ds-close:focus-visible{outline:2px solid var(--info,#315f91);outline-offset:3px;}.ds-close:active{box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));}.ds-inspector-body{display:grid;grid-template-columns:112px minmax(0,1fr);gap:10px;padding:18px;color:var(--text-3, #62635d);}.ds-inspector code{color:var(--text, #20211f);font:400 .92em/1.45 var(--mono,ui-monospace,Consolas,monospace);overflow-wrap:anywhere;user-select:text;}"
     }
   ],
   "narrative": {
     "northStar": "Satin ivory and ink",
-    "overview": "Kurogane uses natural, semi-real skeuomorphism: pale warm surfaces, legible ink, fine beveled edges and controls that feel pressed into or raised above their support. Boundless's instrument plates, inset glass and physical button states are the primary reference. EION Studios contributes the warm monochrome character. This is an adaptation of those materials to an infrastructure workspace; the reference applications' font assets and theme transition system are not bundled here.\n\nLight is the initial appearance. Dark uses charcoal plates and pale ink while preserving the same physical hierarchy. Typography remains compact and familiar; monochrome chrome gives topology and status room to carry meaning. The existing application logos remain intact, and the visible material treatment is built with CSS, SVG and native drawing rather than new raster textures.\n\nEvery macOS view is SwiftUI, hosted in the application window by `NSHostingView`. Native system surfaces, grouped forms, SF Symbols and platform controls express the same warm, tactile direction, while the map uses drawn company grounds, machine slabs and raised service cards. The navigation control group uses Liquid Glass on macOS 26 and newer and ultra-thin material on macOS 13–25. Windows and Linux use the React workspace.",
+    "overview": "Kurogane uses natural, semi-real skeuomorphism: pale warm surfaces, legible ink, fine beveled edges and controls that feel pressed into or raised above their support. Boundless's instrument plates, inset glass and physical button states are the primary reference. EION Studios contributes the warm monochrome character. This is an adaptation of those materials to an infrastructure workspace; the reference applications' font assets and theme transition system are not bundled here.\n\nLight is the initial appearance. Dark uses charcoal plates and pale ink while preserving the same physical hierarchy. Typography remains compact and familiar; monochrome chrome gives topology and status room to carry meaning. The existing application logos remain intact, and the visible material treatment is built with CSS, SVG and native drawing rather than new raster textures.\n\nThe macOS workspace is hosted by `NSHostingView`: SwiftUI owns navigation, inventory, inspectors, forms, settings and vault workflows. Its graph pane embeds the original React/SVG `IsoCanvas` in the existing `WKWebView`, preserving meaningful company grounds, machine slabs, hosted services and route traces. Native system surfaces, grouped forms, SF Symbols and platform controls express the warm, tactile direction. Each native field retains a separate label and control row; sheets keep their action footers visible. Navigation uses Liquid Glass on macOS 26 and newer and ultra-thin material on macOS 13–25. Windows and Linux use the complete React workspace.",
     "keyCharacteristics": [
       "Warm white surfaces and charcoal alternatives.",
       "Raised satin actions and recessed fields.",
@@ -979,7 +1007,7 @@
       },
       {
         "name": "The Paired Appearance Rule",
-        "body": "Web surfaces and text resolve through the existing semantic custom properties in both appearances; native surfaces and text use the corresponding dynamic platform roles.",
+        "body": "Web and graph surfaces use the existing semantic custom properties in both appearances; native surfaces use platform materials and readable dynamic foreground roles. Check both active and inactive native windows.",
         "section": "colors"
       },
       {
@@ -999,13 +1027,13 @@
       "**Do** use status words and distinguishable connection treatments alongside color.",
       "**Do** keep technical values selectable and keyboard focus clearly visible.",
       "**Do** preserve the existing logos and carry the semantic material roles into native macOS views.",
-      "**Do** inspect web light, dark, compact, narrow and settings states, plus native light, dark and sheet states; web evidence is in `.impeccable/review` and macOS evidence in `.impeccable/review/native-verdict`."
+      "**Do** inspect light, dark, active and inactive native windows, a populated shared graph, and real attached sheets with their footers visible at compact sizes."
     ],
     "donts": [
       "**Don't** replace the warm neutral chrome with decorative saturated surfaces.",
       "**Don't** use low-opacity text to quiet important details over the map.",
       "**Don't** erase pressed, focused, selected or disabled states when adding a control.",
-      "**Don't** replace native SwiftUI forms and platform control feedback with webview replicas, or treat presentation captures as proof of bridge workflow execution.",
+      "**Don't** move native forms or vault workflows into the graph webview, or treat empty-fixture screenshots and presentation captures as proof of bridge workflow execution.",
       "**Don't** add raster textures to reproduce materials already expressed by CSS and SVG."
     ]
   }

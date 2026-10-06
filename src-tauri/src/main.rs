@@ -10,6 +10,8 @@ mod commands;
 mod io;
 mod state;
 mod sync;
+#[cfg(target_os = "macos")]
+mod native;
 
 use std::ffi::OsString;
 use std::path::PathBuf;
@@ -79,14 +81,7 @@ fn main() {
             if let Some(window) = app.get_webview_window("main") {
                 if let Ok(pointer) = window.ns_window() {
                     let pointer = pointer as usize;
-                    app.handle().run_on_main_thread(move || {
-                        extern "C" {
-                            fn kurogane_install_swift_shell(window: *mut std::ffi::c_void);
-                        }
-                        // Swift installs native navigation on this NSWindow;
-                        // ownership and the vault lifecycle remain with Tauri.
-                        unsafe { kurogane_install_swift_shell(pointer as *mut std::ffi::c_void) };
-                    })?;
+                    native::install(app.handle(), pointer)?;
                 }
             }
 

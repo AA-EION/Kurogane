@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useId, useRef, useState } from 'react';
+import { type ReactNode, isValidElement, useEffect, useId, useRef, useState } from 'react';
 import type { Option } from '../options';
 import { Icon } from './Icon';
 
@@ -57,12 +57,15 @@ export function Modal({ title, subtitle, onClose, children, footer, wide, icon }
 }
 
 export function Field({ label, hint, children, required, span }: { label: string; hint?: ReactNode; children: ReactNode; required?: boolean; span?: 1 | 2 | 3 }) {
+  // A <label> changes the accessible name of the first button. Segmented
+  // controls need a labelled group so each option retains its own name.
+  const Tag = isValidElement(children) && children.type === Segmented ? 'div' : 'label';
   return (
-    <label className={`f-field span-${span ?? 1}`}>
+    <Tag className={`f-field span-${span ?? 1}`} role={Tag === 'div' ? 'group' : undefined} aria-label={Tag === 'div' ? label : undefined}>
       <span className="f-label">{label}{required && <i className="req">*</i>}</span>
       {children}
       {hint && <small className="f-hint">{hint}</small>}
-    </label>
+    </Tag>
   );
 }
 
@@ -158,7 +161,7 @@ export function Segmented({ value, onChange, options }: { value: string; onChang
   return (
     <div className="segmented">
       {options.map((o) => (
-        <button type="button" key={o.value} className={value === o.value ? 'on' : ''} onClick={() => onChange(o.value)}>{o.label}</button>
+        <button type="button" key={o.value} aria-pressed={value === o.value} className={value === o.value ? 'on' : ''} onClick={() => onChange(o.value)}>{o.label}</button>
       ))}
     </div>
   );

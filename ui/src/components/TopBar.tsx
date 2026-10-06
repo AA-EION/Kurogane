@@ -43,7 +43,7 @@ export function TopBar({ onSearch, remainingSecs, timeoutSecs, onLock, memoryLoc
       <Brand />
       <div className="vault-name" title={topo.vaultName}>{topo.vaultName}</div>
       {!memoryLocked && <span className="pill danger" title="The OS refused to lock key memory">memory not locked</span>}
-      <button className="search-trigger" onClick={onSearch}>
+      <button className="search-trigger" aria-label="Search inventory" title={`Search inventory (${mod}+K)`} onClick={onSearch}>
         <Icon name="search" size={15} />
         <span>Search hosts, IPs, ports, domains…</span>
         <kbd>{mod}</kbd><kbd>K</kbd>

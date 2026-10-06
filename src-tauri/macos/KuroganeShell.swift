@@ -1,127 +1,258 @@
 import AppKit
 import SwiftUI
-import WebKit
+import Combine
 
-// Native SwiftUI navigation lives in the existing Tauri NSWindow. The shared
-// workspace keeps all editors and the isometric map; Rust still owns secrets.
-// No duplicate database, local HTTP server or second vault process is used.
-@MainActor
-final class ShellModel: NSObject, ObservableObject, WKScriptMessageHandler {
-    weak var webView: WKWebView?
+typealias Row = [String: Any]
+extension Dictionary where Key == String, Value == Any {
+    var entityID: String { text("id") }
+    func text(_ key: String, _ fallback: String = "") -> String { self[key] as? String ?? fallback }
+    func flag(_ key: String) -> Bool { self[key] as? Bool ?? false }
+    func number(_ key: String, _ fallback: Int = 0) -> Int { (self[key] as? NSNumber)?.intValue ?? fallback }
+    func rows(_ key: String) -> [Row] { self[key] as? [Row] ?? [] }
+    func row(_ key: String) -> Row { self[key] as? Row ?? [:] }
+}
+struct NativeItem: Identifiable, Hashable {
+    let kind: String
+    let id: String
+}
+struct NativeSheet: Identifiable {
+    let id = UUID()
+    var kind: String
+    var item: Row = [:]
+}
+struct NativeFailure: LocalizedError {
+    let message: String
+    var errorDescription: String? { message }
+}
+#if !NATIVE_PREVIEW
+@_silgen_name("kurogane_native_request")
+func rustRequest(_ message: UnsafePointer<CChar>)
+#endif
+
+@MainActor final class NativeBridge {
+    static let shared = NativeBridge()
+    private var pending: [String: CheckedContinuation<Any, Error>] = [:]
+    var event: ((String, Any) -> Void)?
+    func call(_ command: String, _ args: Row = [:]) async throws -> Any {
+        #if NATIVE_PREVIEW
+        return NativeFixture.reply(command, args)
+        #else
+        let id = UUID().uuidString
+        let data = try JSONSerialization.data(withJSONObject: ["id": id, "command": command, "args": args])
+        let message = String(decoding: data, as: UTF8.self)
+        return try await withCheckedThrowingContinuation { continuation in
+            pending[id] = continuation
+            message.withCString { rustRequest($0) }
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 300_000_000_000)
+                if let expired = pending.removeValue(forKey: id) { expired.resume(throwing: NativeFailure(message: "The operation timed out. Try again.")) }
+            }
+        }
+        #endif
+    }
+    func receive(_ data: Data) {
+        guard let object = try? JSONSerialization.jsonObject(with: data) as? Row else { return }
+        if let name = object["event"] as? String { event?(name, object["payload"] ?? NSNull()); return }
+        guard let continuation = pending.removeValue(forKey: object.text("id")) else { return }
+        if let error = object["error"] as? String { continuation.resume(throwing: NativeFailure(message: error)) }
+        else { continuation.resume(returning: object["result"] ?? NSNull()) }
+    }
+}
+@_cdecl("kurogane_native_receive_json")
+public func receiveNativeJSON(_ pointer: UnsafePointer<CChar>) {
+    let data = Data(String(cString: pointer).utf8)
+    DispatchQueue.main.async { NativeBridge.shared.receive(data) }
+}
+
+@MainActor final class NativeModel: ObservableObject {
+    @Published var status: Row = [:]
+    @Published var topology: Row = [:]
+    @Published var sync: Row = [:]
+    @Published var selected: NativeItem?
+    @Published var sheet: NativeSheet?
+    @Published var query = ""
+    @Published var error: String?
+    @Published var notice: String?
+    @Published var loading = true
+    @Published var busy = false
+    @Published var cloudStep = ""
+    @Published var fit = UUID()
+    @Published var mapMode = true
+    @Published var appearance = UserDefaults.standard.string(forKey: "kurogane.appearance") ?? "light" {
+        didSet { UserDefaults.standard.set(appearance, forKey: "kurogane.appearance"); applyAppearance() }
+    }
     weak var window: NSWindow?
-    @Published var unlocked = false
-    @Published var title = "Kurogane"
-    @Published var companies = false
-    @Published var hosts = false
-    @Published var sync = "Set up sync"
-    @Published var syncing = false
-
-    func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
-        if message.name == "kuroganeAppearance", let theme = message.body as? String {
-            window?.appearance = NSAppearance(named: theme == "dark" ? .darkAqua : .aqua)
-        } else if message.name == "kuroganeState", let state = message.body as? [String: Any] {
-            unlocked = state["unlocked"] as? Bool ?? false
-            title = state["title"] as? String ?? "Kurogane"
-            companies = state["companies"] as? Bool ?? false
-            hosts = state["hosts"] as? Bool ?? false
-            sync = state["sync"] as? String ?? "Set up sync"
-            syncing = state["syncing"] as? Bool ?? false
+    var eventMonitor: Any?
+    private var lastTouch = Date.distantPast
+    var unlocked: Bool { status.text("stage") == "unlocked" }
+    var items: [NativeItem] {
+        ["tenant", "network", "host", "service", "proxy", "credential"].flatMap { kind in rows(kind).map { NativeItem(kind: kind, id: $0.text("id")) } }
+            .filter { query.isEmpty || name($0).localizedCaseInsensitiveContains(query) || String(describing: row($0)).localizedCaseInsensitiveContains(query) }
+    }
+    func rows(_ kind: String) -> [Row] { topology.rows(collection(kind)) }
+    func row(_ item: NativeItem) -> Row { rows(item.kind).first { $0.text("id") == item.id } ?? [:] }
+    func name(_ item: NativeItem) -> String { let r = row(item); return r.text("name", r.text("label", "Untitled")) }
+    func title(_ kind: String) -> String { ["tenant":"Company", "host":"Machine", "service":"Service", "proxy":"Reverse proxy", "credential":"Account", "network":"Network"][kind] ?? kind.capitalized }
+    func collection(_ kind: String) -> String { ["tenant":"tenants", "host":"hosts", "service":"services", "proxy":"proxies", "credential":"credentials", "network":"networks"][kind] ?? kind }
+    func icon(_ kind: String) -> String { ["tenant":"building.2", "host":"server.rack", "service":"shippingbox", "proxy":"arrow.triangle.branch", "credential":"key", "network":"network"][kind] ?? "cube" }
+    func applyAppearance() { window?.appearance = appearance == "system" ? nil : NSAppearance(named: appearance == "dark" ? .darkAqua : .aqua) }
+    func call(_ command: String, _ args: Row = [:]) async throws -> Any { try await NativeBridge.shared.call(command, args) }
+    func perform(_ body: @escaping @MainActor () async throws -> Void) {
+        guard !busy else { return }
+        busy = true; error = nil
+        Task { do { try await body() } catch { self.error = error.localizedDescription }; busy = false }
+    }
+    func refresh() async throws {
+        status = try await call("app_status") as? Row ?? [:]
+        if unlocked { topology = try await call("topology") as? Row ?? [:]; sync = try await call("sync_status") as? Row ?? [:] }
+        else { clearVault() }
+        loading = false
+    }
+    func clearVault() { topology = [:]; selected = nil; sheet = nil; query = ""; notice = nil }
+    func start() {
+        NativeBridge.shared.event = { [weak self] name, payload in
+            guard let self else { return }
+            if name == "vault://locked" { clearVault(); status["stage"] = "locked"; busy = false }
+            if name == "sync://status" { sync = payload as? Row ?? [:] }
+            if name == "cloud:step" { let step = payload as? Row ?? [:]; cloudStep = step.text("step").capitalized; if step.text("step") == "error" { error = step.text("message") } }
+            if name == "vault://changed" || name == "vault://locked" { Task { try? await refresh() } }
+        }
+        // Only real user input extends the session; rendering and polling do not.
+        eventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .leftMouseDown, .rightMouseDown, .scrollWheel]) { [weak self] event in
+            MainActor.assumeIsolated {
+                if let self, self.unlocked, Date().timeIntervalSince(self.lastTouch) > 1 {
+                    self.lastTouch = Date(); Task { _ = try? await self.call("touch") }
+                }
+            }
+            return event
+        }
+        Task {
+            do { try await refresh() } catch { self.error = error.localizedDescription; loading = false }
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                if let next = try? await call("app_status") as? Row { let wasUnlocked = unlocked; status = next; if wasUnlocked && !unlocked { clearVault() } }
+            }
         }
     }
-
-    func action(_ name: String) {
-        guard unlocked, ["search", "lock", "settings", "sync", "fit", "tenant", "host", "service", "proxy", "credential", "network", "import"].contains(name) else { return }
-        // Names are fixed above; arbitrary JavaScript never enters this bridge.
-        webView?.evaluateJavaScript("window.dispatchEvent(new CustomEvent('kurogane:native-action', {detail:'\(name)'}))", completionHandler: nil)
+    func save(_ kind: String, _ row: Row) async throws {
+        let saved = try await call("save_\(kind)", [kind: row]) as? Row ?? [:]
+        topology = saved.row("topology"); selected = NativeItem(kind: kind, id: saved.text("id")); sheet = nil
     }
+    func edit(_ kind: String, _ row: Row = [:]) { sheet = NativeSheet(kind: "edit:\(kind)", item: row) }
+    func openSettings() { sheet = NativeSheet(kind: "settings") }
 }
 
 struct NativeMaterial: ViewModifier {
     @ViewBuilder func body(content: Content) -> some View {
-        if #available(macOS 26.0, *) {
-            content.glassEffect(.regular, in: RoundedRectangle(cornerRadius: 12))
-        } else {
-            content.background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
-        }
+        if #available(macOS 26.0, *) { content.glassEffect(.regular, in: RoundedRectangle(cornerRadius: 14)) }
+        else { content.background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14)) }
     }
 }
-
-struct KuroganeToolbar: View {
-    @ObservedObject var model: ShellModel
+struct TactilePanel: ViewModifier {
+    func body(content: Content) -> some View {
+        content.padding(18).background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(.white.opacity(0.28), lineWidth: 1)).shadow(color: .black.opacity(0.08), radius: 12, y: 5)
+    }
+}
+struct NativeRoot: View {
+    @ObservedObject var model: NativeModel
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "cube.fill").foregroundStyle(.secondary)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(model.title).font(.system(size: 13, weight: .semibold)).lineLimit(1)
-                Text("Issen Software Group").font(.system(size: 10)).foregroundStyle(.secondary)
-            }.frame(maxWidth: 240, alignment: .leading)
-            Spacer(minLength: 8)
-            HStack(spacing: 4) {
-                Button { model.action("search") } label: { Label("Search", systemImage: "magnifyingglass") }
-                    .help("Search inventory (⌘K)")
-                Button { model.action("fit") } label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
-                    .help("Fit the entire map")
-                Menu {
-                    Button("Company") { model.action("tenant") }
-                    Button("Machine") { model.action("host") }.disabled(!model.companies)
-                    Button("Service") { model.action("service") }.disabled(!model.hosts)
-                    Button("Reverse proxy") { model.action("proxy") }.disabled(!model.hosts)
-                    Button("Account") { model.action("credential") }.disabled(!model.companies)
-                    Button("Network") { model.action("network") }.disabled(!model.companies)
-                    Divider()
-                    Button("Import inventory…") { model.action("import") }
-                } label: { Label("New", systemImage: "plus") }
-                Button { model.action("sync") } label: { Image(systemName: "arrow.triangle.2.circlepath") }
-                    .help(model.sync).disabled(model.syncing)
-                Button { model.action("settings") } label: { Image(systemName: "gearshape") }
-                    .help("Settings")
-                Button { model.action("lock") } label: { Image(systemName: "lock") }
-                    .help("Lock vault (⌘L)")
-            }
-            .buttonStyle(.borderless)
-            .controlSize(.regular)
-            .padding(.horizontal, 12).padding(.vertical, 10)
-            .modifier(NativeMaterial())
-            .disabled(!model.unlocked)
-        }
-        .padding(.horizontal, 18).padding(.vertical, 8)
+        VStack(spacing: 0) {
+            if model.loading { ProgressView("Opening Kurogane…").frame(maxWidth: .infinity, maxHeight: .infinity) }
+            else if model.unlocked { NativeWorkspace(model: model) }
+            else { NativeVaultScreen(model: model) }
+        }.background(Color(nsColor: .windowBackgroundColor)).frame(minWidth: 920, minHeight: 640)
+        .sheet(item: $model.sheet) { sheet in NativeSheetView(model: model, sheet: sheet).id(sheet.id).interactiveDismissDisabled(model.busy) }
+        .alert("Operation failed", isPresented: Binding(get: { model.error != nil }, set: { if !$0 { model.error = nil } })) {
+            Button("OK") { model.error = nil }
+            if model.loading { Button("Retry") { model.perform { try await model.refresh() } } }
+        } message: { Text(model.error ?? "") }
     }
 }
-
-@MainActor
-private func findWebView(_ root: NSView) -> WKWebView? {
-    if let web = root as? WKWebView { return web }
-    for view in root.subviews { if let web = findWebView(view) { return web } }
-    return nil
+struct NativeWorkspace: View {
+    @ObservedObject var model: NativeModel
+    @FocusState private var searching: Bool
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                Label(model.topology.text("vaultName", "Kurogane"), systemImage: "cube.fill").font(.headline)
+                Text("ISSEN").font(.system(size: 10, weight: .semibold, design: .rounded)).foregroundStyle(.secondary)
+                Spacer()
+                if !model.status.flag("memoryLocked") { Label("Memory not locked", systemImage: "exclamationmark.shield").font(.caption).foregroundStyle(.orange).help("The OS refused to lock key memory. See Security settings.") }
+                Text("\(model.status.number("remainingSecs"))s").monospacedDigit().foregroundStyle(.secondary).font(.caption)
+                HStack(spacing: 10) {
+                    Button { searching = true } label: { Image(systemName: "magnifyingglass") }.help("Search inventory").keyboardShortcut("k")
+                    Button { model.fit = UUID() } label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }.help("Fit map")
+                    Menu {
+                        ForEach(["tenant", "host", "service", "proxy", "network", "credential"], id: \.self) { kind in
+                            Button(model.title(kind)) { model.edit(kind) }.disabled(kind != "tenant" && model.rows("tenant").isEmpty || ["service", "proxy"].contains(kind) && model.rows("host").isEmpty)
+                        }
+                        Divider(); Button("Import inventory…") { model.sheet = NativeSheet(kind: "import") }
+                    } label: { Label("New", systemImage: "plus") }
+                    Button { if model.sync.rows("linked").isEmpty { model.openSettings() } else { model.perform { model.sync = try await model.call("sync_now") as? Row ?? [:] } } } label: { Image(systemName: "arrow.triangle.2.circlepath") }.help("Sync vault").disabled(model.busy || model.sync.flag("busy"))
+                    Button { model.openSettings() } label: { Image(systemName: "gearshape") }.help("Settings").keyboardShortcut(",")
+                    Button { model.perform { _ = try await model.call("lock") } } label: { Image(systemName: "lock") }.help("Lock vault").keyboardShortcut("l")
+                }.buttonStyle(.borderless).padding(12).modifier(NativeMaterial())
+            }.padding(.horizontal, 20).padding(.vertical, 10)
+            Divider()
+            HSplitView {
+                VStack(alignment: .leading, spacing: 10) {
+                    TextField("Search inventory", text: $model.query).textFieldStyle(.roundedBorder).focused($searching).padding(.horizontal, 12).padding(.top, 12)
+                    List(selection: $model.selected) {
+                        ForEach(["tenant", "host", "service", "proxy", "network", "credential"], id: \.self) { kind in
+                            Section(model.title(kind)) {
+                                ForEach(model.items.filter { $0.kind == kind }) { item in
+                                    Label(model.name(item), systemImage: model.icon(kind)).tag(item)
+                                        .contextMenu { Button("Edit…") { model.edit(kind, model.row(item)) }; Button("Delete…", role: .destructive) { model.sheet = NativeSheet(kind: "delete:\(kind)", item: model.row(item)) } }
+                                }
+                            }
+                        }
+                    }.listStyle(.sidebar)
+                    Text("Encrypted infrastructure inventory").font(.caption2).foregroundStyle(.secondary).padding(12)
+                }.frame(minWidth: 185, idealWidth: 220, maxWidth: 330)
+                VStack(spacing: 0) {
+                    HStack {
+                        Picker("View", selection: $model.mapMode) { Text("Map").tag(true); Text("Inventory").tag(false) }.pickerStyle(.segmented).frame(width: 180)
+                        Spacer()
+                        Menu("Export") {
+                            Button("Map as PNG…") { exportNativeMap(model) }; Button("Map as SVG…") { exportNativeSVG(model) }; Button("FossFLOW JSON…") { exportNativeFoss(model) }
+                            Divider(); Button("Inventory…") { model.sheet = NativeSheet(kind: "export") }
+                        }
+                    }.padding(12)
+                    if model.mapMode { NativeMap(model: model) } else { NativeInventory(model: model) }
+                    HStack {
+                        Text("\(model.rows("host").count) machines · \(model.rows("service").count) services").font(.caption).foregroundStyle(.secondary)
+                        Spacer()
+                        if model.sync.flag("busy") { ProgressView().controlSize(.small); Text("Syncing…").font(.caption) }
+                        else if !model.sync.text("lastError").isEmpty { Button("Sync needs attention") { model.openSettings() }.font(.caption).foregroundStyle(.orange) }
+                        else { Text(model.notice ?? model.sync.text("lastOutcome", "Saved locally")).font(.caption).foregroundStyle(.secondary) }
+                    }.padding(12)
+                }.frame(minWidth: 360, maxWidth: .infinity, maxHeight: .infinity)
+                if let selected = model.selected { NativeInspector(model: model, item: selected).frame(minWidth: 240, idealWidth: 285, maxWidth: 380) }
+            }
+        }
+    }
 }
-
+struct NativeInventory: View {
+    @ObservedObject var model: NativeModel
+    var body: some View {
+        List {
+            ForEach(model.items) { item in
+                Button { model.selected = item } label: { HStack { Image(systemName: model.icon(item.kind)).frame(width: 24); Text(model.name(item)); Spacer(); Text(model.title(item.kind)).font(.caption).foregroundStyle(.secondary) }.padding(.vertical, 6) }.buttonStyle(.plain)
+            }
+            if model.items.isEmpty { Text(model.query.isEmpty ? "Your inventory is empty. Add a company to begin." : "No matching inventory.").foregroundStyle(.secondary).padding() }
+        }
+    }
+}
+@MainActor private var nativeModel: NativeModel?
 @_cdecl("kurogane_install_swift_shell")
 public func installShell(_ pointer: UnsafeMutableRawPointer) {
-    // Called through Tauri's main-thread scheduler after the window is ready.
     MainActor.assumeIsolated {
         let window = Unmanaged<NSWindow>.fromOpaque(pointer).takeUnretainedValue()
-        guard let content = window.contentView, let web = findWebView(content) else { return }
-        let model = ShellModel()
-        model.window = window
-        model.webView = web
-        let controller = web.configuration.userContentController
-        controller.add(model, name: "kuroganeState")
-        controller.add(model, name: "kuroganeAppearance")
-        let script = "document.documentElement.dataset.nativeShell='swift';window.dispatchEvent(new Event('kurogane:native-ready'));window.webkit.messageHandlers.kuroganeAppearance.postMessage(document.documentElement.dataset.theme || 'light');"
-        controller.addUserScript(WKUserScript(source: "document.addEventListener('DOMContentLoaded', function(){\(script)}, {once:true});", injectionTime: .atDocumentEnd, forMainFrameOnly: true))
-        web.evaluateJavaScript(script, completionHandler: nil)
-        let toolbar = NSHostingView(rootView: KuroganeToolbar(model: model))
-        toolbar.translatesAutoresizingMaskIntoConstraints = false
-        content.addSubview(toolbar)
-        NSLayoutConstraint.activate([
-            toolbar.topAnchor.constraint(equalTo: content.topAnchor),
-            toolbar.leadingAnchor.constraint(equalTo: content.leadingAnchor),
-            toolbar.trailingAnchor.constraint(equalTo: content.trailingAnchor),
-            toolbar.heightAnchor.constraint(equalToConstant: 62)
-        ])
-        window.title = "Kurogane"
-        window.titlebarAppearsTransparent = true
-        window.toolbarStyle = .unified
-        window.appearance = NSAppearance(named: .aqua)
+        let model = NativeModel(); model.window = window; nativeModel = model
+        // The entire visible content is SwiftUI. No WKWebView is embedded.
+        window.contentView = NSHostingView(rootView: NativeRoot(model: model))
+        window.title = "Kurogane"; window.titlebarAppearsTransparent = true; window.toolbarStyle = .unified
+        window.minSize = NSSize(width: 920, height: 640); model.applyAppearance(); model.start()
     }
 }

@@ -23,7 +23,7 @@ import { ProxyForm } from './forms/ProxyForm';
 import { ServiceForm } from './forms/ServiceForm';
 import { TenantForm } from './forms/TenantForm';
 import { buildLookup } from './model';
-import { publishNativeState } from './native';
+
 import { buildIndex } from './search/index';
 import { type ModalSpec, type Store, StoreContext } from './store';
 
@@ -159,30 +159,6 @@ export function App() {
     try { await backend?.lock(); } catch (error) { toast(String(error), 'error'); }
     // The mock backend's listener covers the UI; Tauri emits vault://locked too.
   }, [backend, toast]);
-
-  useEffect(() => {
-    const publish = () => publishNativeState({
-      unlocked: status?.stage === 'unlocked', title: topo?.vaultName ?? 'Kurogane',
-      companies: !!topo?.tenants.length, hosts: !!topo?.hosts.length,
-      sync: sync?.busy ? 'Syncing…' : sync?.conflict ? 'Sync conflict' : sync?.lastError ? 'Sync failed' : sync?.linked.length ? 'Sync vault' : 'Set up sync',
-      syncing: !!sync?.busy,
-    });
-    publish();
-    const action = (event: Event) => {
-      if (status?.stage !== 'unlocked' || !backend) return;
-      const name = (event as CustomEvent<string>).detail;
-      if (name === 'search') setOmni(true);
-      else if (name === 'lock') void lock();
-      else if (name === 'settings') setModal({ type: 'settings' });
-      else if (name === 'sync') setModal({ type: 'settings', tab: 'sync' });
-      else if (name === 'fit') window.dispatchEvent(new Event('kurogane:fit'));
-      else if (name === 'tenant' || name === 'host' || name === 'service' || name === 'proxy' || name === 'credential' || name === 'network' || name === 'import') setModal({ type: name });
-      void backend.touch().catch(() => undefined);
-    };
-    window.addEventListener('kurogane:native-ready', publish);
-    window.addEventListener('kurogane:native-action', action);
-    return () => { window.removeEventListener('kurogane:native-ready', publish); window.removeEventListener('kurogane:native-action', action); };
-  }, [status?.stage, topo, sync, backend, lock]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

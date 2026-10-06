@@ -228,16 +228,16 @@ pub fn parse_authorize_output(stdout: &str) -> Result<Zeroizing<String>> {
     } else {
         let compact = Zeroizing::new(block.chars().filter(|c| !c.is_whitespace()).collect::<String>());
         let bytes = Zeroizing::new(
-            data_encoding::BASE64URL_NOPAD.decode(compact.trim_end_matches('=').as_bytes())
+            data_encoding::BASE64URL_NOPAD
+                .decode(compact.trim_end_matches('=').as_bytes())
                 .or_else(|_| data_encoding::BASE64.decode(compact.as_bytes()))
                 .map_err(|_| SyncError::Auth("invalid encoded authorization response; reconnect the account".into()))?,
         );
-        decoded = Zeroizing::new(String::from_utf8(bytes.to_vec())
-            .map_err(|_| SyncError::Auth("authorization response is not UTF-8".into()))?);
+        decoded =
+            Zeroizing::new(String::from_utf8(bytes.to_vec()).map_err(|_| SyncError::Auth("authorization response is not UTF-8".into()))?);
         decoded.as_str()
     };
-    let value: serde_json::Value =
-        serde_json::from_str(json).map_err(|_| SyncError::Auth("authorization response is not JSON".into()))?;
+    let value: serde_json::Value = serde_json::from_str(json).map_err(|_| SyncError::Auth("authorization response is not JSON".into()))?;
     let token = match value.get("token") {
         Some(serde_json::Value::String(token)) => token.as_str(),
         Some(_) => return Err(SyncError::Auth("authorization response has an invalid token".into())),
@@ -297,7 +297,8 @@ mod tests {
         let token = r#"{"access_token":"a","refresh_token":"r"}"#;
         let config = serde_json::json!({ "token": token, "scope": "drive.file" }).to_string();
         for encoded in [data_encoding::BASE64URL_NOPAD.encode(config.as_bytes()), data_encoding::BASE64.encode(config.as_bytes())] {
-            let output = format!("NOTICE: authorized\r\nPaste the following into your remote machine --->\r\n{encoded}\r\n<---End paste\r\n");
+            let output =
+                format!("NOTICE: authorized\r\nPaste the following into your remote machine --->\r\n{encoded}\r\n<---End paste\r\n");
             assert_eq!(parse_authorize_output(&output).unwrap().as_str(), token);
         }
     }

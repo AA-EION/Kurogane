@@ -17,9 +17,6 @@ function apply() {
   document.documentElement.dataset.theme = theme;
   document.documentElement.dataset.appearance = appearance;
   window.dispatchEvent(new CustomEvent('kurogane:appearance', { detail: { appearance, theme } }));
-  // Only appearance metadata crosses into native chrome; no vault data or secrets.
-  const native = (window as Window & { webkit?: { messageHandlers?: { kuroganeAppearance?: { postMessage: (value: string) => void } } } }).webkit;
-  native?.messageHandlers?.kuroganeAppearance?.postMessage(theme);
 }
 export function setAppearance(value: Appearance) {
   appearance = value;

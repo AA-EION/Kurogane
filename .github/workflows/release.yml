@@ -9,17 +9,6 @@ name: Build artifacts (no release)
 # Release creation and publication are intentionally absent.
 
 on:
-  push:
-    branches: ['**']
-    paths:
-      - .github/workflows/release.yml
-      - src-tauri/tauri.conf.json
-      - src-tauri/icons/**
-      - src-tauri/macos/**
-      - src-tauri/src/**
-      - src-tauri/build.rs
-      - crates/**
-      - ui/**
   workflow_dispatch:
 
 concurrency:
@@ -64,7 +53,7 @@ jobs:
           test -n "$xcode"
           sudo xcode-select -s "$xcode/Contents/Developer"
           xcrun swiftc --version
-          xcrun swiftc -typecheck -target arm64-apple-macosx13.0 -sdk "$(xcrun --sdk macosx --show-sdk-path)" src-tauri/macos/KuroganeShell.swift
+          xcrun swiftc -typecheck -target arm64-apple-macosx13.0 -sdk "$(xcrun --sdk macosx --show-sdk-path)" src-tauri/macos/*.swift
 
       - uses: dtolnay/rust-toolchain@stable
         with:

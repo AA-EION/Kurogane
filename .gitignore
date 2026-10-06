@@ -1,0 +1,7 @@
+/target
+**/node_modules
+/ui/dist
+*.kurogane.tmp
+.DS_Store
+/src-tauri/gen/schemas
+*.tsbuildinfo

@@ -1,0 +1,21 @@
+[package]
+name = "kurogane-cli"
+description = "Headless Kurogane: vault creation/inspection, fixture export and sync manager"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "kurogane"
+path = "src/main.rs"
+
+[dependencies]
+kurogane-core.workspace = true
+kurogane-sync.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+rpassword.workspace = true
+serde_json.workspace = true
+qrcode = { version = "0.14", default-features = false }
+zeroize.workspace = true

@@ -53,6 +53,7 @@
       "../THIRD_PARTY_LICENSES.txt": "legal/THIRD_PARTY_LICENSES.txt",
       "../docs/LICENSING.md": "legal/LICENSING.md",
       "../docs/legal/rclone-COPYING": "legal/rclone-COPYING",
+      "../docs/legal/appimage-NOTICES.txt": "legal/appimage-NOTICES.txt",
       "legal-platform/": "legal/platform/"
     },
     "copyright": "Copyright © 2026 Issen Software Group and Kurogane contributors",

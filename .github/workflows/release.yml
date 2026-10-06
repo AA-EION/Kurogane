@@ -22,6 +22,23 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  dependency-source:
+    name: Exact dependency source archives
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/license-audit.mjs --check
+      - run: node scripts/archive-dependency-source.mjs
+      - run: tar -czf kurogane-dependency-source.tar.gz dependency-source
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kurogane-dependency-source
+          path: kurogane-dependency-source.tar.gz
+          if-no-files-found: error
+
   build:
     name: ${{ matrix.name }}
     strategy:
@@ -111,10 +128,21 @@ jobs:
         run: |
           app=$(ls target/release/bundle/appimage/*.AppImage)
           chmod +x "$app"
+          "$app" --appimage-version > appimage-runtime-version.txt 2>&1
           "$app" --appimage-extract >/dev/null
           test -x squashfs-root/usr/bin/kurogane-desktop
           ldd squashfs-root/usr/bin/kurogane-desktop | (! grep "not found")
           python3 scripts/linux-license-audit.py inspect --appdir squashfs-root
+
+      - name: Preserve platform inventory even when source download fails
+        if: runner.os == 'Linux' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kurogane-platform-license-evidence
+          path: |
+            platform-license-manifest.json
+            platform-source-packages.txt
+            appimage-runtime-version.txt
 
       - name: Platform license and source evidence
         if: runner.os == 'Linux'
@@ -138,6 +166,8 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           app=target/universal-apple-darwin/release/bundle/macos/Kurogane.app
+          test -s "$app/Contents/Resources/legal/LICENSE"
+          test -s "$app/Contents/Resources/legal/THIRD_PARTY_LICENSES.txt"
           codesign --verify --deep --strict --verbose=2 "$app"
           lipo -info "$app/Contents/MacOS/kurogane-desktop"
 

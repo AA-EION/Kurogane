@@ -30,9 +30,15 @@ if (process.argv.includes('--check')) {
   for (const key of Object.keys(fingerprint)) if (fingerprint[key] !== inventory[key]) throw Error(`${key}: dependency license inventory is stale; rerun the audit and review changes`);
   if (inventory.packages.length !== cargo.length + npm.length) throw Error('Incomplete package inventory');
   const decisions = JSON.parse(await fs.readFile(path.join(root, 'docs/legal/license-decisions.json'), 'utf8'));
+  const ui = JSON.parse(await fs.readFile(path.join(root, 'ui/package.json'), 'utf8'));
+  const bundle = JSON.parse(await fs.readFile(path.join(root, 'src-tauri/tauri.conf.json'), 'utf8')).bundle;
+  if (ui.license !== decisions.projectLicense || bundle.license !== decisions.projectLicense) throw Error('Project license metadata disagrees with the reviewed policy');
+  const workspace = await fs.readFile(path.join(root, 'Cargo.toml'), 'utf8');
+  if (string(workspace, 'license') !== decisions.projectLicense) throw Error('Rust workspace license disagrees with the reviewed policy');
   for (const p of inventory.packages) {
     if (!p.archiveVerified || !p.license || !p.notices.length) throw Error(`Unverified license/notice: ${p.ecosystem}:${p.name}@${p.version}`);
     if (!decisions.expressions[p.license]) throw Error(`Unreviewed license expression: ${p.license} (${p.name})`);
+    if (p.secondaryLicenseExclusions?.length) throw Error(`MPL secondary-license exclusion requires review: ${p.name}`);
   }
   const notice = await fs.readFile(path.join(root, 'THIRD_PARTY_LICENSES.txt'));
   if (textHash(notice) !== inventory.noticesSha256) throw Error('Generated third-party notices have changed; rerun the audit');

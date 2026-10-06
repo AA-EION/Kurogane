@@ -60,7 +60,11 @@ texts, inventories actual ELF files against dpkg packages, records exact source
 package versions, and downloads matching distro source archives alongside the
 installer. Any unmapped ELF file needs explicit review before public distribution.
 AppImage's loader/launcher and bundling tools retain upstream terms; they are
-separate from the application's Rust/npm graph. LGPL libraries remain replaceable
+separate from the application's Rust/npm graph. Their original project notices
+are in `docs/legal/appimage-NOTICES.txt`; the runtime version is retained in a
+platform evidence artifact. A floating runtime download's exact source and any
+statically linked LGPL components require separate verification before release.
+LGPL libraries remain replaceable
 in an extracted AppDir; preserve their source and modification/relinking rights.
 
 The workflow packages `LICENSE`, `NOTICE`, third-party text and this policy under
@@ -71,9 +75,10 @@ the complete license offline; macOS opens the installed license document.
 ## Source delivery and redistribution
 
 Each artifact run publishes an exact `git archive` source artifact alongside its
-installers. It includes the Rust/Swift/TypeScript sources, assets, lockfiles,
+installers, plus a separate checksum-verified archive of all locked registry
+packages. It includes the Rust/Swift/TypeScript sources, assets, lockfiles,
 configuration, build scripts, notices and the dependency inventory. Exact upstream
-crate/npm source archives and their checksums are listed in the inventory; retain
+crate/npm archive checksums and URLs are listed in the inventory; retain
 access to all required Corresponding Source, including any locally modified
 dependencies and bundled copyleft libraries. The Linux source artifact additionally
 includes the selected distro source packages and patches. A source URL alone is

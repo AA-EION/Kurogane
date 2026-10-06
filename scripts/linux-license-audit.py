@@ -33,6 +33,7 @@ if args.mode == "prepare":
 else:
     if not args.appdir:
         parser.error("inspect requires --appdir")
+    bundle_names = {filename.name for filename in args.appdir.rglob("*") if filename.is_file()}
     index = {}
     for listing in Path("/var/lib/dpkg/info").glob("*.list"):
         name = listing.name[:-5]
@@ -40,7 +41,9 @@ else:
             continue
         for value in listing.read_text(errors="replace").splitlines():
             installed = Path(value)
-            if installed.is_file():
+            # Only inspect paths that could correspond to a bundled file. Other
+            # dpkg entries include private system directories and need no access.
+            if installed.name in bundle_names and installed.is_file():
                 index.setdefault(installed.name, []).append((name, value))
     files, source_packages, unmapped = [], {}, []
     for filename in sorted(args.appdir.rglob("*")):

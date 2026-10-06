@@ -129,6 +129,7 @@ jobs:
           app=$(ls target/release/bundle/appimage/*.AppImage)
           chmod +x "$app"
           "$app" --appimage-version > appimage-runtime-version.txt 2>&1
+          node -e 'const fs=require("fs"); const reviewed=require("./docs/legal/appimage-source-inventory.json"); if(fs.readFileSync("appimage-runtime-version.txt","utf8").trim()!==reviewed.runtimeVersion) throw Error("AppImage runtime changed: source and license audit required")'
           "$app" --appimage-extract >/dev/null
           test -x squashfs-root/usr/bin/kurogane-desktop
           ldd squashfs-root/usr/bin/kurogane-desktop | (! grep "not found")

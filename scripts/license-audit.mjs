@@ -42,6 +42,9 @@ if (process.argv.includes('--check')) {
   }
   const notice = await fs.readFile(path.join(root, 'THIRD_PARTY_LICENSES.txt'));
   if (textHash(notice) !== inventory.noticesSha256) throw Error('Generated third-party notices have changed; rerun the audit');
+  const runtime = JSON.parse(await fs.readFile(path.join(root, 'docs/legal/appimage-source-inventory.json'), 'utf8'));
+  if (textHash(await fs.readFile(path.join(root, 'docs/legal/appimage-NOTICES.txt'))) !== runtime.noticesSha256) throw Error('AppImage original notices changed: review runtime audit');
+  for (const source of runtime.sources) if (!/^[a-f0-9]{64}$/.test(source.sha256) || !source.noticeFiles.length || !source.url.startsWith('https://')) throw Error(`Unverified runtime source: ${source.file}`);
   console.log(`License inventory current: ${cargo.length} registry crates and ${npm.length} npm packages; all expressions reviewed and notice bundle verified.`);
   process.exit(0);
 }

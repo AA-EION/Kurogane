@@ -62,8 +62,17 @@ installer. Any unmapped ELF file needs explicit review before public distributio
 AppImage's loader/launcher and bundling tools retain upstream terms; they are
 separate from the application's Rust/npm graph. Their original project notices
 are in `docs/legal/appimage-NOTICES.txt`; the runtime version is retained in a
-platform evidence artifact. A floating runtime download's exact source and any
-statically linked LGPL components require separate verification before release.
+platform evidence artifact. The observed `8f39b89` runtime was matched to its
+official build log: FUSE 3.15.0, squashfuse 0.5.2, musl 1.2.5, zstd 1.5.6,
+zlib 1.3.2 and mimalloc 2.1.7. Their original notices and checksum-verified
+source archives are retained, including the runtime's FUSE patch/build scripts.
+FUSE library code is LGPL-2.1-or-later; zstd uses its BSD alternative. The MIT
+mimalloc notice is included even though the runtime's top-level license list
+omitted it. CI rejects a changed runtime until this separate audit is updated.
+Alpine build recipes/patches can be located at the build-date snapshot
+`alpinelinux/aports@b82a90a26fc0965ffd03cca90dfb1daed17101cc` for the package
+revisions identified in the upstream build log. Preserve required patches and
+source access when distributing; no static LGPL relinking rights are restricted.
 LGPL libraries remain replaceable
 in an extracted AppDir; preserve their source and modification/relinking rights.
 
@@ -90,6 +99,13 @@ using an AGPL section 6 method. If distributing a modified network service, impl
 the source offer required by section 13. No release is published by this workflow.
 Earlier UI-preview artifacts predate this license/notice packaging and should be
 replaced by the new artifacts for distribution.
+
+To modify/relink the separate AppImage runtime, unpack its source archive and the
+library sources under `dependency-source/AppImage/`. The runtime's upstream
+`scripts/` and `patches/libfuse/` control its build; retain the LGPL terms on FUSE.
+Build a replacement runtime with the modified library, then repack the extracted
+AppDir using `appimagetool --runtime-file <replacement-runtime>`. Kurogane places
+no signing, license or technical restriction on using that replacement.
 
 ## Keeping the audit current
 

@@ -43,5 +43,21 @@ async function worker() {
 await Promise.all(Array.from({ length: 6 }, worker));
 manifest.sort((a, b) => a.file.localeCompare(b.file));
 await fs.writeFile(path.join(output, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
-await fs.writeFile(path.join(output, 'README.txt'), 'Exact locked registry archives; hashes checked against the reviewed dependency inventory. Each .tgz is a gzip-compressed tar archive. Rust crates contain their original source and manifests; npm platform binary archives are also retained as distribution evidence. Project source, build instructions, lockfiles and complete notices accompany these archives in the per-platform source artifact. Do not discard upstream copyright/license files when unpacking.\n');
+const runtime = JSON.parse(await fs.readFile(path.join(root, 'docs/legal/appimage-source-inventory.json')));
+const runtimeOutput = path.join(output, 'AppImage');
+await fs.mkdir(runtimeOutput, { recursive: true });
+for (const source of runtime.sources) {
+  let bytes;
+  try { bytes = await fs.readFile(path.join(root, '.license-cache/runtime', source.file)); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  if (!bytes) {
+    const response = await fetch(source.url, { signal: AbortSignal.timeout(120000) });
+    if (!response.ok) throw Error(`${response.status}: ${source.url}`);
+    bytes = Buffer.from(await response.arrayBuffer());
+  }
+  if (crypto.createHash('sha256').update(bytes).digest('hex') !== source.sha256) throw Error(`Runtime source integrity mismatch: ${source.file}`);
+  await fs.writeFile(path.join(runtimeOutput, source.file), bytes);
+}
+await fs.writeFile(path.join(runtimeOutput, 'manifest.json'), JSON.stringify(runtime, null, 2) + '\n');
+await fs.writeFile(path.join(output, 'README.txt'), 'Exact locked registry archives; hashes checked against the reviewed dependency inventory. Each .tgz is a gzip-compressed tar archive. Rust crates contain their original source and manifests; npm platform binary archives are also retained as distribution evidence. AppImage/ contains the observed runtime source, its FUSE patch/build scripts, and source versions of its embedded libraries verified from the official build log. Project source, build instructions, lockfiles and complete notices accompany these archives in the per-platform source artifact. Do not discard upstream copyright/license files when unpacking.\n');
 console.log(`Archived and verified ${manifest.length} locked packages.`);
+console.log(`Archived and verified ${runtime.sources.length} AppImage runtime/library source packages.`);

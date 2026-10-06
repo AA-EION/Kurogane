@@ -5,9 +5,11 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { gunzipSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const hash = (data, algorithm = 'sha256', encoding = 'hex') => crypto.createHash(algorithm).update(data).digest(encoding);
+const textHash = data => hash(data.toString().replaceAll('\r\n', '\n'));
 const cargoBytes = await fs.readFile(path.join(root, 'Cargo.lock'));
 const npmBytes = await fs.readFile(path.join(root, 'ui/package-lock.json'));
 const string = (block, key) => block.match(new RegExp(`^${key} = "([^"\\n]+)"`, 'm'))?.[1];
@@ -20,7 +22,7 @@ const npm = Object.entries(JSON.parse(npmBytes).packages).filter(([key]) => key)
   source: p.resolved, integrity: p.integrity, declaredLicense: p.license,
   development: Boolean(p.dev), optional: Boolean(p.optional), platforms: p.os ?? [], architectures: p.cpu ?? [],
 }));
-const fingerprint = { cargoLockSha256: hash(cargoBytes), npmLockSha256: hash(npmBytes) };
+const fingerprint = { cargoLockSha256: textHash(cargoBytes), npmLockSha256: textHash(npmBytes) };
 const inventoryPath = path.join(root, 'docs/legal/dependency-inventory.json');
 
 if (process.argv.includes('--check')) {
@@ -33,7 +35,7 @@ if (process.argv.includes('--check')) {
     if (!decisions.expressions[p.license]) throw Error(`Unreviewed license expression: ${p.license} (${p.name})`);
   }
   const notice = await fs.readFile(path.join(root, 'THIRD_PARTY_LICENSES.txt'));
-  if (hash(notice) !== inventory.noticesSha256) throw Error('Generated third-party notices have changed; rerun the audit');
+  if (textHash(notice) !== inventory.noticesSha256) throw Error('Generated third-party notices have changed; rerun the audit');
   console.log(`License inventory current: ${cargo.length} registry crates and ${npm.length} npm packages; all expressions reviewed and notice bundle verified.`);
   process.exit(0);
 }
@@ -98,9 +100,19 @@ const texts = new Map();
 const remoteCache = new Map();
 async function remote(url, json = false) {
   if (!remoteCache.has(url)) remoteCache.set(url, (async () => {
-    const response = await fetch(url, { signal: AbortSignal.timeout(45000) });
+    const filename = path.join(cache, `upstream-${hash(url)}.${json ? 'json' : 'txt'}`);
+    try { const cached = await fs.readFile(filename, 'utf8'); return json ? JSON.parse(cached) : cached; } catch {}
+    let response = await fetch(url, { signal: AbortSignal.timeout(45000) });
+    // Prefer the user's authenticated public-repository access on API rate limit.
+    if (response.status === 403 && url.startsWith('https://api.github.com/')) {
+      const content = execFileSync('gh', ['api', url.slice('https://api.github.com/'.length)], { encoding: 'utf8', maxBuffer: 20_000_000 });
+      await fs.writeFile(filename, content);
+      return json ? JSON.parse(content) : content;
+    }
     if (!response.ok) throw Error(`HTTP ${response.status}: ${url}`);
-    return json ? response.json() : response.text();
+    const content = await response.text();
+    await fs.writeFile(filename, content);
+    return json ? JSON.parse(content) : content;
   })());
   return remoteCache.get(url);
 }

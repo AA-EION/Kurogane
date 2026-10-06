@@ -29,6 +29,7 @@ fn build_swift_shell() {
     compiler_command.args(["swiftc", "-emit-library", "-static", "-parse-as-library", "-O", "-module-name", "KuroganeNative"]);
     if std::env::var_os("CARGO_FEATURE_NATIVE_SMOKE").is_some() {
         compiler_command.args(["-D", "NATIVE_SMOKE"]);
+        println!("cargo:rustc-link-lib=framework=CryptoKit");
     }
     let status = compiler_command
         .arg("-target")

@@ -47,6 +47,7 @@ export function ServiceForm({ value, hostId, publish }: { value?: Service; hostI
       const ports = s.ports.filter((p) => p.containerPort > 0);
       const pending = domains.filter((d) => d.domain.trim());
       if (pending.some((d) => !d.proxyId || !topo.proxies.some((p) => p.id === d.proxyId))) throw new Error('Choose a reverse proxy for each domain');
+      if (new Set(pending.map((d) => `${d.proxyId}:${d.domain.trim()}`)).size !== pending.length) throw new Error('Each domain should appear once per proxy');
       if (pending.length) {
         const host = topo.hosts.find((h) => h.id === s.hostId);
         if (!host || !primaryIp(host)) throw new Error('The machine needs a network card with a private IP before a proxy can route to it');

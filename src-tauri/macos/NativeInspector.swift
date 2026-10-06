@@ -40,9 +40,10 @@ struct NativeInspector: View {
                         }
                     }
                 }
-                if item.kind == "service" { serviceRoutes }
+                if item.kind == "service" { serviceEndpoints; serviceRoutes }
+                if item.kind == "proxy", !value.text("adminUrl").isEmpty { Button("Open proxy administration") { model.perform { _ = try await model.call("launch_web",["url":value.text("adminUrl")]) } } }
                 if item.kind == "credential" { NativeAccount(model:model,value:value).id(item.id) }
-                else {
+                else if ["tenant","host","service","proxy"].contains(item.kind) {
                     HStack { Text("Accounts").font(.headline); Spacer(); Button { model.edit("credential",["owner":["kind":item.kind,"id":item.id],"kind":"admin_login","label":"","id":""]) } label: { Image(systemName:"plus") }.help("Add account") }
                     ForEach(credentials,id:\.entityID) { credential in
                         VStack(alignment:.leading,spacing:10) {
@@ -68,8 +69,8 @@ struct NativeInspector: View {
     }
     var hostActions: some View {
         HStack {
-            Button("SSH") { model.perform { _ = try await model.call("launch_ssh",["hostId":item.id,"credentialId":NSNull()]) } }
-            Button("RDP") { model.perform { _ = try await model.call("launch_rdp",["hostId":item.id,"credentialId":NSNull()]) } }
+            Button("SSH") { model.perform { _ = try await model.call("launch_ssh",["hostId":item.id,"credentialId":NSNull()]) } }.disabled(value.number("sshPort") == 0)
+            Button("RDP") { model.perform { _ = try await model.call("launch_rdp",["hostId":item.id,"credentialId":NSNull()]) } }.disabled(value.number("rdpPort") == 0)
             if !value.text("webAdminUrl").isEmpty { Button("Web") { model.perform { _ = try await model.call("launch_web",["url":value.text("webAdminUrl")]) } } }
         }
     }
@@ -81,9 +82,56 @@ struct NativeInspector: View {
                     Button(route.text("domain")) { model.selected = NativeItem(kind:"proxy",id:proxy.text("id")) }.buttonStyle(.link)
                 }
             }
-            Button("Configure a reverse proxy…") { if let proxy = model.rows("proxy").first { model.edit("proxy",proxy) } else { var proxy = blankEntity("proxy"); proxy["hostId"] = value.text("hostId"); model.edit("proxy",proxy) } }
+            Menu("Publish a domain…") {
+                ForEach(model.rows("proxy"),id:\.entityID) { proxy in Button("Via \(proxy.text("name"))") { publish(proxy) } }
+                Divider(); Button("Create a reverse proxy…") { var proxy = blankEntity("proxy"); proxy["hostId"] = value.text("hostId"); proxy["name"] = "Reverse proxy"; publish(proxy) }
+            }
+            Button("Use this service as a reverse proxy…") { var proxy = blankEntity("proxy"); proxy["hostId"] = value.text("hostId"); proxy["serviceId"] = item.id; proxy["name"] = value.text("name"); model.edit("proxy",proxy) }
         }
     }
+    var serviceEndpoints: some View {
+        VStack(alignment:.leading,spacing:8) {
+            Text("How to reach it").font(.headline)
+            ForEach(nativeServiceEndpoints(value,model.topology),id:\.url) { endpoint in
+                VStack(alignment:.leading,spacing:4) { Text(endpoint.label).font(.caption).foregroundStyle(.secondary); Button(endpoint.url) { model.perform { _ = try await model.call("launch_web",["url":endpoint.url]) } }.buttonStyle(.link).font(.system(.caption,design:.monospaced)) }
+            }
+        }
+    }
+    func publish(_ input: Row) {
+        let host = model.rows("host").first { $0.text("id") == value.text("hostId") } ?? [:]
+        let nic = host.rows("interfaces").first { $0.flag("isPrimary") } ?? host.rows("interfaces").first ?? [:]
+        let port = value.rows("ports").first { $0.flag("isPrimary") } ?? value.rows("ports").first ?? [:]
+        guard !nic.text("internalIp").isEmpty, port.number("containerPort") > 0 else { model.error = "Add a private IP to this machine and a port to the service before publishing a domain."; return }
+        var route = blankEntity("route")
+        route["serviceId"] = item.id; route["targetHostId"] = value.text("hostId"); route["targetIp"] = nic.text("internalIp")
+        route["targetPort"] = port.number("hostPort",port.number("containerPort")); route["targetScheme"] = value.text("scheme") == "https" ? "https" : "http"
+        route["proxyId"] = input.text("id"); route["tlsMode"] = "letsencrypt"
+        var proxy = input; proxy["routes"] = input.rows("routes") + [route]
+        model.edit("proxy",proxy)
+    }
+}
+struct NativeEndpoint { let url: String; let label: String }
+func nativeServiceEndpoints(_ service: Row,_ topology: Row) -> [NativeEndpoint] {
+    var endpoints: [NativeEndpoint] = []
+    for proxy in topology.rows("proxies") {
+        for route in proxy.rows("routes") where route.text("serviceId") == service.text("id") && route.flag("enabled") && ["http","https"].contains(route.text("inboundProtocol")) {
+            let scheme = route.text("inboundProtocol"), port = route.number("inboundPort")
+            let suffix = scheme == "https" && port == 443 || scheme == "http" && port == 80 ? "" : ":\(port)"
+            endpoints.append(NativeEndpoint(url:"\(scheme)://\(route.text("domain"))\(suffix)\(route.text("pathPrefix","/"))",label:"Public · via \(proxy.text("name"))"))
+        }
+    }
+    let host = topology.rows("hosts").first { $0.text("id") == service.text("hostId") } ?? [:]
+    let nic = host.rows("interfaces").first { $0.flag("isPrimary") } ?? host.rows("interfaces").first ?? [:]
+    let ip = nic.text("internalIp"), scheme = service.text("scheme")
+    let nonHTTP: Set<Int> = [21,22,23,25,53,110,143,389,445,554,636,1433,1521,3306,3389,5432,5672,6379,9042,11211,27017]
+    if !ip.isEmpty && ["http","https"].contains(scheme) {
+        for port in service.rows("ports") where port.number("hostPort") > 0 && port.text("protocol") == "tcp" && !nonHTTP.contains(port.number("containerPort")) {
+            let published = port.number("hostPort"), address = ip.contains(":") ? "[\(ip)]" : ip
+            let suffix = scheme == "https" && published == 443 || scheme == "http" && published == 80 ? "" : ":\(published)"
+            endpoints.append(NativeEndpoint(url:"\(scheme)://\(address)\(suffix)/",label:"Internal · \(published) → \(port.number("containerPort"))"))
+        }
+    }
+    return endpoints
 }
 struct NativeAccount: View {
     @ObservedObject var model: NativeModel

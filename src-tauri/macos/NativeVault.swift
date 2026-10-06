@@ -54,7 +54,7 @@ struct NativeCreateVault: View {
             if let enrollment {
                 NativeEnrollment(enrollment:enrollment)
                 TextField("Six-digit code",text:$code).textFieldStyle(.roundedBorder)
-                HStack { Button("Skip for now") { model.perform { model.sheet = nil; try await model.refresh() } }; Spacer(); Button("Verify and finish") { model.perform { _ = try await model.call("confirm_totp",["code":code]); self.enrollment = nil; code = ""; try await model.refresh() } }.buttonStyle(.borderedProminent).disabled(code.count != 6) }
+                HStack { Button("Skip for now") { model.perform { model.sheet = nil; try await model.refresh() } }; Spacer(); Button("Verify and finish") { model.perform { try await model.finishPairing(code); self.enrollment = nil; code = "" } }.buttonStyle(.borderedProminent).disabled(code.count != 6) }
             } else {
                 Form {
                     TextField("Vault name",text:$name); TextField("Authenticator account",text:$account)
@@ -102,10 +102,11 @@ struct NativeCloud: View {
             Picker("Provider",selection:$provider) { Text("Google Drive").tag("drive"); Text("OneDrive").tag("onedrive"); Text("MEGA").tag("mega"); Text("Synced folder").tag("folder") }
             if provider == "mega" { TextField("MEGA email",text:$email); SecureField("MEGA password",text:$password) }
             if model.busy { HStack { ProgressView().controlSize(.small); Text(model.cloudStep.isEmpty ? "Connecting…" : model.cloudStep) } }
+            if model.busy && !model.cloudURL.isEmpty { Button("Open sign-in page") { Task { do { _ = try await model.call("launch_web",["url":model.cloudURL]) } catch { model.error = error.localizedDescription } } } }
             if !message.isEmpty { Text(message).foregroundStyle(.secondary) }
             ForEach(candidates,id:\.self) { candidate in Button(candidate) { model.perform { _ = try await model.call("connect_cloud_finish",["remotePath":candidate]); model.sheet = nil; try await model.refresh() } }.disabled(model.busy) }
             HStack { Spacer(); Button("Cancel") { password = ""; model.sheet = nil }.disabled(model.busy); Button("Connect") { connect() }.buttonStyle(.borderedProminent).disabled(model.busy || provider == "mega" && (email.isEmpty || password.isEmpty)) }
-        }.padding(24).frame(width:500).textFieldStyle(.roundedBorder).onDisappear { password = "" }
+        }.padding(24).frame(width:500).textFieldStyle(.roundedBorder).onDisappear { password = ""; model.cloudURL = "" }
     }
     func connect() {
         let credentials: Any = provider == "mega" ? ["user":email,"password":password] : NSNull()

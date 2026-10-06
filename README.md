@@ -20,7 +20,7 @@ Search everything with **Ctrl/⌘ + K**: names, IPs, ports, domains, usernames.
 
 ## Install
 
-Download the installer for your system from the [Releases](../../releases) page.
+For this UI preview, download the installer for your system from the latest successful [Build artifacts workflow](https://github.com/AA-EION/Kurogane/actions/workflows/release.yml). Sign in to GitHub to download its artifacts. This branch does not publish a release.
 
 | System | File | Notes |
 |---|---|---|
@@ -35,7 +35,7 @@ Double-clicking a `.kurogane` file opens it in Kurogane.
 1. **Create a vault.** Pick a master password. Two-factor (any authenticator app) is optional and can be turned on later under *Settings → Security*.
 2. **Add a company**, then its **machines**. Each machine has a list of network cards, each with a private IP and an optional public IP. VMs can point at the machine they run on.
 3. **Add services** on a machine. A service can be a Docker container, a VM service, an SMB share or a native daemon. Give it its internal port and the port it is published on. If it belongs to a different company than the machine (for example your own website on your employer's VPS), set *Owned by*.
-4. **Add the reverse proxy** (nginx, Traefik, Caddy, Nginx Proxy Manager, Cloudflare Tunnel…) and its routes: `www.example.com` → service. You can also do this from the service form under *Public domains*.
+4. **Add the reverse proxy** (nginx, Traefik, Caddy, Nginx Proxy Manager, Cloudflare Tunnel…) and its routes: `www.example.com` → service. On Windows/Linux, use *Public domains* in the service form; on macOS, use *Publish a domain* in the service inspector.
 5. **Add accounts** to a company, machine, service or proxy. Passwords, SSH keys, tokens and secure notes are encrypted inside the vault.
 
 | | |
@@ -90,9 +90,9 @@ cd ui && npm test               # UI
 
 `cd ui && npm run dev` serves the interface in a browser at http://127.0.0.1:1420 against an in-memory backend, which is handy for UI work. That backend exists only in development builds.
 
-[`.github/workflows/release.yml`](.github/workflows/release.yml) builds Windows, universal macOS and Linux installers as GitHub Actions artifacts. It has no release-creation step. Source changes or a manual dispatch start a build.
+[`.github/workflows/release.yml`](.github/workflows/release.yml) builds Windows, universal macOS and Linux installers as GitHub Actions artifacts when manually dispatched. It has no release-creation step. CI verifies source changes separately.
 
-Appearance defaults to Light. Settings → General offers Light, Dark and System, saved on this computer. The material language follows Boundless and EION Studios. The [macOS SwiftUI shell](docs/MACOS.md) adds native Liquid Glass navigation on macOS 26+, retaining the shared map and editors. macOS source builds require Xcode 26+.
+Appearance defaults to Light. Settings → General offers Light, Dark and System, saved on this computer. The material language follows Boundless and EION Studios. The [macOS port](docs/MACOS.md) uses SwiftUI for every visible view, including its native map, forms, inspectors, vault screens, and settings. Navigation uses native Liquid Glass on macOS 26 and newer. macOS source builds require Xcode 26+.
 
 ### Headless CLI
 
@@ -125,6 +125,7 @@ crates/kurogane-core/    encryption, vault file, SQLCipher database, editing, Ex
 crates/kurogane-sync/    pinned rclone, sandbox, folder sync, lineage and conflict handling
 crates/kurogane-cli/     `kurogane` headless tool
 src-tauri/               desktop shell: commands, sync scheduler, import/export, installer config
+  macos/                 complete SwiftUI presentation and direct Rust command bridge
 ui/src/                  React interface
   canvas/                isometric layout, routing, map export
   components/            sidebar, drawer, settings, lock screen, first-run wizard, dialogs

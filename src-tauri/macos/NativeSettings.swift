@@ -4,6 +4,8 @@ struct NativeSettings: View {
     @ObservedObject var model: NativeModel
     @State private var settings: Row = [:]
     @State private var error: String?
+    @State private var section: String
+    init(model: NativeModel, section: String = "general") { self.model = model; _section = State(initialValue:section) }
     var body: some View {
         VStack(spacing:0) {
             HStack { Text("Settings").font(.title2); Spacer(); Button("Done") { model.sheet = nil }.keyboardShortcut(.cancelAction) }.padding(20)
@@ -11,13 +13,18 @@ struct NativeSettings: View {
                 if let error { VStack(spacing:12) { Text(error).foregroundStyle(.red); Button("Retry") { load() } }.frame(maxHeight:.infinity) }
                 else { ProgressView("Loading settings…").frame(maxHeight:.infinity) }
             } else {
-                TabView {
-                    general.tabItem { Label("General",systemImage:"slider.horizontal.3") }
-                    NativeSecurity(model:model,settings:$settings).tabItem { Label("Security",systemImage:"lock.shield") }
-                    NativeSyncSettings(model:model).tabItem { Label("Sync",systemImage:"cloud") }
-                    data.tabItem { Label("Data",systemImage:"externaldrive") }
-                    about.tabItem { Label("About",systemImage:"info.circle") }
-                }.padding(.horizontal,12).padding(.bottom,12)
+                Picker("Settings section",selection:$section) {
+                    Text("General").tag("general"); Text("Security").tag("security"); Text("Sync").tag("sync"); Text("Data").tag("data"); Text("About").tag("about")
+                }.pickerStyle(.segmented).padding(.horizontal,24).padding(.bottom,12)
+                Group {
+                    switch section {
+                    case "security": NativeSecurity(model:model,settings:$settings)
+                    case "sync": NativeSyncSettings(model:model)
+                    case "data": data
+                    case "about": about
+                    default: general
+                    }
+                }.padding(.horizontal,12).padding(.bottom,12).frame(maxHeight:.infinity)
             }
         }.frame(width:680,height:650).task { load() }
     }
@@ -29,8 +36,8 @@ struct NativeSettings: View {
             }
             Section("Vault") {
                 TextField("Name",text:Binding(get:{ settings.text("displayName") },set:{ settings["displayName"] = $0 }))
-                Stepper("Lock after \(settings.number("lockTimeoutSecs")) seconds",value:intBinding("lockTimeoutSecs"),in:30...3600,step:30)
-                Stepper("Clear clipboard after \(settings.number("clipboardClearSecs")) seconds",value:intBinding("clipboardClearSecs"),in:5...300,step:5)
+                Stepper("Lock after \(settings.number("lockTimeoutSecs")) seconds",value:intBinding("lockTimeoutSecs"),in:min(30,settings.number("lockTimeoutSecs"))...max(14400,settings.number("lockTimeoutSecs")),step:30)
+                Stepper("Clear clipboard after \(settings.number("clipboardClearSecs")) seconds",value:intBinding("clipboardClearSecs"),in:min(5,settings.number("clipboardClearSecs"))...max(600,settings.number("clipboardClearSecs")),step:5)
                 Toggle("Lock on system suspend",isOn:Binding(get:{ settings.flag("lockOnSuspend") },set:{ settings["lockOnSuspend"] = $0 }))
                 Text(settings.text("vaultPath")).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
                 Button("Save preferences") { model.perform { _ = try await model.call("update_settings",["settings":["displayName":settings.text("displayName"),"lockTimeoutSecs":settings.number("lockTimeoutSecs"),"clipboardClearSecs":settings.number("clipboardClearSecs"),"lockOnSuspend":settings.flag("lockOnSuspend")]]); try await model.refresh(); model.notice = "Preferences saved" } }.disabled(model.busy || settings.text("displayName").trimmingCharacters(in:.whitespaces).isEmpty)

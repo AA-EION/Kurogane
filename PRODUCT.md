@@ -6,7 +6,7 @@
 
 web
 
-Desktop React workspace on Windows and Linux; macOS also has native SwiftUI chrome.
+Desktop React workspace on Windows and Linux; every visible macOS view is SwiftUI, backed by the same Rust core.
 
 ## Product Purpose
 

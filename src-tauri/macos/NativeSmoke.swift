@@ -1,6 +1,7 @@
 #if NATIVE_SMOKE
 import AppKit
 import SwiftUI
+import CryptoKit
 
 // This file has no shipping code. CI explicitly opts into the Cargo feature.
 @MainActor func startNativeSmoke(_ model: NativeModel) {
@@ -10,9 +11,15 @@ import SwiftUI
         defer { try? FileManager.default.removeItem(at:vault) }
         do {
             try await Task.sleep(nanoseconds:1_000_000_000)
-            _ = try await model.call("create_vault",["args":["path":vault.path,"displayName":"Issen Infrastructure","password":"native-smoke-password-2026","kdf":"standard","account":"CI"]])
+            let enrollment = try await model.call("create_vault",["args":["path":vault.path,"displayName":"Issen Infrastructure","password":"native-smoke-password-2026","kdf":"standard","account":"CI"]]) as? Row ?? [:]
             try await model.refresh()
             precondition(model.unlocked)
+            model.sheet = NativeSheet(kind:"create")
+            let pairingCode = try nativeSmokeCode(enrollment.text("secretBase32"))
+            try await model.finishPairing(pairingCode)
+            precondition(model.sheet == nil && model.status.flag("totpRequired"))
+            _ = try await model.call("totp_disable",["code":pairingCode])
+            try await model.refresh()
             var company = blankEntity("tenant"); company["name"] = "Issen Software Group"
             try await model.save("tenant",try normalized("tenant",company))
             let companyID = model.selected!.id
@@ -57,7 +64,7 @@ import SwiftUI
             }
             model.status = try await model.call("close_vault") as? Row ?? [:]
             try FileManager.default.removeItem(at:vault)
-            print("Native bridge integration passed: encrypted vault, all entity types, credential reveal, dependency impact, settings, lock and reopen")
+            print("Native bridge integration passed: encrypted vault, authenticator pairing dismissal, all entity types, credential reveal, dependency impact, settings, lock and reopen")
             exit(0)
         } catch {
             _ = try? await model.call("lock")
@@ -66,5 +73,21 @@ import SwiftUI
             exit(1)
         }
     }
+}
+func nativeSmokeCode(_ base32: String) throws -> String {
+    let alphabet = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZ234567".utf8)
+    var bits: UInt32 = 0, count = 0
+    var secret = Data()
+    for character in base32.uppercased().utf8 where character != 61 {
+        guard let digit = alphabet.firstIndex(of:character) else { throw NativeFailure(message:"Invalid fixture TOTP seed") }
+        bits = (bits << 5) | UInt32(digit); count += 5
+        if count >= 8 { count -= 8; secret.append(UInt8((bits >> count) & 255)) }
+    }
+    var counter = UInt64(Date().timeIntervalSince1970 / 30).bigEndian
+    let data = withUnsafeBytes(of:&counter) { Data($0) }
+    let digest = Array(HMAC<Insecure.SHA1>.authenticationCode(for:data,using:SymmetricKey(data:secret)))
+    let offset = Int(digest.last! & 15)
+    let number = (UInt32(digest[offset] & 127) << 24) | (UInt32(digest[offset+1]) << 16) | (UInt32(digest[offset+2]) << 8) | UInt32(digest[offset+3])
+    return String(format:"%06d",Int(number % 1_000_000))
 }
 #endif

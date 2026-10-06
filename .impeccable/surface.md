@@ -10,7 +10,7 @@ OWN-WORLD: Ivory and satin surfaces, warm black ink, beveled controls, inset fie
 
 STORY: Find the company, follow its machine and service, inspect its route or account, act through the existing Rust-backed workflows.
 
-FIRST VIEWPORT: A 64px toolbar above a 300px inventory rail and a large recessed map. A 380px inspector opens at the right. Search and New remain in the toolbar. macOS replaces that toolbar with native SwiftUI controls and Liquid Glass.
+FIRST VIEWPORT: Windows/Linux use a 64px toolbar above a 300px inventory rail and a large recessed map, with a 380px inspector. Every macOS view is SwiftUI: native navigation and split panes, a tactile map and inspectors, sheets and vault screens. Native navigation uses Liquid Glass on macOS 26 and newer. Search and New remain directly available on all platforms.
 
 FORM: User-pinned skeuomorphic adaptation of Boundless's existing material language; no concept randomization replaces the explicit reference. The signature interaction is a pressed control followed by a camera move to the physical service, with reduced-motion support.
 

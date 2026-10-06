@@ -42,6 +42,15 @@ import SwiftUI
                 do { _ = try normalized("port",port); fatalError("Invalid port was accepted") } catch {}
                 let valid = try normalized("port",blankEntity("port")); precondition(valid.number("containerPort") == 80)
                 let layout = MapLayout(NativeFixture.topology); precondition(layout.nodes.count == 4 && layout.size.height >= 500)
+                let endpoints = nativeServiceEndpoints(NativeFixture.service,NativeFixture.topology)
+                precondition(endpoints.map(\.url) == ["https://git.issen.local/","http://10.0.0.10:3000/"])
+                var privateOnly = NativeFixture.topology; privateOnly["proxies"] = []
+                precondition(nativeServiceEndpoints(NativeFixture.service,privateOnly).map(\.url) == ["http://10.0.0.10:3000/"])
+                var unpublished = NativeFixture.service; unpublished["ports"] = [["containerPort":3000,"protocol":"tcp"]]
+                precondition(nativeServiceEndpoints(unpublished,privateOnly).isEmpty)
+                var v6Host = NativeFixture.host; v6Host["interfaces"] = [["internalIp":"fd00::1","isPrimary":true]]
+                privateOnly["hosts"] = [v6Host]
+                precondition(nativeServiceEndpoints(NativeFixture.service,privateOnly).first?.url == "http://[fd00::1]:3000/")
                 let folder = CommandLine.arguments[1]
                 for theme in ["light","dark"] {
                     model.appearance = theme; model.applyAppearance()
@@ -55,6 +64,12 @@ import SwiftUI
                     ("proxy-editor",AnyView(NativeEditor(model:model,kind:"proxy",item:NativeFixture.proxy))),
                     ("account-editor",AnyView(NativeEditor(model:model,kind:"credential",item:[:]))),
                     ("settings",AnyView(NativeSettings(model:model))),
+                    ("security-settings",AnyView(NativeSettings(model:model,section:"security"))),
+                    ("sync-settings",AnyView(NativeSettings(model:model,section:"sync"))),
+                    ("data-settings",AnyView(NativeSettings(model:model,section:"data"))),
+                    ("about-settings",AnyView(NativeSettings(model:model,section:"about"))),
+                    ("company-editor",AnyView(NativeEditor(model:model,kind:"tenant",item:NativeFixture.tenant))),
+                    ("network-editor",AnyView(NativeEditor(model:model,kind:"network",item:[:]))),
                     ("cloud",AnyView(NativeCloud(model:model,linking:true))),
                     ("import",AnyView(NativeImport(model:model))),
                     ("export",AnyView(NativeExport(model:model))),
@@ -70,7 +85,7 @@ import SwiftUI
                 window.contentView = NSHostingView(rootView:NativeVaultScreen(model:model).background(Color(nsColor:.windowBackgroundColor)))
                 try await Task.sleep(nanoseconds:350_000_000)
                 try capture(window,folder+"/locked-vault.png")
-                print("Native SwiftUI validation and 12 view captures passed")
+                print("Native SwiftUI validation and 18 view captures passed")
                 exit(0)
             } catch { fputs("Native preview failed: \(error)\n",stderr); exit(1) }
         }

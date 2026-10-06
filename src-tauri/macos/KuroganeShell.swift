@@ -43,10 +43,6 @@ func rustRequest(_ message: UnsafePointer<CChar>)
         return try await withCheckedThrowingContinuation { continuation in
             pending[id] = continuation
             message.withCString { rustRequest($0) }
-            Task { @MainActor in
-                try? await Task.sleep(nanoseconds: 300_000_000_000)
-                if let expired = pending.removeValue(forKey: id) { expired.resume(throwing: NativeFailure(message: "The operation timed out. Try again.")) }
-            }
         }
         #endif
     }
@@ -76,6 +72,7 @@ public func receiveNativeJSON(_ pointer: UnsafePointer<CChar>) {
     @Published var loading = true
     @Published var busy = false
     @Published var cloudStep = ""
+    @Published var cloudURL = ""
     @Published var fit = UUID()
     @Published var mapMode = true
     @Published var appearance = UserDefaults.standard.string(forKey: "kurogane.appearance") ?? "light" {
@@ -112,18 +109,25 @@ public func receiveNativeJSON(_ pointer: UnsafePointer<CChar>) {
             let picture = try await call("topology") as? Row ?? [:]
             guard generation == vaultGeneration && unlocked else { return }
             topology = picture
-            sync = try await call("sync_status") as? Row ?? [:]
+            let syncState = try await call("sync_status") as? Row ?? [:]
+            guard generation == vaultGeneration && unlocked else { return }
+            sync = syncState
         }
         else { clearVault() }
         loading = false
     }
-    func clearVault() { vaultGeneration += 1; topology = [:]; sync = [:]; selected = nil; sheet = nil; query = ""; notice = nil; cloudStep = "" }
+    func clearVault() { vaultGeneration += 1; topology = [:]; sync = [:]; selected = nil; sheet = nil; query = ""; notice = nil; cloudStep = ""; cloudURL = "" }
     func start() {
         NativeBridge.shared.event = { [weak self] name, payload in
             guard let self else { return }
             if name == "vault://locked" { clearVault(); status["stage"] = "locked"; busy = false }
             if name == "sync://status" { sync = payload as? Row ?? [:] }
-            if name == "cloud:step" { let step = payload as? Row ?? [:]; cloudStep = step.text("step").capitalized; if step.text("step") == "error" { error = step.text("message") } }
+            if name == "cloud:step" {
+                let step = payload as? Row ?? [:]
+                cloudStep = ["provisioning":"Preparing sync…","consent":"Waiting for browser approval…","listing":"Finding your vaults…","downloading":"Opening your cloud vault…","done":"Connected","error":"Connection failed"][step.text("step")] ?? "Connecting…"
+                if step.text("step") == "consent" { cloudURL = step.text("url") }
+                if step.text("step") == "error" { error = step.text("message") }
+            }
             if name == "vault://changed" || name == "vault://locked" { Task { try? await self.refresh() } }
         }
         // Only real user input extends the session; rendering and polling do not.
@@ -152,6 +156,11 @@ public func receiveNativeJSON(_ pointer: UnsafePointer<CChar>) {
     }
     func edit(_ kind: String, _ row: Row = [:]) { sheet = NativeSheet(kind: "edit:\(kind)", item: row) }
     func openSettings() { sheet = NativeSheet(kind: "settings") }
+    func finishPairing(_ code: String) async throws {
+        _ = try await call("confirm_totp",["code":code])
+        sheet = nil
+        try await refresh()
+    }
 }
 
 struct NativeMaterial: ViewModifier {

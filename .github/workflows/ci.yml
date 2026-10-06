@@ -63,7 +63,7 @@ jobs:
 
   desktop:
     name: Desktop shell (${{ matrix.os }})
-    needs: [core, ui]
+    needs: [ui]
     strategy:
       fail-fast: false
       matrix:

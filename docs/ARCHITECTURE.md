@@ -1,6 +1,6 @@
 # Architecture & framework choice
 
-## Decision: Rust core + Tauri v2 shell + React/SVG canvas
+## Decision: Rust core + Tauri lifecycle + React/SVG or SwiftUI presentation
 
 | Concern | Choice | Why |
 |---|---|---|
@@ -15,7 +15,7 @@
 
 * **Go + Wails**: a comparable footprint. Rejected because Go's GC moves and copies buffers, so reliably zeroizing a key is not possible, and the SQLCipher bindings need cgo anyway.
 * **C++ / Qt 6**: an excellent native toolkit, but a much larger memory-unsafe surface for a security product. The licensing (LGPL/commercial) and the build complexity across three OSes are also heavier.
-* **Slint / iced (pure Rust UI)**: attractive for the smallest attack surface. But the FossFLOW reuse mandate and the richness of web layout for the drawer and omnibox favoured a webview. The core is UI-agnostic (`kurogane-core` has no Tauri dependency), so a native front end can be added later.
+* **Slint / iced (pure Rust UI)**: attractive for the smallest attack surface. But the FossFLOW reuse mandate and the richness of web layout for the drawer and omnibox favoured a webview. The core is UI-agnostic (`kurogane-core` has no Tauri dependency). macOS now uses a complete SwiftUI presentation while Windows and Linux keep the React/SVG workspace.
 * **Electron**: rejected per the brief. It brings ~150 MB of Chromium per app, and its sandboxing depends on careful configuration.
 
 ## Process & trust boundaries
@@ -44,6 +44,8 @@
 * Launch targets are validated against allow-lists before reaching `Command::new` (no `-oProxyCommand=…` hosts, no `javascript:` URLs, no CR/LF in `.rdp` fields).
 * File dialogs, URL opening and the clipboard are invoked **from Rust**. The capability file grants JS nothing beyond listening to Kurogane's own events.
 
+On macOS, SwiftUI replaces every visible web view. Its native command allow-list calls the same Rust handlers through asynchronous C ABI requests and copies response buffers synchronously. Tauri owns window lifecycle; React does not mount. Native topology stays secret-free; explicit audited Reveal is the only secret output into Swift, and Copy/launchers remain in Rust. See [MACOS.md](MACOS.md) for sources and runner checks.
+
 ## Crates
 
 | Crate | Responsibility | Depends on Tauri? |
@@ -58,7 +60,7 @@ The three non-Tauri crates are the default workspace members, so `cargo test` ru
 ## Session lifecycle
 
 1. **Unlock**: Argon2id runs on a blocking thread. Then the VDK is unwrapped, the key ring derived (six mlocked pages), the payload decrypted, and the SQLCipher working copy opened. TOTP is verified with replay protection.
-2. **Active**: every IPC call that touches the vault calls `SessionClock::touch()`. The UI also throttles a `touch` on pointer/keyboard activity, at most once per 10 s.
+2. **Active**: every IPC call that touches the vault calls `SessionClock::touch()`. The UI also throttles a `touch` on pointer/keyboard activity, at most once per 10 s on Windows/Linux or once per second on macOS. Rendering and status polling never touch the session.
 3. **Lock** (manual, `Ctrl/⌘+L`, inactivity timeout, suspend detected, app exit): pending sync is flushed first (except on suspend), then `save_if_dirty()` persists audit entries, then the `UnlockedVault` is dropped. That closes SQLCipher, shreds the working copy and zeroizes and unlocks every key page. The clipboard is cleared if it still holds a Kurogane secret. The UI receives `vault://locked` and discards the topology.
 
 Suspend detection is portable: it compares wall-clock and monotonic deltas (`session.rs`). OS-specific screen-lock signals plug into `SessionClock::force_lock`. These are logind `Lock`/`PrepareForSleep`, `com.apple.screenIsLocked`, and `WTS_SESSION_LOCK` (see the roadmap in the README).

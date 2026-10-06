@@ -47,24 +47,38 @@ struct NativeFields: View {
     }
     var body: some View {
         ForEach(editorFields(kind)) { f in
+            // Keep a field as one explicit form row. Grouped Form can flatten
+            // mixed Picker/LabeledContent children and merge adjacent labels.
+            VStack(alignment:.leading,spacing:6) {
             if f.type == "bool" { Toggle(f.label, isOn: Binding(get: { value.flag(f.key) }, set: { value[f.key] = $0 })).toggleStyle(.switch) }
             else if f.type == "choice" {
+                HStack {
+                    Text(f.label).foregroundStyle(NativePalette.secondary)
+                    Spacer()
                 Picker(f.label, selection: textBinding(f)) {
                     if !f.choices.contains(value.text(f.key)), !value.text(f.key).isEmpty { Text(value.text(f.key)).tag(value.text(f.key)) }
                     ForEach(f.choices, id: \.self) { Text($0.replacingOccurrences(of: "_", with: " ").capitalized).tag($0) }
+                }.labelsHidden().accessibilityLabel(f.label)
                 }
             } else if ["tenant","host","network","service"].contains(f.type) {
+                HStack {
+                    Text(f.label + (f.required ? " *" : "")).foregroundStyle(NativePalette.secondary)
+                    Spacer()
                 Picker(f.label + (f.required ? " *" : ""), selection: textBinding(f)) {
                     Text(f.required ? "Choose…" : "None").tag("")
                     ForEach(model.rows(f.type).filter { !(kind == "host" && f.key == "parentHostId" && $0.text("id") == value.text("id")) }, id: \.entityID) { row in Text(row.text("name")).tag(row.text("id")) }
+                }.labelsHidden().accessibilityLabel(f.label)
                 }
             } else if f.type == "multiline" {
                 VStack(alignment: .leading) { Text(f.label); TextEditor(text: textBinding(f)).font(.body).frame(height: 72).border(.gray.opacity(0.25)) }
             } else {
-                LabeledContent {
-                    TextField("",text:textBinding(f)).textFieldStyle(.roundedBorder).accessibilityLabel(f.label)
-                } label: { Text(f.label + (f.required ? " *" : "")).foregroundStyle(NativePalette.secondary) }
+                HStack {
+                    Text(f.label + (f.required ? " *" : "")).foregroundStyle(NativePalette.secondary)
+                    Spacer()
+                    TextField("",text:textBinding(f)).textFieldStyle(.roundedBorder).accessibilityLabel(f.label).frame(minWidth:180,maxWidth:340)
+                }
             }
+            }.padding(.vertical,4)
         }
     }
 }

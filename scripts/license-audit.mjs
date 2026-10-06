@@ -211,7 +211,7 @@ const lines = ['KUROGANE THIRD-PARTY LICENSE AND COPYRIGHT TEXTS', '',
   ...[...texts].sort(([a], [b]) => a.localeCompare(b)).flatMap(([digest, content]) => [`========== NOTICE ${digest} ==========`, content, ''])];
 const output = lines.join('\n');
 await fs.writeFile(path.join(root, 'THIRD_PARTY_LICENSES.txt'), output);
-const inventory = { schemaVersion: 1, ...fingerprint, noticesSha256: hash(output), packages: results };
+const inventory = { schemaVersion: 1, ...fingerprint, noticesSha256: textHash(output), packages: results };
 await fs.writeFile(inventoryPath, JSON.stringify(inventory, null, 2) + '\n');
 console.log(JSON.stringify({ cargo: cargo.length, npm: npm.length, expressions: [...new Set(results.map(p => p.license))].sort(),
   missingNotices: results.filter(p => !p.notices.length).map(p => `${p.ecosystem}:${p.name}@${p.version}`), noticeBytes: Buffer.byteLength(output) }, null, 2));

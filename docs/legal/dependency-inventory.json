@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "cargoLockSha256": "e80cd0dcdc8969e0580b6a063b00417b50b36841dc28fe5b948e49067d585275",
   "npmLockSha256": "79c61ef6027da02c1c2a373a044ff38efc8050e1e82b3a474a6d829198d004c9",
-  "noticesSha256": "14dada57c2216d7f2400d6145c4365b07a010ee2f98d7c1167f3a05aa7390cde",
+  "noticesSha256": "5e94160f090002342643afb6887c8c8c676d681e634f81ae95eccb9437c6d21e",
   "packages": [
     {
       "ecosystem": "cargo",

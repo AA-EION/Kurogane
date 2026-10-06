@@ -18,10 +18,10 @@ struct NativeVaultScreen: View {
                     if model.status.text("lastLockReason") == "inactivity" { Text("Locked after inactivity.").font(.caption).foregroundStyle(NativePalette.secondary) }
                     SecureField("Master password",text:$password).textFieldStyle(.roundedBorder).focused($focused).onSubmit { unlock() }
                     if model.status.flag("totpRequired") { TextField("Authenticator code",text:$code).textFieldStyle(.roundedBorder).onSubmit { unlock() } }
-                    Button(model.busy ? "Unlocking…" : "Unlock vault") { unlock() }.buttonStyle(.borderedProminent).tint(NativePalette.primaryFill).foregroundStyle(NativePalette.primaryInk).frame(maxWidth:.infinity).disabled(password.isEmpty || model.busy)
+                    Button(model.busy ? "Unlocking…" : "Unlock vault") { unlock() }.buttonStyle(NativePrimaryButtonStyle()).frame(maxWidth:.infinity).disabled(password.isEmpty || model.busy)
                     Button("Choose another vault") { password = ""; code = ""; model.perform { model.status = try await model.call("close_vault") as? Row ?? [:] } }
                 } else {
-                    Button { model.sheet = NativeSheet(kind:"create") } label: { Label("Create a vault",systemImage:"plus.circle").frame(maxWidth:.infinity,alignment:.leading) }.buttonStyle(.borderedProminent).tint(NativePalette.primaryFill).foregroundStyle(NativePalette.primaryInk)
+                    Button { model.sheet = NativeSheet(kind:"create") } label: { Label("Create a vault",systemImage:"plus.circle").frame(maxWidth:.infinity,alignment:.leading) }.buttonStyle(NativePrimaryButtonStyle())
                     Button { model.perform { _ = try await model.call("open_vault",["path":NSNull()]); try await model.refresh() } } label: { Label("Open an existing vault…",systemImage:"folder").frame(maxWidth:.infinity,alignment:.leading) }
                     Button { model.sheet = NativeSheet(kind:"cloud") } label: { Label("Connect a cloud vault…",systemImage:"cloud").frame(maxWidth:.infinity,alignment:.leading) }
                     let recent = model.status["recentVaults"] as? [String] ?? []
@@ -72,12 +72,12 @@ struct NativeCreateVault: View {
                 Button(enrollment == nil ? "Cancel" : "Skip for now") { model.perform { model.sheet = nil; if enrollment != nil { try await model.refresh() } } }.keyboardShortcut(.cancelAction)
                 Spacer()
                 if enrollment != nil {
-                    Button("Verify and finish") { model.perform { try await model.finishPairing(code); self.enrollment = nil; code = "" } }.buttonStyle(.borderedProminent).tint(NativePalette.primaryFill).foregroundStyle(NativePalette.primaryInk).disabled(code.count != 6)
+                    Button("Verify and finish") { model.perform { try await model.finishPairing(code); self.enrollment = nil; code = "" } }.buttonStyle(NativePrimaryButtonStyle()).disabled(code.count != 6)
                 } else {
                     Button("Create vault") {
                         let pw = password; password = ""; confirmation = ""
                         model.perform { enrollment = try await model.call("create_vault",["args":["path":path,"displayName":name,"password":pw,"kdf":kdf,"account":account.isEmpty ? name : account]]) as? Row }
-                    }.buttonStyle(.borderedProminent).tint(NativePalette.primaryFill).foregroundStyle(NativePalette.primaryInk).disabled(path.isEmpty || password.count < 12 || password != confirmation || name.trimmingCharacters(in:.whitespaces).isEmpty)
+                    }.buttonStyle(NativePrimaryButtonStyle()).disabled(path.isEmpty || password.count < 12 || password != confirmation || name.trimmingCharacters(in:.whitespaces).isEmpty)
                 }
             }
         }.padding(24).nativeSheetSize(model,width:560,height:600).disabled(model.busy).onDisappear { password = ""; confirmation = ""; enrollment = nil; code = "" }
@@ -110,6 +110,7 @@ struct NativeCloud: View {
     var body: some View {
         VStack(alignment:.leading,spacing:18) {
             Text(linking ? "Link a sync destination" : "Connect a cloud vault").font(.title2)
+            ScrollView { VStack(alignment:.leading,spacing:18) {
             Text("Only the encrypted vault is synced. Approve cloud access in your browser when prompted.").foregroundStyle(NativePalette.secondary)
             Picker("Provider",selection:$provider) { Text("Google Drive").tag("drive"); Text("OneDrive").tag("onedrive"); Text("MEGA").tag("mega"); Text("Synced folder").tag("folder") }
             if provider == "mega" { TextField("MEGA email",text:$email); SecureField("MEGA password",text:$password) }
@@ -119,8 +120,10 @@ struct NativeCloud: View {
             if !candidates.isEmpty {
                 ScrollView { VStack(alignment:.leading,spacing:8) { ForEach(candidates,id:\.self) { candidate in Button(candidate) { model.perform { _ = try await model.call("connect_cloud_finish",["remotePath":candidate]); model.sheet = nil; try await model.refresh() } }.lineLimit(2).disabled(model.busy) } } }.frame(maxHeight:160)
             }
-            HStack { Spacer(); Button("Cancel") { password = ""; model.sheet = nil }.disabled(model.busy); Button("Connect") { connect() }.buttonStyle(.borderedProminent).tint(NativePalette.primaryFill).foregroundStyle(NativePalette.primaryInk).disabled(model.busy || provider == "mega" && (email.isEmpty || password.isEmpty)) }
-        }.padding(24).frame(width:500).textFieldStyle(.roundedBorder).onDisappear { password = ""; model.cloudURL = "" }
+            }.frame(maxWidth:.infinity,alignment:.leading) }
+            Divider()
+            HStack { Spacer(); Button("Cancel") { password = ""; model.sheet = nil }.disabled(model.busy); Button("Connect") { connect() }.buttonStyle(NativePrimaryButtonStyle()).disabled(model.busy || provider == "mega" && (email.isEmpty || password.isEmpty)) }
+        }.padding(24).nativeSheetSize(model,width:520,height:600).textFieldStyle(.roundedBorder).onDisappear { password = ""; model.cloudURL = "" }
     }
     func connect() {
         let credentials: Any = provider == "mega" ? ["user":email,"password":password] : NSNull()

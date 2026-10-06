@@ -17,3 +17,16 @@ enum NativePalette {
     static let primaryFill = color(0x343d42,0xd6d9d8)
     static let primaryInk = color(0xfffefa,0x20211f)
 }
+
+struct NativePrimaryButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var enabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label.padding(.horizontal,12).padding(.vertical,6)
+            .foregroundStyle(enabled ? NativePalette.primaryInk : NativePalette.secondary)
+            .background(enabled ? NativePalette.primaryFill : Color(nsColor:.controlBackgroundColor),in:RoundedRectangle(cornerRadius:7))
+            .shadow(color:.black.opacity(enabled && !configuration.isPressed ? 0.16 : 0),radius:2,y:2)
+            .scaleEffect(configuration.isPressed && enabled ? 0.98 : 1)
+            .animation(.easeOut(duration:reduceMotion ? 0 : 0.1),value:configuration.isPressed)
+    }
+}

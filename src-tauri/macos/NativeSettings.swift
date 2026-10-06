@@ -147,7 +147,7 @@ struct NativeImport: View {
                     }.frame(maxWidth:.infinity,alignment:.leading)
                 }
             }
-            HStack { Spacer(); Button("Cancel") { model.sheet = nil }.keyboardShortcut(.cancelAction); Button("Apply import") { model.perform { let result = try await model.call("import_apply") as? Row ?? [:]; model.topology = result.row("topology"); model.sheet = nil; model.notice = "Inventory imported" } }.buttonStyle(.borderedProminent).tint(NativePalette.primaryFill).foregroundStyle(NativePalette.primaryInk).disabled(preview == nil || !(preview?.row("report").rows("errors").isEmpty ?? false) || model.busy) }
+            HStack { Spacer(); Button("Cancel") { model.sheet = nil }.keyboardShortcut(.cancelAction); Button("Apply import") { model.perform { let result = try await model.call("import_apply") as? Row ?? [:]; model.topology = result.row("topology"); model.sheet = nil; model.notice = "Inventory imported" } }.buttonStyle(NativePrimaryButtonStyle()).disabled(preview == nil || !(preview?.row("report").rows("errors").isEmpty ?? false) || model.busy) }
         }.padding(24).nativeSheetSize(model,width:600,height:550)
     }
 }
@@ -162,7 +162,7 @@ struct NativeExport: View {
             Picker("Format",selection:$format) { Text("Excel").tag("xlsx"); Text("JSON").tag("json") }.pickerStyle(.segmented)
             Toggle("Include passwords and private keys",isOn:$include)
             if include { Text("The exported file will contain readable secrets. Enter your master password to confirm.").foregroundStyle(NativePalette.warning); SecureField("Master password",text:$password) }
-            HStack { Spacer(); Button("Cancel") { model.sheet = nil }; Button("Export…") { let pw = password; password = ""; model.perform { if let path = try await model.call("export_data",["format":format,"includeSecrets":include,"password":include ? pw as Any : NSNull()]) as? String { model.notice = "Saved \(path)"; model.sheet = nil } } }.buttonStyle(.borderedProminent).tint(NativePalette.primaryFill).foregroundStyle(NativePalette.primaryInk).disabled(model.busy || include && password.isEmpty) }
+            HStack { Spacer(); Button("Cancel") { model.sheet = nil }; Button("Export…") { let pw = password; password = ""; model.perform { if let path = try await model.call("export_data",["format":format,"includeSecrets":include,"password":include ? pw as Any : NSNull()]) as? String { model.notice = "Saved \(path)"; model.sheet = nil } } }.buttonStyle(NativePrimaryButtonStyle()).disabled(model.busy || include && password.isEmpty) }
         }.padding(24).frame(width:500).onDisappear { password = "" }
     }
 }

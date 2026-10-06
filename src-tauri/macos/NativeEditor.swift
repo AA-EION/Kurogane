@@ -128,7 +128,7 @@ struct NativeEditor: View {
                 if let error { Text(error).foregroundStyle(NativePalette.danger).textSelection(.enabled) }
             }.formStyle(.grouped)
             Divider()
-            HStack { Spacer(); Button("Cancel") { model.sheet = nil }.keyboardShortcut(.cancelAction); Button(model.busy ? "Saving…" : "Save") { save() }.buttonStyle(.borderedProminent).tint(NativePalette.primaryFill).foregroundStyle(NativePalette.primaryInk).keyboardShortcut(.defaultAction) }.padding(16).disabled(model.busy)
+            HStack { Spacer(); Button("Cancel") { model.sheet = nil }.keyboardShortcut(.cancelAction); Button(model.busy ? "Saving…" : "Save") { save() }.buttonStyle(NativePrimaryButtonStyle()).keyboardShortcut(.defaultAction) }.padding(16).disabled(model.busy)
         }.nativeSheetSize(model,width:680,height:680).onDisappear { secrets.removeAll(); modes.removeAll() }
     }
     private func nested(_ key: String, _ child: String, _ title: String) -> some View {

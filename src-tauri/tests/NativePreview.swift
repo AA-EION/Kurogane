@@ -55,13 +55,15 @@ import SwiftUI
                 let folder = CommandLine.arguments[1]
                 if CommandLine.arguments.count > 2 {
                     let data = try Data(contentsOf:URL(fileURLWithPath:CommandLine.arguments[2]))
-                    model.topology = try JSONSerialization.jsonObject(with:data) as? Row ?? NativeFixture.topology
+                    let fixture = try JSONSerialization.jsonObject(with:data) as? Row ?? [:]
+                    model.topology = fixture.row("topology")
+                    precondition(model.rows("host").count >= 10 && model.rows("service").count >= 10,"Rich topology fixture did not load")
                     if let service = model.rows("service").first(where: { $0.text("name") == "gitea" }) { model.selected = NativeItem(kind:"service",id:service.entityID) }
                 }
                 for _ in 0..<100 { if model.graphReady { break }; try await Task.sleep(nanoseconds:100_000_000) }
                 precondition(model.graphReady,"Shared graph did not connect")
                 let count = try await model.graph.webView?.evaluateJavaScript("document.querySelectorAll('[data-node]').length") as? Int ?? 0
-                precondition(count >= model.rows("host").count,"Topology did not render its machines")
+                precondition(count > 0 && count >= model.rows("host").count,"Topology did not render its machines")
                 for theme in ["light","dark"] {
                     model.appearance = theme; model.applyAppearance()
                     try await Task.sleep(nanoseconds:500_000_000)

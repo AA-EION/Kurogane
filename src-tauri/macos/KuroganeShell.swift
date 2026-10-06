@@ -262,7 +262,7 @@ struct NativeWorkspace: View {
                         else { Text(model.notice ?? model.sync.text("lastOutcome", "Saved locally")).font(.caption).foregroundStyle(NativePalette.secondary) }
                     }.padding(12)
                 }.frame(minWidth: 360, maxWidth: .infinity, maxHeight: .infinity)
-                if let selected = model.selected { NativeInspector(model: model, item: selected).frame(minWidth: 240, idealWidth: 285, maxWidth: 320) }
+                if let selected = model.selected, !model.row(selected).isEmpty { NativeInspector(model: model, item: selected).frame(minWidth: 240, idealWidth: 285, maxWidth: 320) }
             }
         }
     }

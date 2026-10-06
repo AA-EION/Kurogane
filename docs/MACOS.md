@@ -36,4 +36,6 @@ The runner-only `native-smoke` Cargo feature creates a temporary encrypted vault
 
 At source commit `1212307`, [native verification 37487691096](https://github.com/AA-EION/Kurogane/actions/runs/37487691096) passed both architecture typechecks and produced 34 workspace/attached-sheet captures. Finish review returned **ship**, scoped to layout, topology and theme contrast: distinct form rows, bounded sheets and visible action footers, the original graph contained in its pane, and readable native text/actions in both appearances. Whole-map overview labels require zooming. This review does not certify live cloud consent or every interaction.
 
+[CI 37487690952](https://github.com/AA-EION/Kurogane/actions/runs/37487690952) passed the 56 Rust tests on all three operating systems, 12 UI tests, desktop builds and the real native encrypted-vault smoke workflow at that source revision. [Installer run 37487696874](https://github.com/AA-EION/Kurogane/actions/runs/37487696874) produced Windows, Linux and universal macOS artifacts, with AppImage dependency and macOS signature checks. No release was published.
+
 Live cloud consent requires the user's account and browser. OAuth parsing has regression coverage for raw JSON and rclone's encoded config response; screenshots or synthetic fixtures do not prove successful live authorization.

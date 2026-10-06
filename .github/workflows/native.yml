@@ -33,7 +33,7 @@ jobs:
         run: |
           npm --prefix ui ci
           npm --prefix ui run build
-          node ui/node_modules/vite/bin/vite.js preview --host 127.0.0.1 --port 1420 >/tmp/kurogane-graph.log 2>&1 &
+          node ui/node_modules/vite/bin/vite.js preview ui --host 127.0.0.1 --port 1420 >/tmp/kurogane-graph.log 2>&1 &
       - name: Native layout and validation checks
         run: |
           xcrun swiftc -D NATIVE_PREVIEW -parse-as-library -target arm64-apple-macosx13.0 src-tauri/macos/*.swift src-tauri/tests/NativePreview.swift -o /tmp/kurogane-native-preview

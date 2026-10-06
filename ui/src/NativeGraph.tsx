@@ -15,7 +15,7 @@ interface GraphState {
 declare global {
   interface Window {
     __KUROGANE_NATIVE_GRAPH__?: boolean;
-    kuroganeGraph?: { update(state: GraphState): void; export(format: string): Promise<void> };
+    kuroganeGraph?: { update(state: GraphState): void; export(format: string, id: string): Promise<void> };
     webkit?: { messageHandlers?: { kuroganeGraph?: { postMessage(message: unknown): void } } };
   }
 }
@@ -33,8 +33,11 @@ export function NativeGraph() {
   }, [scene, state?.selected?.id]);
   useEffect(() => {
     window.kuroganeGraph = {
-      update(next) { setAppearance(next.appearance); setState(next); },
-      async export(format) {
+      update(next) {
+        setAppearance(next.appearance);
+        setState((previous) => ({ ...next, topology: JSON.stringify(previous?.topology) === JSON.stringify(next.topology) ? previous?.topology ?? null : next.topology }));
+      },
+      async export(format, id) {
         try {
           const topology = current.current?.topology;
           if (!topology) throw new Error('Unlock the vault and open its map first.');
@@ -51,8 +54,8 @@ export function NativeGraph() {
             reader.onload = () => resolve(String(reader.result).split(',')[1]);
             reader.readAsDataURL(blob);
           });
-          post({ type: 'file', format, dataBase64: base64 });
-        } catch (error) { post({ type: 'error', message: String(error) }); }
+          post({ type: 'file', id, format, dataBase64: base64 });
+        } catch (error) { post({ type: 'error', id, message: String(error) }); }
       },
     };
     post({ type: 'ready' });
@@ -62,7 +65,7 @@ export function NativeGraph() {
   if (!scene || !state?.topology) return <main className="native-graph-stage"><span className="native-graph-empty">Unlock your vault to view its topology.</span></main>;
   const topology = state.topology;
   return <main className="native-graph-stage" aria-label="Infrastructure topology">
-    <IsoCanvas scene={scene} selected={scene.refToNode.get(state.selected?.id ?? '') ?? null} focus={focus} dimmedTenants={new Set()} onSelect={(nodeID) => {
+    <IsoCanvas scene={scene} selected={scene.refToNode.get(state.selected?.id ?? '') ?? null} focus={focus} inspectorInset={0} dimmedTenants={new Set()} onSelect={(nodeID) => {
       const zone = scene.zones.find((value) => value.id === nodeID);
       const node = scene.nodes.find((value) => value.id === nodeID);
       const id = zone?.refId ?? node?.refId;

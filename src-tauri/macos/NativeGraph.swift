@@ -7,6 +7,7 @@ import WebKit
     weak var model: NativeModel?
     var webView: WKWebView?
     private var lastState = ""
+    private var exportID: String?
     init(model: NativeModel) { self.model = model }
     func attach(_ view: WKWebView) {
         webView = view
@@ -27,11 +28,12 @@ import WebKit
             if result as? Bool == true && error == nil { self.lastState = json; self.model?.graphReady = true }
         }
     }
-    func clear() { lastState = ""; update() }
+    func clear() { lastState = ""; exportID = nil; update() }
     func export(_ format: String) {
         guard let model, !model.busy, !model.graphExporting, model.graphReady else { return }
         model.graphExporting = true
-        webView?.evaluateJavaScript("window.kuroganeGraph.export('\(format)'); undefined") { [weak self] _,error in
+        let id = UUID().uuidString; exportID = id
+        webView?.evaluateJavaScript("window.kuroganeGraph.export('\(format)','\(id)'); undefined") { [weak self] _,error in
             if let error { self?.model?.error = error.localizedDescription; self?.model?.graphExporting = false }
         }
     }
@@ -45,14 +47,15 @@ import WebKit
             if item.isEmpty { model.selected = nil }
             else if model.rows(kind).contains(where: { $0.entityID == id }) { model.selected = NativeItem(kind:kind,id:id) }
         case "file":
-            guard model.unlocked, model.graphExporting, ["png","svg","json"].contains(body.text("format")) else { return }
+            guard model.unlocked, model.graphExporting, body.text("id") == exportID, ["png","svg","json"].contains(body.text("format")) else { return }
+            guard !model.busy else { model.graphExporting = false; model.error = "Finish the current operation, then export the map again."; return }
             let format = body.text("format")
             model.perform {
-                defer { model.graphExporting = false }
+                defer { model.graphExporting = false; self.exportID = nil }
                 let path = try await model.call("save_file",["suggestedName":"Kurogane-map.\(format)","dataBase64":body.text("dataBase64"),"filterName":"Map","extensions":[format]])
                 if let path = path as? String { model.notice = "Saved \(path)" }
             }
-        case "error": model.graphExporting = false; model.error = body.text("message")
+        case "error": if body.text("id") == exportID { model.graphExporting = false; exportID = nil; model.error = body.text("message") }
         default: break
         }
     }

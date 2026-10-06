@@ -57,6 +57,13 @@ import CryptoKit
             let nodes = try await model.graph.webView?.evaluateJavaScript("document.querySelectorAll('[data-node]').length") as? Int ?? 0
             precondition(nodes >= 3,"The original topology graph did not render the inventory")
             if let window = model.window {
+                window.setContentSize(NSSize(width:960,height:640))
+                try await Task.sleep(nanoseconds:500_000_000)
+                if let graph = model.graph.webView, let container = graph.superview {
+                    precondition(abs(graph.frame.width-container.bounds.width) < 1 && abs(graph.frame.height-container.bounds.height) < 1,"Graph escaped its native pane")
+                }
+                let visible = try await model.graph.webView?.evaluateJavaScript("(() => { const node = document.querySelector('[data-node=\"svc:\(serviceID)\"]'); if (!node) return false; const rect = node.getBoundingClientRect(); return rect.right > 0 && rect.left < innerWidth && rect.bottom > 0 && rect.top < innerHeight; })()") as? Bool ?? false
+                precondition(visible,"Selected service is outside the graph viewport")
                 window.setContentSize(NSSize(width:1440,height:900))
                 for theme in ["light","dark"] {
                     model.appearance = theme; model.applyAppearance()

@@ -1,6 +1,6 @@
 # Relational schema
 
-The complete DDL is in [`crates/kurogane-core/src/db/schema_v1.sql`](../crates/kurogane-core/src/db/schema_v1.sql). It is applied by the migration runner in `db/mod.rs`, tracked with `PRAGMA user_version`, and refuses to open a vault whose schema is newer than the build.
+The complete DDL is in [`schema_v1.sql`](../crates/kurogane-core/src/db/schema_v1.sql) plus the migrations after it ([`schema_v2.sql`](../crates/kurogane-core/src/db/schema_v2.sql) adds `services.owner_tenant_id`). They are applied by the migration runner in `db/mod.rs`, tracked with `PRAGMA user_version`, and refuses to open a vault whose schema is newer than the build.
 
 ```mermaid
 erDiagram
@@ -11,6 +11,7 @@ erDiagram
     hosts ||--o{ network_interfaces : has
     networks ||--o{ network_interfaces : "attached (SET NULL)"
     hosts ||--o{ services : runs
+    tenants |o--o{ services : "owns (when not the host's company)"
     services ||--o{ service_ports : binds
     hosts ||--o{ reverse_proxies : "runs / tunnel connector"
     services |o--o| reverse_proxies : "proxy is a container (SET NULL)"
@@ -32,7 +33,7 @@ erDiagram
 | `networks` | Subnets per tenant | `UNIQUE(tenant_id, cidr)`, VLAN 1–4094 |
 | `hosts` | VPS, servers, VMs, switches, APs, routers, firewalls, NVRs, NAS, edge devices | `UNIQUE(tenant_id, name)`, category enum, port ranges, no self-parent |
 | `network_interfaces` | NIC name, internal IP, gateway, public egress IP | `UNIQUE(host_id, name)`; **partial unique index**: one primary NIC per host |
-| `services` | Containers, systemd units, SMB shares, Windows services… | runtime enum, scheme enum, `UNIQUE(host_id, name)` |
+| `services` | Containers, systemd units, SMB shares, Windows services… | runtime enum, scheme enum, `UNIQUE(host_id, name)`; optional `owner_tenant_id` for a service that belongs to a different company than its machine (your site on your employer's VPS), `SET NULL` on delete |
 | `service_ports` | Internal binding port vs host port | `UNIQUE(service_id, container_port, protocol)`; **triggers** forbid two services on one host publishing the same host port/protocol on overlapping bind addresses |
 | `reverse_proxies` | Nginx, Traefik, NPM, Caddy, HAProxy, Cloudflare Tunnel | runs on a host, optionally *is* a service |
 | `proxy_routes` | domain → inbound port/protocol (+TLS expiry) → target IP:port → service | `UNIQUE(proxy_id, domain, path_prefix, inbound_port)`; `CHECK (inbound_protocol <> 'https' OR tls_mode <> 'none')` |
@@ -52,11 +53,13 @@ Every foreign key has an index, partial where the column is nullable (`WHERE x I
 
 ## Conventions
 
-* UUIDv4 `TEXT` primary keys: stable across devices and merge-friendly. The demo seed uses UUIDv5 for reproducible fixtures.
+* UUIDv4 `TEXT` primary keys: stable across devices and merge-friendly.
 * ISO-8601 UTC `TEXT` timestamps. `updated_at` is maintained by `AFTER UPDATE` triggers; `recursive_triggers` is off, so there is no loop.
 * Enumerations are `TEXT + CHECK`, so the file stays self-describing for anyone inspecting it with SQLCipher tools.
 * View `v_route_traces` flattens Internet → edge public IP → proxy → target IP:port → service → container port for the canvas and the "Launch" action.
 
 ## Data-access layer
 
-`db/repo.rs` holds typed insert/load functions. All sealing and unsealing happens there and nowhere else. `load_topology()` returns the secret-free `Topology` DTO, and `credential_secret()` decrypts one field on demand. `db/seed.rs` is the mock-data loader: three tenants, 14 hosts, 15 services, 3 proxies, 8 routes, 22 credentials.
+`db/repo.rs` holds typed insert/load functions, and `db/edit.rs` the upsert/delete layer the editing UI uses (`save_tenant`, `save_host` with its NICs, `save_service` with its ports, `save_proxy` with its routes, `save_credential`, `delete_impact`, `delete_entity`). All sealing and unsealing happens there and nowhere else. `load_topology()` returns the secret-free `Topology` DTO, and `credential_secret()` decrypts one field on demand. Constraint violations are translated into plain sentences ("This company already has a machine with that name") before they reach the UI.
+
+`interchange.rs` maps the same tables to the Excel template (one sheet per table, drop-down lists for every enum, a *Read me* sheet) and to JSON, for bulk import and export. Imports are validated as a dry run first and applied in one transaction. `db/seed.rs` is test-only mock data (behind the `demo-seed` feature); production vaults start empty.

@@ -11,6 +11,8 @@ mod io;
 mod state;
 mod sync;
 
+use std::ffi::OsString;
+use std::path::PathBuf;
 use std::sync::Mutex;
 use std::time::Duration;
 
@@ -20,8 +22,35 @@ use tauri::{Emitter, Manager, RunEvent};
 use crate::clipboard::ClipboardWorker;
 use crate::state::{AppConfig, AppState, Inner, Paths};
 
+/// A `.kurogane` file passed on the command line (double-click / "Open with").
+fn vault_arg(args: impl IntoIterator<Item = OsString>) -> Option<PathBuf> {
+    args.into_iter().skip(1).map(PathBuf::from).find(|p| p.extension().is_some_and(|e| e == "kurogane") && p.is_file())
+}
+
+/// Switch to `path` unless a vault is open right now; the UI re-reads status.
+fn open_from_shell(app: &tauri::AppHandle, path: PathBuf) {
+    let state = app.state::<AppState>();
+    let mut inner = state.inner.lock().unwrap();
+    if inner.vault.is_none() && inner.vault_path.as_deref() != Some(path.as_path()) {
+        inner.vault_path = Some(path.clone());
+        state.remember(&mut inner, &path);
+        let _ = app.emit("vault://locked", LockReason::Manual);
+    }
+}
+
 fn main() {
     let app = tauri::Builder::default()
+        // Two processes writing one vault would fork its history: focus the
+        // running window instead and hand it the file that was opened.
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            if let Some(w) = app.get_webview_window("main") {
+                let _ = w.unminimize();
+                let _ = w.set_focus();
+            }
+            if let Some(path) = vault_arg(args.into_iter().map(OsString::from)) {
+                open_from_shell(app, path);
+            }
+        }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
@@ -36,7 +65,8 @@ fn main() {
                 kurogane_core::fsutil::create_private_dir(&dir)?;
             }
             let config = AppConfig::load(&paths.config_file);
-            let inner = Inner { vault_path: config.last_vault_path.clone().filter(|p| p.exists()), config, ..Default::default() };
+            let vault_path = vault_arg(std::env::args_os()).or_else(|| config.last_vault_path.clone().filter(|p| p.exists()));
+            let inner = Inner { vault_path, config, ..Default::default() };
             app.manage(AppState {
                 inner: Mutex::new(inner),
                 paths,
@@ -119,6 +149,12 @@ fn main() {
         .expect("failed to build Kurogane");
 
     app.run(|handle, event| {
+        #[cfg(target_os = "macos")]
+        if let RunEvent::Opened { urls } = &event {
+            if let Some(path) = urls.iter().filter_map(|u| u.to_file_path().ok()).find(|p| p.extension().is_some_and(|e| e == "kurogane")) {
+                open_from_shell(handle, path);
+            }
+        }
         if let RunEvent::ExitRequested { .. } | RunEvent::Exit = event {
             if matches!(event, RunEvent::ExitRequested { .. }) {
                 sync::flush_pending(handle);

@@ -15,7 +15,7 @@ Studied from the published `fossflow@1.0.5` package (a fork of `isoflow`) and ad
 
 ## What is new: automatic layout from relational data
 
-FossFLOW is an editor: a human places every icon. Kurogane derives the picture from the database (`layoutTopology` in `canvas/layout.ts`). It is deterministic, so every machine renders the same diagram, and it is fast (well under 5 ms for the demo).
+FossFLOW is an editor: a human places every icon. Kurogane derives the picture from the database (`layoutTopology` in `canvas/layout.ts`). It is deterministic, so every machine renders the same diagram, and it is fast (well under 5 ms for a 15-machine, 3-company inventory).
 
 1. **Host blocks.** Each host's workloads (services + proxies, proxies first) go into a `ceil(√n)` grid with 2-tile cells. The host becomes a slab of `(cols·2+1) × (rows·2+1)` tiles, leaving a 1-tile front strip for its floor label. Hosts without workloads (switches, APs, NVRs) become 1×1 appliance boxes.
 2. **Tenant zones.** Inside each tenant, slabs are shelf-packed (proxy hosts first, then by category: firewall → router → VPS → servers → VMs right after their hypervisor → NAS → edge). Appliances line up in a tight strip in front. The zone keeps a padded border plus 2 rows for the floor label.

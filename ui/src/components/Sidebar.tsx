@@ -192,10 +192,10 @@ function AccountRow({ c, path, nodeRef }: { c: CredentialMeta; path: string; nod
         )}
         {field && (
           <>
-            <button className="icon-btn tiny" title={shown ? 'Hide' : 'Reveal for 10 s'} onClick={() => run(async () => {
+            <button className="icon-btn tiny" title={shown ? 'Hide' : 'Reveal for 15s'} onClick={() => run(async () => {
               if (shown) return setShown(null);
               setShown(await backend.reveal(c.id, field));
-              setTimeout(() => setShown(null), 10_000);
+              setTimeout(() => setShown(null), 15_000);
             })}>
               <Icon name={shown ? 'eyeOff' : 'eye'} size={13} />
             </button>

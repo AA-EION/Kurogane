@@ -41,7 +41,7 @@ export function DeleteDialog({ kind, id, name, onDone }: { kind: EntityKind; id:
       footer={<><Button onClick={closeModal}>Cancel</Button><Button kind="danger" onClick={go} busy={busy}>Delete</Button></>}
     >
       {parts.length > 0 ? (
-        <p>This also deletes <b>{parts.join(', ')}</b> that belong to it.</p>
+        <p>Everything that belongs to it goes too: <b>{parts.join(', ')}</b>.</p>
       ) : (
         <p>This cannot be undone (the previous version stays in the <code>.bak</code> file next to your vault until the next save).</p>
       )}

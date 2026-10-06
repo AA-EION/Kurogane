@@ -1,120 +1,139 @@
 # KUROGANE 黒鉄
 
-**Offline-first infrastructure atlas + zero-knowledge credential vault + isolated, zero-setup cloud sync.** It runs on macOS, Windows and Linux.
+**A map of every machine, service and password you look after, drawn for you.**
 
-Kurogane reads your hybrid infrastructure (tenants, hosts, NICs, reverse proxies, routes, containers and credentials) from an encrypted vault and **draws it automatically** as an isometric map. It traces every public route, `Internet → public IP → proxy :443 → private IP:port → container`, and gives you 1-click SSH, RDP and browser launch, plus a secure credential drawer.
+You enter companies, machines, services, reverse proxies and accounts in simple forms. Kurogane draws them as an isometric diagram grouped by company, traces each public domain through the proxy to the container behind it, and keeps every password in an encrypted vault. Click **Open** to launch a site, **SSH** to get a terminal, or **RDP** to start a remote desktop session.
 
-![canvas](docs/img/canvas.png)
+Runs offline on Windows, macOS and Linux. The vault is a single encrypted file that you can sync through Google Drive, OneDrive, MEGA or any folder you already sync.
 
-## Status
+![Map with the service drawer open](docs/img/map.png)
 
-A working prototype scaffold with production-grade foundations. Everything listed under *Built & verified* runs and is covered by tests (43 Rust, 10 TypeScript). The *Roadmap* section is what remains before a 1.0.
+## What it answers at a glance
 
-### Built & verified
+For every service: **which company owns it** (even when it runs on another company's server), the machine it runs on, **internal port vs published port**, the **private and public IPs** and the network card they belong to, whether it is **HTTP or HTTPS**, which **domain** points at it through which **reverse proxy**, and the **accounts** for it.
 
-| Area | What exists | How it was verified |
+For every machine (VPS, server, VM, router, access point, NVR, NAS, switch, firewall…): its network cards and IPs, the VMs and containers on it, and its SSH, RDP and other logins.
+
+Search everything with **Ctrl/⌘ + K**: names, IPs, ports, domains, usernames.
+
+## Install
+
+Download the installer for your system from the [Releases](../../releases) page.
+
+| System | File | Notes |
 |---|---|---|
-| Key derivation | Argon2id (256 MiB / t=3 / p=4 default, 1 GiB hardened) → MEK → wrapped random VDK → HKDF subkeys | RFC 9106 test vector; tamper/downgrade tests |
-| `.kurogane` container | 256-byte authenticated header + AES-256-GCM archive with SHA-256 manifest; atomic save with `.bak` | byte-exact round-trip; every header region tamper-tested |
-| Database | SQLCipher 4 (vendored OpenSSL), schema v1 with cascades, triggers, partial indexes, a trace view; secrets additionally field-sealed | wrong key fails closed; raw file has no SQLite header; constraint tests |
-| Portable TOTP | RFC 6238 seed sealed *inside* the vault; replay protection | RFC 6238 vectors (SHA1/256/512); vault moved between two work dirs unlocks with the same authenticator |
-| Session lock | mlocked/`MADV_DONTDUMP` key pages; inactivity timeout; suspend detection; lock on exit; clipboard cleared on lock | unit tests with an injected clock; manual lock in the UI |
-| Launchers | SSH in the native terminal (ssh-agent key loading), `.rdp` generation (never contains passwords), http(s)-only web launch | argument-injection tests (`-oProxyCommand`, CRLF in `.rdp`, `javascript:`) |
-| Sync engine | rclone 1.75.1 pinned by SHA-256 (binary) or image digest (container); cleared-env sandbox; Drive limited to `drive.file`; lineage-based push/pull/conflict | real download + verification, real two-device sync through the sandboxed binary, OAuth scope checked against the live consent redirect |
-| Canvas | Auto-layout from DB records (Isoflow/FossFLOW projection), orthogonal A* routes, LOD labels, badges, FossFLOW JSON export | layout invariants, determinism, export integrity; screenshots below |
-| Desktop shell | Tauri v2, 19 IPC commands, strict CSP, no JS plugin permissions | built and driven under Xvfb: lock screen → unlock → canvas → omnibox → drawer |
-| Headless mode | `kurogane` CLI: create, inspect, unlock, link (Drive/OneDrive/MEGA), sync | used for the end-to-end runs above |
+| Windows 10/11 | `Kurogane_<version>_x64-setup.exe` | Installs for your user only, so no admin rights are needed. Until the installer is code-signed, SmartScreen asks first: choose *More info → Run anyway*. |
+| macOS 11+ (Apple silicon and Intel) | `Kurogane_<version>_universal.dmg` | Open it and drag **Kurogane** onto **Applications**. The app is ad-hoc signed but not notarized. On first launch, right-click → *Open*, or run `xattr -dr com.apple.quarantine /Applications/Kurogane.app`. |
+| Linux (x86-64) | `Kurogane_<version>_amd64.AppImage` | `chmod +x` it and run it. Needs WebKitGTK 4.1, present on current Ubuntu/Fedora/Debian desktops. |
 
-### Roadmap (not done yet)
+Double-clicking a `.kurogane` file opens it in Kurogane.
 
-* **Editing UI.** Records are created through the core API, the CLI's `--demo` seed, or SQL. The canvas is read-only. Next come CRUD forms in the drawer, plus importers for `docker ps`/Compose, Traefik/NPM configs and the Cloudflare API.
-* **Native screen-lock hooks** (logind `Lock`, `com.apple.screenIsLocked`, `WTS_SESSION_LOCK`) feeding `SessionClock::force_lock`. Suspend detection already works on Linux and macOS through clock divergence.
-* **Clipboard history exclusion** (Windows `ExcludeClipboardContentFromMonitorProcessing`, macOS `org.nspasteboard.ConcealedType`).
-* **Row-level 3-way merge** for sync conflicts. Today a conflict keeps both files and never loses data. UUID keys, `updated_at` triggers and tombstones are already in the schema for this.
-* **Not exercised yet:** real Google, Microsoft and MEGA accounts, the Docker/Podman sidecar against a live daemon (its argv is unit-tested), and builds on macOS and Windows. The CI workflow targets all three OSes but has not run yet.
-* An optional hardware-bound factor (FIDO2 `hmac-secret`) mixed into the KDF. See the TOTP threat-model note in [docs/CRYPTO.md](docs/CRYPTO.md#4-portable-offline-totp).
+## Using it
+
+1. **Create a vault.** Pick a master password. Two-factor (any authenticator app) is optional and can be turned on later under *Settings → Security*.
+2. **Add a company**, then its **machines**. Each machine has a list of network cards, each with a private IP and an optional public IP. VMs can point at the machine they run on.
+3. **Add services** on a machine. A service can be a Docker container, a VM service, an SMB share or a native daemon. Give it its internal port and the port it is published on. If it belongs to a different company than the machine (for example your own website on your employer's VPS), set *Owned by*.
+4. **Add the reverse proxy** (nginx, Traefik, Caddy, Nginx Proxy Manager, Cloudflare Tunnel…) and its routes: `www.example.com` → service. You can also do this from the service form under *Public domains*.
+5. **Add accounts** to a company, machine, service or proxy. Passwords, SSH keys, tokens and secure notes are encrypted inside the vault.
+
+| | |
+|---|---|
+| ![Service form](docs/img/service-form.png) Ports, owner company and public domains in one form | ![Accounts](docs/img/accounts.png) Every account, grouped by company. Copying a password clears the clipboard after 30 s |
+
+Click anything on the map or in the sidebar to open its drawer. From there you can open its website, connect by SSH or RDP, copy or reveal a password, edit it, or delete it. Before anything is deleted, Kurogane tells you what else goes with it.
+
+### Import and export
+
+*Settings → Import & export* lets you **download an empty Excel template**. It has one sheet per kind of record, drop-down lists for every choice and a *Read me* sheet. Fill it in and import it. Kurogane checks every row first and shows what will be created or updated, and what is wrong (sheet and row). Nothing changes until you confirm.
+
+You can also export the whole inventory to Excel or JSON, with or without passwords, save an encrypted backup of the vault, and export the map as PNG, SVG or a FossFLOW diagram. Map exports never contain passwords.
+
+![Import and export](docs/img/import-export.png)
+
+### Sync between computers
+
+*Settings → Sync* links **Google Drive, OneDrive or MEGA** with a browser login (no API keys, nothing to register), or a **synced folder** (Dropbox, iCloud Drive, Syncthing, a NAS share…). Only the encrypted vault file leaves the machine. Sync runs automatically after changes, on unlock, every 5 minutes, and before locking or quitting. If two computers changed the vault at the same time, you choose which version to keep, and the other one is kept as a backup.
+
+On another computer: install Kurogane, choose *Get it from the cloud* on the first screen, and unlock with the same password. Your authenticator keeps working.
+
+![Sync settings](docs/img/sync.png)
+
+### Security
+
+* **Zero-knowledge and offline.** No account, no server, no telemetry. Only the encrypted file is synced.
+* **Layered encryption.** Argon2id (256 MiB) derives the key for an AES-256-GCM container. Inside it, SQLCipher encrypts the database pages, and every password, key and note is sealed again on its own. Each layer has its own key.
+* **Passwords stay in the Rust core.** The interface only sees a password when you click *Reveal*, and only for 15 seconds. *Copy*, *SSH* and *RDP* never pass it through the webview. RDP files never contain passwords.
+* **Auto-lock** after inactivity (configurable) and when the computer sleeps. Keys are held in locked memory and wiped on lock.
+* Honest limits, such as what two-factor does and doesn't protect against offline: [docs/CRYPTO.md](docs/CRYPTO.md).
+
+## Building from source
+
+Prerequisites: Rust ≥ 1.85, Node ≥ 20, Perl and `make` for the vendored OpenSSL behind SQLCipher (plus NASM on Windows). On Linux, also the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) (`libwebkit2gtk-4.1-dev` …).
+
+```bash
+cd ui && npm ci && cd ..
+
+# Run the desktop app with hot reload
+node ui/node_modules/@tauri-apps/cli/tauri.js dev
+
+# Build the installer for this OS (output in target/release/bundle/)
+node ui/node_modules/@tauri-apps/cli/tauri.js build --bundles appimage   # Linux
+node ui/node_modules/@tauri-apps/cli/tauri.js build --bundles nsis       # Windows
+node ui/node_modules/@tauri-apps/cli/tauri.js build --target universal-apple-darwin --bundles app,dmg   # macOS
+
+# Tests
+cargo test                      # Rust core, sync engine, CLI
+cd ui && npm test               # UI
+```
+
+`cd ui && npm run dev` serves the interface in a browser at http://127.0.0.1:1420 against an in-memory backend, which is handy for UI work. That backend exists only in development builds.
+
+Pushing a tag such as `v0.2.0` runs [`.github/workflows/release.yml`](.github/workflows/release.yml). It builds all three installers and attaches them to a draft release.
+
+### Headless CLI
+
+`kurogane` manages vaults without the GUI. It is useful on servers and for scripting.
+
+```bash
+kurogane create ~/infra.kurogane                     # new empty vault
+kurogane totp ~/infra.kurogane                       # optional two-factor
+kurogane inspect ~/infra.kurogane                    # clear-text header, no password needed
+kurogane unlock ~/infra.kurogane                     # print a summary
+kurogane link ~/infra.kurogane drive                 # or onedrive / mega
+kurogane link-folder ~/infra.kurogane ~/Dropbox      # sync through a folder
+kurogane sync ~/infra.kurogane
+```
 
 ## Documentation
 
-| Deliverable | Document |
+| Topic | Document |
 |---|---|
-| Architecture & framework justification | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
-| Cryptographic & container blueprint (byte layout, Argon2id, TOTP) | [docs/CRYPTO.md](docs/CRYPTO.md) |
-| Isolated sync engine | [docs/SYNC.md](docs/SYNC.md) |
-| Relational schema (DDL, ER diagram, cascades) | [docs/SCHEMA.md](docs/SCHEMA.md) · [`schema_v1.sql`](crates/kurogane-core/src/db/schema_v1.sql) |
-| Isometric canvas adapter | [docs/CANVAS.md](docs/CANVAS.md) |
+| Architecture and why Tauri + Rust | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
+| Encryption, file format, two-factor | [docs/CRYPTO.md](docs/CRYPTO.md) |
+| Sync engine | [docs/SYNC.md](docs/SYNC.md) |
+| Database schema | [docs/SCHEMA.md](docs/SCHEMA.md) |
+| How the map is drawn | [docs/CANVAS.md](docs/CANVAS.md) |
 
 ## Repository layout
 
 ```
-Kurogane/
-├── Cargo.toml                    workspace (core/sync/cli are default members; no WebKit needed to test)
-├── crates/
-│   ├── kurogane-core/            security kernel — no UI dependencies
-│   │   └── src/
-│   │       ├── kdf.rs            Argon2id profiles + hostile-parameter bounds
-│   │       ├── keys.rs           VDK → HKDF key ring (payload, sqlcipher, field, totp, sync)
-│   │       ├── container.rs      .kurogane header + KGPK archive + manifest
-│   │       ├── crypto.rs         AES-256-GCM, sealed fields
-│   │       ├── secure.rs         page-locked, zeroize-on-drop SecretBox
-│   │       ├── totp.rs           RFC 6238 + otpauth URI + QR SVG
-│   │       ├── session.rs        inactivity + suspend detection
-│   │       ├── launch.rs         SSH / RDP / web launchers with allow-list validation
-│   │       ├── fsutil.rs         atomic write + .bak, shred
-│   │       ├── vault.rs          create / unlock / save / reload / change password
-│   │       └── db/               SQLCipher DAL, schema_v1.sql, models, demo seed
-│   ├── kurogane-sync/            rclone provisioning, sandbox, runners, OAuth, reconcile, engine
-│   └── kurogane-cli/             `kurogane` headless manager
-├── src-tauri/                    desktop shell: commands.rs, state.rs, clipboard.rs, tauri.conf.json
-├── ui/                           React + TypeScript (Vite)
-│   └── src/
-│       ├── canvas/               iso.ts, layout.ts, pathfinder.ts, IsoCanvas.tsx, fossflowExport.ts
-│       ├── components/           Drawer, Omnibox, LockScreen, Wizard, TopBar
-│       ├── search/               fuzzy matcher + omnibox index
-│       ├── api/                  Backend interface, Tauri bindings, DTO types
-│       └── mock/                 browser demo backend + fixture generated by the CLI
-└── docs/
+crates/kurogane-core/    encryption, vault file, SQLCipher database, editing, Excel/JSON import-export, launchers
+crates/kurogane-sync/    pinned rclone, sandbox, folder sync, lineage and conflict handling
+crates/kurogane-cli/     `kurogane` headless tool
+src-tauri/               desktop shell: commands, sync scheduler, import/export, installer config
+ui/src/                  React interface
+  canvas/                isometric layout, routing, map export
+  components/            sidebar, drawer, settings, lock screen, first-run wizard, dialogs
+  forms/                 company, network, machine, service, proxy, account forms
 ```
 
-## Quick start
+## Roadmap
 
-Prerequisites: Rust ≥ 1.80, Node ≥ 20, Perl and `make` (to build the vendored OpenSSL behind SQLCipher). On Linux, also install the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) (`libwebkit2gtk-4.1-dev` etc.).
-
-```bash
-# Core tests (no GUI toolchain needed)
-cargo test
-
-# UI tests + browser demo (mock backend; demo password and live TOTP are shown on the lock screen)
-cd ui && npm install && npm test && npm run dev        # http://127.0.0.1:1420
-
-# Desktop app
-cd ui && npm run build && cd .. && cargo run -p kurogane-app --features custom-protocol
-# or, with hot reload:   cd ui && npx tauri dev --config ../src-tauri/tauri.conf.json
-
-# Headless
-cargo run -p kurogane-cli -- create ~/infra.kurogane --demo      # prints the TOTP QR
-cargo run -p kurogane-cli -- inspect ~/infra.kurogane            # clear-text header, no password
-cargo run -p kurogane-cli -- engine provision                    # download + verify rclone
-cargo run -p kurogane-cli -- link ~/infra.kurogane drive         # browser consent, no API keys
-cargo run -p kurogane-cli -- sync ~/infra.kurogane
-```
-
-Regenerate the UI fixture after changing the seed: `cargo run -p kurogane-cli -- demo-fixture --out ui/src/mock/demo-fixture.json`.
-
-## Screens
-
-| | |
-|---|---|
-| ![wizard](docs/img/wizard.png) First run: create, open or connect a cloud vault | ![lock](docs/img/lock.png) Unlock: Argon2id + portable TOTP |
-| ![drawer](docs/img/drawer.png) Route trace + secure drawer with an auto-clearing clipboard | ![omnibox](docs/img/omnibox.png) ⌘/Ctrl+K omnibox: IPs, ports, domains, tenants |
-
-## Security summary
-
-* Zero-knowledge and offline: nothing leaves the machine unless you link a cloud remote, and what leaves is the encrypted container.
-* Defence in depth: container AEAD ⊃ SQLCipher pages ⊃ field-sealed secrets. Every layer has its own HKDF-separated key.
-* The webview never sees keys. It sees secrets only on an explicit, audited Reveal. Copy and launch keep plaintext on the Rust side.
-* Read the honest limits (TOTP's role, revealed secrets in the JS heap, SSD remanence) in [docs/CRYPTO.md](docs/CRYPTO.md).
+* Code-signed Windows installer and a notarized macOS build.
+* Row-level merge for sync conflicts. Today you pick one version and nothing is lost. The schema already has the UUIDs, timestamps and tombstones a merge needs.
+* Native screen-lock hooks, and hiding copied passwords from clipboard-history tools.
+* An optional hardware key (FIDO2) mixed into the key derivation.
 
 ## Third-party
 
-See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The canvas projection and connector-routing model are adapted from Isoflow / FossFLOW (MIT).
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The map projection and connector routing are adapted from Isoflow / FossFLOW (MIT).

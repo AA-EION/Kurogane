@@ -2,6 +2,19 @@
 
 **Goal:** sync a `.kurogane` file with Google Drive, OneDrive or MEGA. The user must not need a cloud developer account, an API key or an OAuth app, and Kurogane must never touch the cloud desktop clients or CLIs already logged in on the host.
 
+Four destinations are offered under *Settings → Sync*:
+
+| Destination | How it works |
+|---|---|
+| Google Drive, OneDrive, MEGA | Kurogane's own pinned rclone (below), linked with a browser login. The vault lands in a `Kurogane/` folder of that account. |
+| **A synced folder** | Any folder another tool already keeps in sync: Dropbox, iCloud Drive, Syncthing, a NAS share, a USB stick. Kurogane copies the vault there with the same lineage checks (`FolderTransport`), so no rclone is needed at all. Stored as provider `local`. |
+
+**When it syncs (desktop app):** 2 s after unlock, 15 s after the last edit (debounced), every 5 minutes, and immediately before an idle or manual lock and before quitting, so edits never wait for the next unlock. Each round shows in the top bar (*Synced just now*, *Syncing…*, *Sync failed*). Automatic sync can be turned off; *Sync now* still works.
+
+**Connecting on a second computer:** on the first-run screen choose *Get it from the cloud*, pick the provider (or the synced folder), then pick the vault file. It is downloaded, verified and opened with the same master password. No re-pairing of the authenticator is needed.
+
+**Conflicts:** if both computers changed the vault since their last sync, a banner offers two choices. *Keep this computer’s* uploads the local copy (the other one stays in the remote `.bak`). *Use Google Drive’s* (or OneDrive’s, MEGA’s, the folder’s) validates the other copy with your keys, then replaces the local file, which is kept as `.bak`.
+
 ## Engine: pinned rclone
 
 [rclone](https://rclone.org) (MIT) speaks all three providers. It also ships **public OAuth client IDs** for Drive and OneDrive, so linking an account is a single browser consent screen. Kurogane pins one version (`platform.rs`):
@@ -100,14 +113,14 @@ This round trip was run against the **real** rclone 1.75.1, downloaded and pin-v
 
 ```text
 $ kurogane --home A engine provision            → rclone ready (verified)
-$ kurogane --home A create infra.kurogane --demo
-$ kurogane --home A confirm-totp infra.kurogane 123456
+$ kurogane --home A create infra.kurogane
+$ kurogane --home A totp infra.kurogane            # optional two-factor
 $ kurogane --home A sync devA/infra.kurogane --transport binary --local-remote ./cloud
 FirstUpload: {"kind":"pushed",…}
 $ kurogane --home B sync devB/infra.kurogane --transport binary --local-remote ./cloud
 FirstDownload: {"kind":"pulled",…}
 $ kurogane --home B unlock devB/infra.kurogane --totp <same authenticator>
-E2E: 3 tenants, 14 hosts, 15 services, 3 proxies (8 routes), 22 credentials · keys mlocked: true
+E2E: same tenants, hosts, services, proxies and credentials as device A · keys mlocked: true
 $ kurogane --home B sync …                      → InSync
 ```
 

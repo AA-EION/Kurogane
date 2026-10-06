@@ -32,6 +32,8 @@ The FossFLOW export targets the `fossflow@1.0.5` model schema.
 | OpenSSL 3 (vendored, crypto provider for SQLCipher) | Apache-2.0 | |
 | Tauri v2 | MIT / Apache-2.0 | desktop shell |
 | RustCrypto crates (aes-gcm, argon2, hkdf, hmac, sha1, sha2) | MIT / Apache-2.0 | |
+| rust_xlsxwriter, calamine | MIT / Apache-2.0, MIT | Excel template, export and import |
+| tauri-plugin-dialog, -opener, -single-instance | MIT / Apache-2.0 | file dialogs, opening links, one window per user |
 | React | MIT | UI |
 
 Full dependency license lists: `cargo license` (Rust) and `npx license-checker` (ui/).

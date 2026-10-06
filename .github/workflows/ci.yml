@@ -7,7 +7,8 @@ on:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Let expensive platform regression suites finish and populate their caches.
+  cancel-in-progress: false
 
 env:
   CARGO_TERM_COLOR: always

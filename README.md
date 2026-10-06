@@ -8,7 +8,7 @@ A product of [Issen Software Group](https://issen.kurokamicorp.com).
 
 Runs offline on Windows, macOS and Linux. The vault is a single encrypted file that you can sync through Google Drive, OneDrive, MEGA or any folder you already sync.
 
-![Map with the service drawer open](docs/img/map.png)
+![Light map with the service drawer open](docs/img/map-light.jpg)
 
 ## What it answers at a glance
 
@@ -38,10 +38,6 @@ Double-clicking a `.kurogane` file opens it in Kurogane.
 4. **Add the reverse proxy** (nginx, Traefik, Caddy, Nginx Proxy Manager, Cloudflare Tunnel…) and its routes: `www.example.com` → service. On Windows/Linux, use *Public domains* in the service form; on macOS, use *Publish a domain* in the service inspector.
 5. **Add accounts** to a company, machine, service or proxy. Passwords, SSH keys, tokens and secure notes are encrypted inside the vault.
 
-| | |
-|---|---|
-| ![Service form](docs/img/service-form.png) Ports, owner company and public domains in one form | ![Accounts](docs/img/accounts.png) Every account, grouped by company. Copying a password clears the clipboard after 30 s |
-
 Click anything on the map or in the sidebar to open its drawer. From there you can open its website, connect by SSH or RDP, copy or reveal a password, edit it, or delete it. Before anything is deleted, Kurogane tells you what else goes with it.
 
 ### Import and export
@@ -50,15 +46,11 @@ Click anything on the map or in the sidebar to open its drawer. From there you c
 
 You can also export the whole inventory to Excel or JSON, with or without passwords, save an encrypted backup of the vault, and export the map as PNG, SVG or a FossFLOW diagram. Map exports never contain passwords.
 
-![Import and export](docs/img/import-export.png)
-
 ### Sync between computers
 
 *Settings → Sync* links **Google Drive, OneDrive or MEGA** with a browser login (no API keys, nothing to register), or a **synced folder** (Dropbox, iCloud Drive, Syncthing, a NAS share…). Only the encrypted vault file leaves the machine. Sync runs automatically after changes, on unlock, every 5 minutes, and before locking or quitting. If two computers changed the vault at the same time, you choose which version to keep, and the other one is kept as a backup.
 
 On another computer: install Kurogane, choose *Get it from the cloud* on the first screen, and unlock with the same password. Your authenticator keeps working.
-
-![Sync settings](docs/img/sync.png)
 
 ### Security
 
@@ -93,6 +85,8 @@ cd ui && npm test               # UI
 [`.github/workflows/release.yml`](.github/workflows/release.yml) builds Windows, universal macOS and Linux installers as GitHub Actions artifacts when manually dispatched. It has no release-creation step. CI verifies source changes separately.
 
 Appearance defaults to Light. Settings → General offers Light, Dark and System, saved on this computer. The material language follows Boundless and EION Studios. The [macOS port](docs/MACOS.md) uses SwiftUI for every visible view, including its native map, forms, inspectors, vault screens, and settings. Navigation uses native Liquid Glass on macOS 26 and newer. macOS source builds require Xcode 26+.
+
+![Native SwiftUI map and service inspector](docs/img/macos-map.png)
 
 ### Headless CLI
 

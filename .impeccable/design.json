@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-06T13:37:17.124051+00:00",
+  "generatedAt": "2026-10-06T14:17:08.795652+00:00",
   "title": "Design System: Kurogane",
   "extensions": {
     "colorMeta": {
@@ -759,6 +759,34 @@
           "oklch(83.57% 0.00400 128.64)",
           "oklch(95.00% 0.00400 128.64)"
         ]
+      },
+      "native-map-ground": {
+        "role": "neutral",
+        "displayName": "Native warm map support",
+        "tonalRamp": [
+          "oklch(15.00% 0.00684 87.77)",
+          "oklch(26.43% 0.00684 87.77)",
+          "oklch(37.86% 0.00684 87.77)",
+          "oklch(49.29% 0.00684 87.77)",
+          "oklch(60.71% 0.00684 87.77)",
+          "oklch(72.14% 0.00684 87.77)",
+          "oklch(83.57% 0.00684 87.77)",
+          "oklch(95.00% 0.00684 87.77)"
+        ]
+      },
+      "native-dark-map-ground": {
+        "role": "neutral",
+        "displayName": "Native charcoal map support",
+        "tonalRamp": [
+          "oklch(15.00% 0.00260 286.13)",
+          "oklch(26.43% 0.00260 286.13)",
+          "oklch(37.86% 0.00260 286.13)",
+          "oklch(49.29% 0.00260 286.13)",
+          "oklch(60.71% 0.00260 286.13)",
+          "oklch(72.14% 0.00260 286.13)",
+          "oklch(83.57% 0.00260 286.13)",
+          "oklch(95.00% 0.00260 286.13)"
+        ]
       }
     },
     "typographyMeta": {
@@ -768,7 +796,7 @@
       },
       "body": {
         "displayName": "Workspace body",
-        "purpose": "Names, content and explanations."
+        "purpose": "Web names, content and explanations. Native views retain SwiftUI system font roles."
       },
       "label": {
         "displayName": "Form label",
@@ -856,7 +884,7 @@
       "name": "Primary action",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Standard workspace action with its implemented resting, hover, focus, pressed and disabled treatments.",
+      "description": "Web specimen. Standard workspace action with its implemented resting, hover, focus, pressed and disabled treatments.",
       "html": "<button class=\"ds-btn-primary\">Save</button>",
       "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 14px;border-radius:9px;font:600 13px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);cursor:pointer;white-space:nowrap;background:linear-gradient(180deg,var(--primary-top,#4c5456),var(--primary-bottom,#2b3336));color:var(--primary-ink,#fffefa);border:1px solid var(--primary-bottom,#2b3336);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 2px 3px var(--shadow-ink,rgba(38,35,28,.15));}.ds-btn-primary:hover:not(:disabled){filter:brightness(1.07);}.ds-btn-primary:focus-visible{outline:2px solid var(--info,#315f91);outline-offset:3px;}.ds-btn-primary:active:not(:disabled){box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));transform:translateY(1px);}.ds-btn-primary:disabled{opacity:.45;cursor:not-allowed;}"
     },
@@ -864,7 +892,7 @@
       "name": "Satin action",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "Standard workspace action with its implemented resting, hover, focus, pressed and disabled treatments.",
+      "description": "Web specimen. Standard workspace action with its implemented resting, hover, focus, pressed and disabled treatments.",
       "html": "<button class=\"ds-btn-secondary\">New company</button>",
       "css": ".ds-btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 14px;border-radius:9px;font:600 13px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);cursor:pointer;white-space:nowrap;background:linear-gradient(180deg,var(--surface-top,#fffefa),var(--surface-bottom,#e8e5de));color:var(--text, #20211f);border:1px solid var(--line-2, #b9b6ae);box-shadow:var(--raised, inset 0 1px 0 rgba(255,255,255,.9), 0 1px 2px rgba(38,35,28,.15));}.ds-btn-secondary:hover:not(:disabled){border-color:var(--text-3, #696a64);}.ds-btn-secondary:focus-visible{outline:2px solid var(--info,#315f91);outline-offset:3px;}.ds-btn-secondary:active:not(:disabled){box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));transform:translateY(1px);}.ds-btn-secondary:disabled{opacity:.45;cursor:not-allowed;}"
     },
@@ -872,7 +900,7 @@
       "name": "Ghost action",
       "kind": "button",
       "refersTo": "button-ghost",
-      "description": "Standard workspace action with its implemented resting, hover, focus, pressed and disabled treatments.",
+      "description": "Web specimen. Standard workspace action with its implemented resting, hover, focus, pressed and disabled treatments.",
       "html": "<button class=\"ds-btn-ghost\">Cancel</button>",
       "css": ".ds-btn-ghost{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 14px;border-radius:9px;font:600 13px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);cursor:pointer;white-space:nowrap;background:transparent;color:var(--text-2, #52534e);border:1px solid transparent;box-shadow:none;}.ds-btn-ghost:hover:not(:disabled){background:var(--panel-2, #e5e3dd);border-color:var(--text-3, #696a64);}.ds-btn-ghost:focus-visible{outline:2px solid var(--info,#315f91);outline-offset:3px;}.ds-btn-ghost:active:not(:disabled){box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));transform:translateY(1px);}.ds-btn-ghost:disabled{opacity:.45;cursor:not-allowed;}"
     },
@@ -880,7 +908,7 @@
       "name": "Recessed field",
       "kind": "input",
       "refersTo": "field",
-      "description": "An inset editable value with explicit label and keyboard focus.",
+      "description": "Web specimen. An inset editable value with explicit label and keyboard focus.",
       "html": "<label class=\"ds-field\"><span>Vault name</span><input class=\"ds-input\" value=\"Demo Infrastructure\" placeholder=\"Vault name\"></label>",
       "css": ".ds-field{display:flex;flex-direction:column;gap:5px;font:600 12px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);color:var(--text-2, #52534e);}.ds-input{min-width:0;background:var(--panel, #fcfbf8);border:1px solid var(--line-2, #b9b6ae);border-radius:8px;padding:8px 10px;color:var(--text, #20211f);font:400 13px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));caret-color:var(--text, #20211f);}.ds-input::placeholder{color:var(--text-3, #696a64);opacity:1;}.ds-input:hover{border-color:var(--text-3, #696a64);}.ds-input:focus{border-color:var(--info,#315f91);box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));}.ds-input:focus-visible{outline:2px solid var(--info,#315f91);outline-offset:3px;}"
     },
@@ -888,7 +916,7 @@
       "name": "Inventory navigation",
       "kind": "nav",
       "refersTo": "navigation",
-      "description": "Inset tab support with a raised selected navigation button.",
+      "description": "Web specimen. Inset tab support with a raised selected navigation button.",
       "html": "<nav class=\"ds-tabs\" aria-label=\"Workspace\"><button class=\"ds-tab ds-tab-selected\" aria-current=\"page\">Inventory</button><button class=\"ds-tab\">Accounts</button></nav>",
       "css": ".ds-tabs{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:3px;border-radius:9px;background:var(--panel-2, #e5e3dd);box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));}.ds-tab{padding:8px 5px;border:0;border-radius:8px;background:transparent;color:var(--text-3, #696a64);font:600 12px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);cursor:pointer;}.ds-tab-selected{background:linear-gradient(180deg,var(--surface-top,#fffefa),var(--surface-bottom,#e8e5de));color:var(--text, #20211f);box-shadow:var(--raised, inset 0 1px 0 rgba(255,255,255,.9), 0 1px 2px rgba(38,35,28,.15));}.ds-tab:hover{color:var(--text, #20211f);}.ds-tab:focus-visible{outline:2px solid var(--info,#315f91);outline-offset:3px;}.ds-tab:active{box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));}"
     },
@@ -896,7 +924,7 @@
       "name": "Status and action chips",
       "kind": "chip",
       "refersTo": "badge-chip",
-      "description": "Fine bordered annotation beside a compact secondary action.",
+      "description": "Web specimen. Fine bordered annotation beside a compact secondary action.",
       "html": "<div class=\"ds-chips\"><span class=\"ds-badge ds-badge-ok\">HTTPS</span><button class=\"ds-chip-action\">+ Public domain</button></div>",
       "css": ".ds-chips{display:flex;align-items:center;flex-wrap:wrap;gap:6px;}.ds-badge{padding:2px 7px;border-radius:99px;border:1px solid var(--line-2, #b9b6ae);color:var(--text-2, #52534e);font:600 10.5px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);}.ds-badge-ok{color:var(--ok,#25784b);border-color:rgba(60,207,142,.4);}.ds-chip-action{padding:2px 8px;border:1px solid var(--line-2, #b9b6ae);border-radius:99px;background:transparent;color:var(--text-2, #52534e);font:400 11px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);cursor:pointer;}.ds-chip-action:hover{border-color:var(--ember,#343d42);color:var(--text, #20211f);}.ds-chip-action:focus-visible{outline:2px solid var(--info,#315f91);outline-offset:3px;}.ds-chip-action:active{box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));}"
     },
@@ -904,7 +932,7 @@
       "name": "Settings card",
       "kind": "card",
       "refersTo": "card",
-      "description": "A quiet contained settings group on warm secondary ground.",
+      "description": "Web specimen. A quiet contained settings group on warm secondary ground.",
       "html": "<section class=\"ds-card\"><h3>Appearance</h3><p>Saved on this computer.</p></section>",
       "css": ".ds-card{display:flex;flex-direction:column;gap:10px;background:var(--bg-2, #f6f4f0);color:var(--text, #20211f);border:1px solid var(--line, #d1cec6);border-radius:12px;padding:14px;font:400 13.5px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);}.ds-card h3{margin:0;font-size:14px;font-weight:700;}.ds-card p{margin:0;color:var(--text-3, #696a64);font-size:12px;}"
     },
@@ -912,7 +940,7 @@
       "name": "Appearance selector",
       "kind": "custom",
       "refersTo": "segmented",
-      "description": "An inset segmented track with a raised selected appearance.",
+      "description": "Web specimen. An inset segmented track with a raised selected appearance.",
       "html": "<div class=\"ds-segmented\" role=\"group\" aria-label=\"Appearance\"><button class=\"ds-segment ds-segment-on\" aria-pressed=\"true\">Light</button><button class=\"ds-segment\" aria-pressed=\"false\">Dark</button><button class=\"ds-segment\" aria-pressed=\"false\">System</button></div>",
       "css": ".ds-segmented{display:inline-flex;flex-wrap:wrap;gap:2px;padding:3px;border:1px solid var(--line-2, #b9b6ae);border-radius:9px;background:var(--panel-2, #e5e3dd);box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));}.ds-segment{padding:5px 10px;border:0;border-radius:6px;background:transparent;color:var(--text-2, #52534e);font:400 12.5px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);cursor:pointer;}.ds-segment-on{background:linear-gradient(180deg,var(--surface-top,#fffefa),var(--surface-bottom,#e8e5de));color:var(--text, #20211f);box-shadow:var(--raised, inset 0 1px 0 rgba(255,255,255,.9), 0 1px 2px rgba(38,35,28,.15));}.ds-segment:hover{color:var(--text, #20211f);}.ds-segment:focus-visible{outline:2px solid var(--info,#315f91);outline-offset:3px;}.ds-segment:active{box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));}"
     },
@@ -920,7 +948,7 @@
       "name": "Labeled toggle",
       "kind": "custom",
       "refersTo": "toggle",
-      "description": "The accessible native input drives the visible compact track and thumb.",
+      "description": "Web specimen. The accessible native input drives the visible compact track and thumb.",
       "html": "<label class=\"ds-toggle\"><input type=\"checkbox\" checked><span class=\"ds-toggle-track\"><span class=\"ds-toggle-thumb\"></span></span><span>Lock when the computer sleeps</span></label>",
       "css": ".ds-toggle{display:inline-flex;align-items:center;gap:10px;cursor:pointer;color:var(--text-2, #52534e);font:400 13px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);}.ds-toggle input{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;clip-path:inset(50%);overflow:hidden;white-space:nowrap;}.ds-toggle-track{position:relative;width:34px;height:20px;border-radius:99px;background:var(--line-2, #b9b6ae);transition:background .15s;flex:none;}.ds-toggle-thumb{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s;}.ds-toggle input:checked+.ds-toggle-track{background:var(--ember,#343d42);}.ds-toggle input:checked+.ds-toggle-track .ds-toggle-thumb{transform:translateX(14px);}.ds-toggle input:focus-visible+.ds-toggle-track{outline:2px solid var(--info,#315f91);outline-offset:3px;}.ds-toggle input:disabled~span{opacity:.45;cursor:not-allowed;}@media(prefers-reduced-motion:reduce){.ds-toggle-track,.ds-toggle-thumb{transition-duration:.01ms;}}"
     },
@@ -928,14 +956,14 @@
       "name": "Record inspector",
       "kind": "custom",
       "refersTo": "inspector",
-      "description": "Floating ivory containment with satin title area and technical details.",
+      "description": "Web specimen. Floating ivory containment with satin title area and technical details.",
       "html": "<article class=\"ds-inspector\"><header><div><span class=\"ds-kicker\">Docker service · app-01</span><h2>gitea</h2></div><button class=\"ds-close\" aria-label=\"Close inspector\">×</button></header><div class=\"ds-inspector-body\"><span>Machine</span><code>app-01 · 10.10.0.21</code></div></article>",
       "css": ".ds-inspector{width:380px;max-width:100%;overflow:hidden;background:var(--panel, #fcfbf8);border:1px solid var(--line, #d1cec6);border-radius:14px;box-shadow:var(--shadow, 0 2px 4px rgba(38,35,28,.08), 0 16px 36px -16px rgba(38,35,28,.25));color:var(--text, #20211f);font:400 13.5px/1.45 var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);}.ds-inspector header{display:flex;justify-content:space-between;gap:12px;padding:20px 18px;background:linear-gradient(var(--surface-top,#fffefa),var(--bg-2,#f6f4f0));border-bottom:1px solid var(--line, #d1cec6);}.ds-kicker{font-size:11px;color:var(--text-3, #696a64);}.ds-inspector h2{margin:2px 0 6px;font-size:18px;font-weight:700;letter-spacing:.01em;overflow-wrap:anywhere;}.ds-close{width:30px;height:30px;border:0;border-radius:7px;background:transparent;color:var(--text-3, #696a64);font:400 20px var(--sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);cursor:pointer;}.ds-close:hover{background:var(--panel-2, #e5e3dd);color:var(--text, #20211f);}.ds-close:focus-visible{outline:2px solid var(--info,#315f91);outline-offset:3px;}.ds-close:active{box-shadow:var(--inset, inset 0 1px 3px rgba(38,35,28,.15), 0 1px 0 rgba(255,255,255,.9));}.ds-inspector-body{display:grid;grid-template-columns:112px minmax(0,1fr);gap:10px;padding:18px;color:var(--text-3, #696a64);}.ds-inspector code{color:var(--text, #20211f);font:400 .92em/1.45 var(--mono,ui-monospace,Consolas,monospace);overflow-wrap:anywhere;user-select:text;}"
     }
   ],
   "narrative": {
     "northStar": "Satin ivory and ink",
-    "overview": "Kurogane uses natural, semi-real skeuomorphism: pale warm surfaces, legible ink, fine beveled edges and controls that feel pressed into or raised above their support. Boundless's instrument plates, inset glass and physical button states are the primary reference. EION Studios contributes the warm monochrome character. This is an adaptation of those materials to an infrastructure workspace; the reference applications' font assets and theme transition system are not bundled here.\n\nLight is the initial appearance. Dark uses charcoal plates and pale ink while preserving the same physical hierarchy. Typography remains compact and familiar; monochrome chrome gives company colors, connection types and status room to carry meaning. The existing application logos remain intact, and the visible material treatment is built with CSS and SVG rather than new raster textures.",
+    "overview": "Kurogane uses natural, semi-real skeuomorphism: pale warm surfaces, legible ink, fine beveled edges and controls that feel pressed into or raised above their support. Boundless's instrument plates, inset glass and physical button states are the primary reference. EION Studios contributes the warm monochrome character. This is an adaptation of those materials to an infrastructure workspace; the reference applications' font assets and theme transition system are not bundled here.\n\nLight is the initial appearance. Dark uses charcoal plates and pale ink while preserving the same physical hierarchy. Typography remains compact and familiar; monochrome chrome gives topology and status room to carry meaning. The existing application logos remain intact, and the visible material treatment is built with CSS, SVG and native drawing rather than new raster textures.\n\nEvery macOS view is SwiftUI, hosted in the application window by `NSHostingView`. Native system surfaces, grouped forms, SF Symbols and platform controls express the same warm, tactile direction, while the map uses drawn company grounds, machine slabs and raised service cards. The navigation control group uses Liquid Glass on macOS 26 and newer and ultra-thin material on macOS 13–25. Windows and Linux use the React workspace.",
     "keyCharacteristics": [
       "Warm white surfaces and charcoal alternatives.",
       "Raised satin actions and recessed fields.",
@@ -951,7 +979,7 @@
       },
       {
         "name": "The Paired Appearance Rule",
-        "body": "Every new surface or text treatment must resolve through the existing semantic custom properties in both appearances.",
+        "body": "Web surfaces and text resolve through the existing semantic custom properties in both appearances; native surfaces and text use the corresponding dynamic platform roles.",
         "section": "colors"
       },
       {
@@ -971,13 +999,13 @@
       "**Do** use status words and distinguishable connection treatments alongside color.",
       "**Do** keep technical values selectable and keyboard focus clearly visible.",
       "**Do** preserve the existing logos and carry the semantic material roles into native macOS views.",
-      "**Do** inspect light, dark, compact, narrow and settings states when extending the UI; evidence for this pass is in `.impeccable/review/desktop.jpg`, `dark.jpg`, `compact.jpg`, `mobile.jpg` and `settings.jpg`."
+      "**Do** inspect web light, dark, compact, narrow and settings states, plus native light, dark and sheet states; web evidence is in `.impeccable/review` and macOS evidence in `.impeccable/review/native-final`."
     ],
     "donts": [
       "**Don't** replace the warm neutral chrome with decorative saturated surfaces.",
       "**Don't** use low-opacity text to quiet important details over the map.",
       "**Don't** erase pressed, focused, selected or disabled states when adding a control.",
-      "**Don't** treat browser captures as native macOS validation or certify native views before their source and runtime are verified.",
+      "**Don't** replace native SwiftUI forms and platform control feedback with webview replicas, or treat presentation captures as proof of bridge workflow execution.",
       "**Don't** add raster textures to reproduce materials already expressed by CSS and SVG."
     ]
   }

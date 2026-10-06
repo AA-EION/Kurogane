@@ -48,6 +48,15 @@ fn build_swift_shell() {
     let toolchain = compiler.parent().unwrap().parent().unwrap();
     println!("cargo:rustc-link-search=native={}/lib/swift/macosx", toolchain.display());
     println!("cargo:rustc-link-lib=static=KuroganeNative");
+    // Swift's back-deployed availability checks use compiler-rt. Rust's linker
+    // invocation does not add this archive as the Swift driver normally does.
+    let clang_resources = Command::new("xcrun").args(["clang", "-print-resource-dir"]).output().expect("could not locate Clang runtime");
+    assert!(clang_resources.status.success(), "could not locate Clang runtime");
+    let clang_resources = PathBuf::from(String::from_utf8(clang_resources.stdout).unwrap().trim());
+    let runtime_dir = clang_resources.join("lib/darwin");
+    assert!(runtime_dir.join("libclang_rt.osx.a").exists(), "Xcode macOS compiler runtime is missing");
+    println!("cargo:rustc-link-search=native={}", runtime_dir.display());
+    println!("cargo:rustc-link-lib=static=clang_rt.osx");
     println!("cargo:rustc-link-lib=dylib=swiftCore");
     for framework in ["AppKit", "SwiftUI", "Foundation", "Combine", "CoreImage", "CoreGraphics"] {
         println!("cargo:rustc-link-lib=framework={framework}");

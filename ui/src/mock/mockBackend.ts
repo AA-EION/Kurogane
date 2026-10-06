@@ -4,6 +4,7 @@ import type {
   SyncStatus, Topology,
 } from '../api/types';
 import { verifyTotp } from './totp';
+import demo from '../canvas/__fixtures__/demo-topology.json';
 
 /**
  * In-memory stand-in for the native core, used only by `npm run dev` in a
@@ -28,6 +29,13 @@ export function createMockBackend(): Backend {
   const secrets = new Map<string, Partial<Record<SecretField, string>>>();
   let sync: SyncStatus = { linked: [], autoSync: true, busy: false, transport: null, lastOutcome: null, lastError: null, lastSyncedAtMs: null, conflict: null };
   let pendingImport: Topology | null = null;
+  // Explicit, development-only visual fixture. Never enabled in installers.
+  if (import.meta.env.DEV && new URLSearchParams(window.location.search).get('demo') === '1') {
+    stage = 'unlocked';
+    vaultPath = 'Synthetic preview.kurogane';
+    topo = structuredClone(demo.topology) as Topology;
+    settings.displayName = topo.vaultName;
+  }
 
   const remaining = () => Math.max(0, settings.lockTimeoutSecs - Math.floor((Date.now() - lastActivity) / 1000));
   const status = (): AppStatus => ({

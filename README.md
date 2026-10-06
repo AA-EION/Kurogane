@@ -4,6 +4,8 @@
 
 You enter companies, machines, services, reverse proxies and accounts in simple forms. Kurogane draws them as an isometric diagram grouped by company, traces each public domain through the proxy to the container behind it, and keeps every password in an encrypted vault. Click **Open** to launch a site, **SSH** to get a terminal, or **RDP** to start a remote desktop session.
 
+A product of [Issen Software Group](https://issen.kurokamicorp.com).
+
 Runs offline on Windows, macOS and Linux. The vault is a single encrypted file that you can sync through Google Drive, OneDrive, MEGA or any folder you already sync.
 
 ![Map with the service drawer open](docs/img/map.png)
@@ -23,7 +25,7 @@ Download the installer for your system from the [Releases](../../releases) page.
 | System | File | Notes |
 |---|---|---|
 | Windows 10/11 | `Kurogane_<version>_x64-setup.exe` | Installs for your user only, so no admin rights are needed. Until the installer is code-signed, SmartScreen asks first: choose *More info → Run anyway*. |
-| macOS 11+ (Apple silicon and Intel) | `Kurogane_<version>_universal.dmg` | Open it and drag **Kurogane** onto **Applications**. The app is ad-hoc signed but not notarized. On first launch, right-click → *Open*, or run `xattr -dr com.apple.quarantine /Applications/Kurogane.app`. |
+| macOS 13+ (Apple silicon and Intel) | `Kurogane_<version>_universal.dmg` | Open it and drag **Kurogane** onto **Applications**. The app is ad-hoc signed but not notarized. On first launch, right-click → *Open*, or run `xattr -dr com.apple.quarantine /Applications/Kurogane.app`. |
 | Linux (x86-64) | `Kurogane_<version>_amd64.AppImage` | `chmod +x` it and run it. Everything it needs is bundled. Works on Ubuntu 22.04, Debian 12, Fedora 36 or newer. |
 
 Double-clicking a `.kurogane` file opens it in Kurogane.
@@ -68,7 +70,7 @@ On another computer: install Kurogane, choose *Get it from the cloud* on the fir
 
 ## Building from source
 
-Prerequisites: Rust ≥ 1.85, Node ≥ 20, Perl and `make` for the vendored OpenSSL behind SQLCipher (plus NASM on Windows). On Linux, also the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) (`libwebkit2gtk-4.1-dev` …).
+Prerequisites: Rust ≥ 1.85, Node ≥ 22.12, Perl and `make` for the vendored OpenSSL behind SQLCipher (plus NASM on Windows). On Linux, also the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) (`libwebkit2gtk-4.1-dev` …).
 
 ```bash
 cd ui && npm ci && cd ..
@@ -88,7 +90,9 @@ cd ui && npm test               # UI
 
 `cd ui && npm run dev` serves the interface in a browser at http://127.0.0.1:1420 against an in-memory backend, which is handy for UI work. That backend exists only in development builds.
 
-Pushing a tag such as `v0.2.0` runs [`.github/workflows/release.yml`](.github/workflows/release.yml). It builds all three installers and attaches them to a draft release.
+[`.github/workflows/release.yml`](.github/workflows/release.yml) builds Windows, universal macOS and Linux installers as GitHub Actions artifacts. It has no release-creation step. Source changes or a manual dispatch start a build.
+
+Appearance defaults to Light. Settings → General offers Light, Dark and System, saved on this computer. The material language follows Boundless and EION Studios. The [macOS SwiftUI shell](docs/MACOS.md) adds native Liquid Glass navigation on macOS 26+, retaining the shared map and editors. macOS source builds require Xcode 26+.
 
 ### Headless CLI
 

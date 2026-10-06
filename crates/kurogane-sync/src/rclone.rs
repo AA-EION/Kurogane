@@ -218,9 +218,34 @@ pub fn isolated_env(home: &Path, cache: &Path, config: &Path, tmp: &Path) -> Vec
 pub fn parse_authorize_output(stdout: &str) -> Result<Zeroizing<String>> {
     let start = stdout.find("--->").ok_or_else(|| SyncError::Auth("no token in rclone output".into()))? + 4;
     let end = stdout[start..].find("<---End paste").ok_or_else(|| SyncError::Auth("unterminated token block".into()))? + start;
-    let token = stdout[start..end].trim();
+    let block = stdout[start..end].trim();
+    // Supplying an options blob (Drive's restricted scope) makes rclone return
+    // a base64url config map, not a raw OAuth token. This is independent of OS.
+    // Never include the block or serde errors in diagnostics: they are secrets.
+    let decoded;
+    let json = if block.starts_with('{') {
+        block
+    } else {
+        let compact = Zeroizing::new(block.chars().filter(|c| !c.is_whitespace()).collect::<String>());
+        let bytes = Zeroizing::new(
+            data_encoding::BASE64URL_NOPAD.decode(compact.trim_end_matches('=').as_bytes())
+                .or_else(|_| data_encoding::BASE64.decode(compact.as_bytes()))
+                .map_err(|_| SyncError::Auth("invalid encoded authorization response; reconnect the account".into()))?,
+        );
+        decoded = Zeroizing::new(String::from_utf8(bytes.to_vec())
+            .map_err(|_| SyncError::Auth("authorization response is not UTF-8".into()))?);
+        decoded.as_str()
+    };
+    let value: serde_json::Value =
+        serde_json::from_str(json).map_err(|_| SyncError::Auth("authorization response is not JSON".into()))?;
+    let token = match value.get("token") {
+        Some(serde_json::Value::String(token)) => token.as_str(),
+        Some(_) => return Err(SyncError::Auth("authorization response has an invalid token".into())),
+        None => json,
+    };
     let v: serde_json::Value = serde_json::from_str(token).map_err(|_| SyncError::Auth("token is not JSON".into()))?;
-    if v.get("access_token").is_none() && v.get("refresh_token").is_none() {
+    let valid = |key| v.get(key).and_then(serde_json::Value::as_str).is_some_and(|s| !s.trim().is_empty());
+    if !valid("access_token") && !valid("refresh_token") {
         return Err(SyncError::Auth("token JSON has no access/refresh token".into()));
     }
     Ok(Zeroizing::new(token.to_string()))
@@ -265,6 +290,26 @@ mod tests {
         assert!(parse_authorize_output("nothing").is_err());
         let line = "NOTICE: Log in and authorize rclone for access\nNOTICE: please go to the following link: http://127.0.0.1:53682/auth?state=abc123";
         assert_eq!(parse_auth_url(line).unwrap(), "http://127.0.0.1:53682/auth?state=abc123");
+    }
+
+    #[test]
+    fn parses_encoded_config_returned_when_scope_is_supplied() {
+        let token = r#"{"access_token":"a","refresh_token":"r"}"#;
+        let config = serde_json::json!({ "token": token, "scope": "drive.file" }).to_string();
+        for encoded in [data_encoding::BASE64URL_NOPAD.encode(config.as_bytes()), data_encoding::BASE64.encode(config.as_bytes())] {
+            let output = format!("NOTICE: authorized\r\nPaste the following into your remote machine --->\r\n{encoded}\r\n<---End paste\r\n");
+            assert_eq!(parse_authorize_output(&output).unwrap().as_str(), token);
+        }
+    }
+
+    #[test]
+    fn rejects_invalid_authorization_without_echoing_secrets() {
+        for block in ["SECRET!!", r#"{"token":"SECRET"}"#, r#"{"access_token":""}"#, r#"{"access_token":42}"#, r#"{"token":{}}"#] {
+            let output = format!("--->\n{block}\n<---End paste");
+            let error = parse_authorize_output(&output).unwrap_err().to_string();
+            assert!(!error.contains("SECRET"));
+        }
+        assert!(parse_authorize_output("---> unterminated").is_err());
     }
 
     #[test]

@@ -75,6 +75,21 @@ fn main() {
             });
             sync::spawn_scheduler(app.handle().clone());
 
+            #[cfg(target_os = "macos")]
+            if let Some(window) = app.get_webview_window("main") {
+                if let Ok(pointer) = window.ns_window() {
+                    let pointer = pointer as usize;
+                    app.handle().run_on_main_thread(move || {
+                        extern "C" {
+                            fn kurogane_install_swift_shell(window: *mut std::ffi::c_void);
+                        }
+                        // Swift installs native navigation on this NSWindow;
+                        // ownership and the vault lifecycle remain with Tauri.
+                        unsafe { kurogane_install_swift_shell(pointer as *mut std::ffi::c_void) };
+                    })?;
+                }
+            }
+
             // Session watchdog: inactivity timeout and suspend detection.
             let handle = app.handle().clone();
             std::thread::Builder::new().name("kurogane-session".into()).spawn(move || loop {

@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'codex/**']
   pull_request:
 
 concurrency:
@@ -22,9 +22,20 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: Select Xcode with the Liquid Glass SDK
+        if: runner.os == 'macOS'
+        run: |
+          xcode=$(find /Applications -maxdepth 1 -name 'Xcode_26*.app' | sort -V | tail -1)
+          test -n "$xcode"
+          sudo xcode-select -s "$xcode/Contents/Developer"
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
+      - uses: ilammy/setup-nasm@v1
+        if: runner.os == 'Windows'
+      - name: Use Strawberry Perl
+        if: runner.os == 'Windows'
+        run: echo "OPENSSL_SRC_PERL=C:\Strawberry\perl\bin\perl.exe" >> $env:GITHUB_ENV
       - uses: Swatinem/rust-cache@v2
       # Vendored OpenSSL (for SQLCipher) needs Perl; Windows runners ship Strawberry Perl.
       - run: cargo fmt --all --check
@@ -60,7 +71,18 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: Select Xcode with the Liquid Glass SDK
+        if: runner.os == 'macOS'
+        run: |
+          xcode=$(find /Applications -maxdepth 1 -name 'Xcode_26*.app' | sort -V | tail -1)
+          test -n "$xcode"
+          sudo xcode-select -s "$xcode/Contents/Developer"
       - uses: dtolnay/rust-toolchain@stable
+      - uses: ilammy/setup-nasm@v1
+        if: runner.os == 'Windows'
+      - name: Use Strawberry Perl
+        if: runner.os == 'Windows'
+        run: echo "OPENSSL_SRC_PERL=C:\Strawberry\perl\bin\perl.exe" >> $env:GITHUB_ENV
       - uses: Swatinem/rust-cache@v2
       - uses: actions/setup-node@v4
         with:
@@ -77,3 +99,5 @@ jobs:
       - run: npm run build
         working-directory: ui
       - run: cargo build -p kurogane-app --features custom-protocol --release
+        env:
+          MACOSX_DEPLOYMENT_TARGET: "13.0"

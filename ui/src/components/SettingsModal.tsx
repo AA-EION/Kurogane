@@ -4,6 +4,7 @@ import { toFossflowModel } from '../canvas/fossflowExport';
 import { mapToSvg, svgToPng } from '../canvas/mapExport';
 import { errorText, type SettingsTab, useRun, useStore } from '../store';
 import { Icon } from './Icon';
+import { setAppearance, useAppearance, type Appearance } from '../theme';
 import { TotpPairing } from './TotpPairing';
 import { Button, Field, FormError, Modal, NumberInput, SecretInput, Segmented, Text, Toggle } from './ui';
 
@@ -19,8 +20,9 @@ export function SettingsModal({ tab: initial }: { tab?: SettingsTab }) {
   const { backend, closeModal } = useStore();
   const [tab, setTab] = useState<SettingsTab>(initial ?? 'general');
   const [settings, setSettings] = useState<Settings | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const reload = () => backend.getSettings().then(setSettings);
-  useEffect(() => void reload(), []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { reload().catch((e) => setLoadError(errorText(e))); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <Modal wide title="Settings" icon="settings" onClose={closeModal}>
       <div className="settings">
@@ -32,7 +34,8 @@ export function SettingsModal({ tab: initial }: { tab?: SettingsTab }) {
           ))}
         </nav>
         <div className="settings-body">
-          {!settings && <span className="spinner" />}
+          {loadError && <><FormError error={loadError} /><Button onClick={() => { setLoadError(null); reload().catch((e) => setLoadError(errorText(e))); }}>Try again</Button></>}
+          {!settings && !loadError && <span className="spinner" />}
           {settings && tab === 'general' && <General s={settings} onSaved={reload} />}
           {settings && tab === 'security' && <Security s={settings} onSaved={reload} />}
           {tab === 'sync' && <SyncTab />}
@@ -45,6 +48,7 @@ export function SettingsModal({ tab: initial }: { tab?: SettingsTab }) {
 }
 
 function General({ s, onSaved }: { s: Settings; onSaved: () => void }) {
+  const appearance = useAppearance();
   const { backend, toast, applyTopology } = useStore();
   const [d, setD] = useState({ displayName: s.displayName, lockTimeoutSecs: s.lockTimeoutSecs, clipboardClearSecs: s.clipboardClearSecs, lockOnSuspend: s.lockOnSuspend });
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +56,11 @@ function General({ s, onSaved }: { s: Settings; onSaved: () => void }) {
   const minutes = Math.round(d.lockTimeoutSecs / 60);
   return (
     <div className="stack">
+      <Field label="Appearance" hint="Saved on this computer. System follows your operating system’s appearance.">
+        <Segmented value={appearance} onChange={(value) => setAppearance(value as Appearance)} options={[
+          { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }, { value: 'system', label: 'System' },
+        ]} />
+      </Field>
       <Field label="Vault name">
         <Text value={d.displayName} onChange={(displayName) => setD({ ...d, displayName })} />
       </Field>
@@ -349,9 +358,13 @@ function DataTab() {
 }
 
 function About({ s }: { s: Settings }) {
+  const { backend } = useStore();
+  const run = useRun();
   return (
     <div className="stack">
       <p><b>Kurogane</b> {s.appVersion} — offline infrastructure map and credential vault.</p>
+      <p>A product of <b>Issen Software Group</b>.</p>
+      <button className="link-btn" onClick={() => run(() => backend.launchWeb('https://issen.kurokamicorp.com'))}>issen.kurokamicorp.com</button>
       <p className="small muted mono">{s.vaultPath}</p>
       <p className="small">
         Encryption: Argon2id ({Math.round(s.kdf.mCostKib / 1024)} MiB) → AES-256-GCM container → SQLCipher database → per-field AES-256-GCM for secrets.

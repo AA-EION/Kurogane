@@ -1,22 +1,25 @@
-name: Installers
+name: Build artifacts (no release)
 
 # Builds the installers for all three platforms:
 #   Windows  → Kurogane_<version>_x64-setup.exe   (NSIS, per-user install)
 #   macOS    → Kurogane_<version>_universal.dmg   (drag Kurogane.app to Applications; ad-hoc signed)
 #   Linux    → Kurogane_<version>_amd64.AppImage
 #
-# Push a tag like `v0.2.0` to publish them as a draft GitHub release.
-# Any other run (manual, or a change to the packaging config) only uploads
-# them as workflow artifacts.
+# This workflow uploads installers as workflow artifacts only.
+# Release creation and publication are intentionally absent.
 
 on:
   push:
-    tags: ['v*']
     branches: ['**']
     paths:
       - .github/workflows/release.yml
       - src-tauri/tauri.conf.json
       - src-tauri/icons/**
+      - src-tauri/macos/**
+      - src-tauri/src/**
+      - src-tauri/build.rs
+      - crates/**
+      - ui/**
   workflow_dispatch:
 
 concurrency:
@@ -24,7 +27,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 env:
   CARGO_TERM_COLOR: always
@@ -53,6 +56,15 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Select Xcode with the Liquid Glass SDK
+        if: runner.os == 'macOS'
+        run: |
+          xcode=$(find /Applications -maxdepth 1 -name 'Xcode_26*.app' | sort -V | tail -1)
+          test -n "$xcode"
+          sudo xcode-select -s "$xcode/Contents/Developer"
+          xcrun swiftc --version
+          xcrun swiftc -typecheck -target arm64-apple-macosx13.0 -sdk "$(xcrun --sdk macosx --show-sdk-path)" src-tauri/macos/KuroganeShell.swift
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -85,7 +97,13 @@ jobs:
         run: echo "OPENSSL_SRC_PERL=C:\Strawberry\perl\bin\perl.exe" >> $env:GITHUB_ENV
 
       # Runs `npm run build` in ui/ first (beforeBuildCommand), then cargo and the bundler.
+      - name: UI verification
+        run: node node_modules/vitest/vitest.mjs run
+        working-directory: ui
+
       - name: Build installer
+        env:
+          MACOSX_DEPLOYMENT_TARGET: "13.0"
         run: node ui/node_modules/@tauri-apps/cli/tauri.js build ${{ matrix.args }}
 
       - name: Smoke-test the AppImage
@@ -109,28 +127,3 @@ jobs:
           name: kurogane-${{ runner.os }}
           path: ${{ matrix.artifacts }}
           if-no-files-found: error
-
-  release:
-    name: Draft release
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          path: dist
-          merge-multiple: true
-      - run: ls -la dist && (cd dist && sha256sum * > SHA256SUMS.txt)
-      - uses: softprops/action-gh-release@v2
-        with:
-          draft: true
-          name: Kurogane ${{ github.ref_name }}
-          files: dist/*
-          body: |
-            **Windows** — run `Kurogane_*_x64-setup.exe`. It installs per-user, so no admin rights are needed. SmartScreen may warn because the installer is not code-signed yet: choose *More info → Run anyway*.
-
-            **macOS** — open `Kurogane_*_universal.dmg` and drag **Kurogane** onto **Applications**. The app is ad-hoc signed, not notarized, so the first time either right-click it and choose *Open*, or run `xattr -dr com.apple.quarantine /Applications/Kurogane.app`.
-
-            **Linux** — `chmod +x Kurogane_*.AppImage` and run it.
-
-            Check downloads against `SHA256SUMS.txt`.

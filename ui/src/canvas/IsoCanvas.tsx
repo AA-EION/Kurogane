@@ -33,7 +33,7 @@ function shade(hex: string, amt: number): string {
   return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
 }
 
-const STEEL = '#2b3038';
+const STEEL = '#90938f';
 
 // ------------------------------------------------------------------- shapes
 
@@ -192,7 +192,7 @@ function Connector({ c, lit, dim }: { c: SceneConnector; lit: boolean; dim: bool
   const pts = connectorPoints(c);
   if (pts.length < 2) return null;
   const d = pathD(pts);
-  const color = c.kind === 'parent' ? '#868e96' : c.kind === 'ingress' ? '#dee2e6' : c.secure ? '#ff7a45' : '#ffd43b';
+  const color = c.kind === 'parent' ? 'var(--text-3)' : c.kind === 'ingress' ? 'var(--ingress)' : c.secure ? 'var(--route)' : 'var(--warn)';
   const baseOpacity = dim ? 0.05 : c.kind === 'ingress' ? 0.16 : c.kind === 'parent' ? 0.45 : 0.4;
   return (
     <g className={`connector ${c.kind} ${lit ? 'lit' : ''}`} pointerEvents="none">
@@ -207,7 +207,7 @@ function Connector({ c, lit, dim }: { c: SceneConnector; lit: boolean; dim: bool
         opacity={lit ? 1 : baseOpacity}
         strokeDasharray={c.kind === 'parent' ? '6 6' : c.tunnel || c.kind === 'ingress' ? '2 7' : undefined}
       />
-      {lit && <path d={d} className="flow" stroke={shade(color, 0.5)} strokeWidth={3} fill="none" strokeLinejoin="round" />}
+      {lit && <path d={d} className="flow" stroke={color} strokeWidth={3} fill="none" strokeLinejoin="round" />}
     </g>
   );
 }
@@ -400,6 +400,7 @@ export function IsoCanvas({ scene, selected, onSelect, focus, dimmedTenants }: P
 
   const animateTo = useCallback((target: View, ms = 480) => {
     if (anim.current) cancelAnimationFrame(anim.current);
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setView(target); return; }
     const from = viewRef.current;
     const t0 = performance.now();
     const step = (now: number) => {
@@ -410,6 +411,8 @@ export function IsoCanvas({ scene, selected, onSelect, focus, dimmedTenants }: P
     };
     anim.current = requestAnimationFrame(step);
   }, []);
+
+  useEffect(() => () => { if (anim.current) cancelAnimationFrame(anim.current); }, []);
 
   const fit = useCallback(
     (animate: boolean) => {
@@ -426,6 +429,11 @@ export function IsoCanvas({ scene, selected, onSelect, focus, dimmedTenants }: P
   );
 
   useLayoutEffect(() => fit(false), [fit]);
+  useEffect(() => {
+    const onFit = () => fit(true);
+    window.addEventListener('kurogane:fit', onFit);
+    return () => window.removeEventListener('kurogane:fit', onFit);
+  }, [fit]);
 
   useEffect(() => {
     if (!focus) return;
@@ -579,7 +587,7 @@ export function IsoCanvas({ scene, selected, onSelect, focus, dimmedTenants }: P
         <span className="zoom-readout">{Math.round(view.k * 100)}%</span>
       </div>
       <div className="legend">
-        <span><i className="sw" style={{ background: '#ff7a45' }} />HTTPS route</span>
+        <span><i className="sw" style={{ background: 'var(--route)' }} />HTTPS route</span>
         <span><i className="sw dashed" />Tunnel / ingress</span>
         <span><i className="sw" style={{ background: '#868e96' }} />VM → hypervisor</span>
       </div>

@@ -91,21 +91,26 @@ import SwiftUI
                     ("export","export",[:]),
                     ("create-vault","create",[:])
                 ]
-                for (name,kind,item) in cases {
+                for theme in ["light","dark"] {
+                    model.appearance = theme; model.applyAppearance()
+                    for (name,kind,item) in cases {
                     model.sheet = NativeSheet(kind:kind,item:item)
                     for _ in 0..<30 { if window.attachedSheet != nil { break }; try await Task.sleep(nanoseconds:100_000_000) }
                     try await Task.sleep(nanoseconds:400_000_000)
                     guard let sheet = window.attachedSheet else { throw NativeFailure(message:"Sheet \(name) was not presented") }
                     precondition(sheet.frame.height <= (window.screen?.visibleFrame.height ?? 900),"Sheet \(name) exceeds the display")
-                    try await capture(sheet,folder+"/"+name+".png")
+                    let suffix = theme == "light" ? "" : "-dark"
+                    try await capture(sheet,folder+"/"+name+suffix+".png")
                     model.sheet = nil
                     for _ in 0..<30 { if window.attachedSheet == nil { break }; try await Task.sleep(nanoseconds:100_000_000) }
+                    }
                 }
+                model.appearance = "light"; model.applyAppearance()
                 model.status = ["stage":"locked","vaultName":"Issen Infrastructure","vaultPath":"/Users/issen/Infrastructure.kurogane","totpRequired":true]
                 window.contentView = NSHostingView(rootView:NativeVaultScreen(model:model).background(Color(nsColor:.windowBackgroundColor)))
                 try await Task.sleep(nanoseconds:350_000_000)
                 try await capture(window,folder+"/locked-vault.png")
-                print("Native validation passed: original isometric graph, compact window, real attached sheets and 19 captures")
+                print("Native validation passed: original isometric graph, compact window, real attached sheets in both themes and 34 captures")
                 exit(0)
             } catch { fputs("Native preview failed: \(error)\n",stderr); exit(1) }
         }

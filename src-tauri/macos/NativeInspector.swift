@@ -26,7 +26,16 @@ struct NativeInspector: View {
                             VStack(alignment:.leading,spacing:5) {
                                 if key == "interfaces" { Text(r.text("name")).font(.caption.bold()); Text([r.text("internalIp"),r.text("publicIp"),r.text("mac")].filter { !$0.isEmpty }.joined(separator:" · ")) }
                                 else if key == "ports" { Text("\(r.number("hostPort",r.number("containerPort"))) → \(r.number("containerPort"))/\(r.text("protocol"))"); Text(r.text("bindAddress")).foregroundStyle(.secondary) }
-                                else { Text(r.text("domain")+r.text("pathPrefix")).font(.caption.bold()); Text("\(r.text("targetIp")):\(r.number("targetPort"))"); Text(r.flag("enabled") ? "Enabled · \(r.text("tlsMode"))" : "Disabled").foregroundStyle(.secondary); if ["http","https"].contains(r.text("inboundProtocol")) { Button("Open domain") { model.perform { _ = try await model.call("launch_web",["url":"\(r.text("inboundProtocol"))://\(r.text("domain")):\(r.number("inboundPort"))\(r.text("pathPrefix"))"]) } } }
+                                else {
+                                    Text(r.text("domain")+r.text("pathPrefix")).font(.caption.bold())
+                                    Text("\(r.text("targetIp")):\(r.number("targetPort"))")
+                                    Text(r.flag("enabled") ? "Enabled · \(r.text("tlsMode"))" : "Disabled").foregroundStyle(.secondary)
+                                    if ["http","https"].contains(r.text("inboundProtocol")) {
+                                        Button("Open domain") {
+                                            model.perform { _ = try await model.call("launch_web",["url":"\(r.text("inboundProtocol"))://\(r.text("domain")):\(r.number("inboundPort"))\(r.text("pathPrefix"))"]) }
+                                        }
+                                    }
+                                }
                             }.font(.system(size:11,design:.monospaced)).textSelection(.enabled).padding(12).background(.quaternary,in:RoundedRectangle(cornerRadius:8))
                         }
                     }

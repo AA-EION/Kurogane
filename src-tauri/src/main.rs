@@ -8,10 +8,10 @@
 mod clipboard;
 mod commands;
 mod io;
-mod state;
-mod sync;
 #[cfg(target_os = "macos")]
 mod native;
+mod state;
+mod sync;
 
 use std::ffi::OsString;
 use std::path::PathBuf;

@@ -22,7 +22,7 @@ jobs:
       - name: Typecheck both native architectures
         run: |
           for arch in arm64 x86_64; do
-            xcrun swiftc -typecheck -target "$arch-apple-macosx13.0" -sdk "$(xcrun --sdk macosx --show-sdk-path)" src-tauri/macos/*.swift
+            xcrun swiftc -typecheck -whole-module-optimization -target "$arch-apple-macosx13.0" -sdk "$(xcrun --sdk macosx --show-sdk-path)" src-tauri/macos/*.swift
           done
       - name: Native layout and validation checks
         run: |

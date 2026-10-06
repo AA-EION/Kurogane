@@ -115,7 +115,7 @@ public func receiveNativeJSON(_ pointer: UnsafePointer<CChar>) {
             if name == "vault://locked" { clearVault(); status["stage"] = "locked"; busy = false }
             if name == "sync://status" { sync = payload as? Row ?? [:] }
             if name == "cloud:step" { let step = payload as? Row ?? [:]; cloudStep = step.text("step").capitalized; if step.text("step") == "error" { error = step.text("message") } }
-            if name == "vault://changed" || name == "vault://locked" { Task { try? await refresh() } }
+            if name == "vault://changed" || name == "vault://locked" { Task { try? await self.refresh() } }
         }
         // Only real user input extends the session; rendering and polling do not.
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .leftMouseDown, .rightMouseDown, .scrollWheel]) { [weak self] event in

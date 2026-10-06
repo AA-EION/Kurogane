@@ -64,12 +64,14 @@ pub unsafe extern "C" fn kurogane_native_request(message: *const c_char) {
 
 async fn dispatch(app: &AppHandle, command: &str, a: &Value) -> Result<Value, String> {
     let state = app.state::<AppState>();
-    let channel = || Channel::new(|body| {
-        if let tauri::ipc::InvokeResponseBody::Json(payload) = body {
-            deliver(json!({"event": "cloud:step", "payload": serde_json::from_str::<Value>(&payload).unwrap_or(Value::Null)}));
-        }
-        Ok(())
-    });
+    let channel = || {
+        Channel::new(|body| {
+            if let tauri::ipc::InvokeResponseBody::Json(payload) = body {
+                deliver(json!({"event": "cloud:step", "payload": serde_json::from_str::<Value>(&payload).unwrap_or(Value::Null)}));
+            }
+            Ok(())
+        })
+    };
     match command {
         "app_status" => value(Ok(c::app_status(state))),
         "create_vault" => value(c::create_vault(arg(a, "args")?, state).await),
@@ -78,7 +80,10 @@ async fn dispatch(app: &AppHandle, command: &str, a: &Value) -> Result<Value, St
         "close_vault" => value(Ok(c::close_vault(state))),
         "unlock" => value(c::unlock(arg(a, "password")?, arg(a, "totp")?, state).await),
         "lock" => value(c::lock(app.clone()).await),
-        "touch" => { c::touch(state); Ok(Value::Null) }
+        "touch" => {
+            c::touch(state);
+            Ok(Value::Null)
+        }
         "topology" => value(c::topology(state)),
         "save_tenant" => value(c::save_tenant(arg(a, "tenant")?, state)),
         "save_network" => value(c::save_network(arg(a, "network")?, state)),
@@ -90,7 +95,10 @@ async fn dispatch(app: &AppHandle, command: &str, a: &Value) -> Result<Value, St
         "delete_entity" => value(c::delete_entity(arg(a, "kind")?, arg(a, "id")?, state)),
         "reveal_secret" => value(c::reveal_secret(arg(a, "credentialId")?, arg(a, "field")?, state)),
         "copy_secret" => value(c::copy_secret(arg(a, "credentialId")?, arg(a, "field")?, state)),
-        "copy_text" => { c::copy_text(arg(a, "text")?, state); Ok(Value::Null) }
+        "copy_text" => {
+            c::copy_text(arg(a, "text")?, state);
+            Ok(Value::Null)
+        }
         "launch_ssh" => value(c::launch_ssh(arg(a, "hostId")?, arg(a, "credentialId")?, state)),
         "launch_rdp" => value(c::launch_rdp(arg(a, "hostId")?, arg(a, "credentialId")?, state)),
         "launch_web" => value(c::launch_web(arg(a, "url")?, app.clone(), state)),
@@ -101,11 +109,15 @@ async fn dispatch(app: &AppHandle, command: &str, a: &Value) -> Result<Value, St
         "confirm_totp" => value(c::confirm_totp(arg(a, "code")?, state)),
         "totp_disable" => value(c::totp_disable(arg(a, "code")?, state)),
         "download_template" => value(io::download_template(app.clone()).await),
-        "export_data" => value(io::export_data(arg(a, "format")?, arg(a, "includeSecrets")?, arg(a, "password")?, app.clone(), state).await),
+        "export_data" => {
+            value(io::export_data(arg(a, "format")?, arg(a, "includeSecrets")?, arg(a, "password")?, app.clone(), state).await)
+        }
         "export_backup" => value(io::export_backup(app.clone(), state).await),
         "import_preview" => value(io::import_preview(app.clone(), state).await),
         "import_apply" => value(io::import_apply(state)),
-        "save_file" => value(io::save_file(arg(a, "suggestedName")?, arg(a, "dataBase64")?, arg(a, "filterName")?, arg(a, "extensions")?, app.clone()).await),
+        "save_file" => value(
+            io::save_file(arg(a, "suggestedName")?, arg(a, "dataBase64")?, arg(a, "filterName")?, arg(a, "extensions")?, app.clone()).await,
+        ),
         "connect_cloud" => value(sync::connect_cloud(arg(a, "provider")?, arg(a, "mega")?, channel(), app.clone()).await),
         "connect_cloud_finish" => value(sync::connect_cloud_finish(arg(a, "remotePath")?, channel(), app.clone()).await),
         "link_remote" => value(sync::link_remote(arg(a, "provider")?, arg(a, "mega")?, channel(), app.clone()).await),

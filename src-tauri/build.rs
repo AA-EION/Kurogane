@@ -9,7 +9,11 @@ fn build_swift_shell() {
     use std::path::PathBuf;
     use std::process::Command;
     println!("cargo:rerun-if-changed=macos");
-    let mut sources: Vec<_> = std::fs::read_dir("macos").unwrap().map(|entry| entry.unwrap().path()).filter(|path| path.extension().is_some_and(|ext| ext == "swift")).collect();
+    let mut sources: Vec<_> = std::fs::read_dir("macos")
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .filter(|path| path.extension().is_some_and(|ext| ext == "swift"))
+        .collect();
     sources.sort();
     let output = PathBuf::from(std::env::var_os("OUT_DIR").unwrap());
     let arch = match std::env::var("CARGO_CFG_TARGET_ARCH").unwrap().as_str() {

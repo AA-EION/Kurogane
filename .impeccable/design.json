@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-06T14:17:08.795652+00:00",
+  "generatedAt": "2026-10-06T14:33:36.917616+00:00",
   "title": "Design System: Kurogane",
   "extensions": {
     "colorMeta": {
@@ -999,7 +999,7 @@
       "**Do** use status words and distinguishable connection treatments alongside color.",
       "**Do** keep technical values selectable and keyboard focus clearly visible.",
       "**Do** preserve the existing logos and carry the semantic material roles into native macOS views.",
-      "**Do** inspect web light, dark, compact, narrow and settings states, plus native light, dark and sheet states; web evidence is in `.impeccable/review` and macOS evidence in `.impeccable/review/native-final`."
+      "**Do** inspect web light, dark, compact, narrow and settings states, plus native light, dark and sheet states; web evidence is in `.impeccable/review` and macOS evidence in `.impeccable/review/native-verdict`."
     ],
     "donts": [
       "**Don't** replace the warm neutral chrome with decorative saturated surfaces.",

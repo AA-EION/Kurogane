@@ -298,7 +298,7 @@ Native editors cover companies, machines, services, reverse proxies, networks an
 
 The application window content is an `NSHostingView` containing `NativeRoot`; React does not mount on macOS and no webview hosts these native screens. Swift sends asynchronous requests through a C ABI bridge to the same Rust command handlers used by the web application. Native busy states prevent repeated operations and interactive sheet dismissal during active work; errors use explicit alerts, and vault-lock events clear the workspace and sheet state. This visual system does not create a separate vault implementation.
 
-Presentation evidence is in `.impeccable/review/native-final`: the light and dark workspace captures show the native split panes at (1440px by 642px), and editor, vault, cloud, import/export and settings captures show native controls and sheet actions on macOS 26.6.2. The current settings source adds an explicit section picker; further section captures are tracked by the finish review. These images establish the native presentation. The true native-to-Rust bridge integration test is tracked separately and is not reported as passed by this documentation extraction.
+Presentation evidence is in `.impeccable/review/native-verdict`: eighteen captures cover the light and dark workspace, vault entry and creation, company, machine, service, proxy, network and account editors, cloud linking, import/export, and all five Settings sections. The workspace captures show the native split panes at (1440px by 642px); Settings shows explicit General, Security, Sync, Data and About navigation, and sheets expose their action controls on macOS 26.6.2. These images establish presentation; native-to-Rust bridge execution requires separate integration evidence. `docs/img/PROVENANCE.md` records the actual web and native presentation captures used in the README.
 
 ## Do's and Don'ts
 
@@ -309,7 +309,7 @@ Presentation evidence is in `.impeccable/review/native-final`: the light and dar
 - **Do** use status words and distinguishable connection treatments alongside color.
 - **Do** keep technical values selectable and keyboard focus clearly visible.
 - **Do** preserve the existing logos and carry the semantic material roles into native macOS views.
-- **Do** inspect web light, dark, compact, narrow and settings states, plus native light, dark and sheet states; web evidence is in `.impeccable/review` and macOS evidence in `.impeccable/review/native-final`.
+- **Do** inspect web light, dark, compact, narrow and settings states, plus native light, dark and sheet states; web evidence is in `.impeccable/review` and macOS evidence in `.impeccable/review/native-verdict`.
 
 ### Don't:
 

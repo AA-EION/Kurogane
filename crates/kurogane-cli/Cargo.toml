@@ -10,6 +10,10 @@ publish.workspace = true
 name = "kurogane"
 path = "src/main.rs"
 
+[features]
+# Dev tooling: `kurogane demo-fixture` regenerates the UI test fixture.
+demo-seed = ["kurogane-core/demo-seed"]
+
 [dependencies]
 kurogane-core.workspace = true
 kurogane-sync.workspace = true

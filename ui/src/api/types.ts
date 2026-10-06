@@ -77,6 +77,8 @@ export interface Service {
   healthPath?: string | null;
   description?: string | null;
   icon?: string | null;
+  /** Owning company when it differs from the machine's company. */
+  ownerTenantId?: string | null;
   ports: ServicePort[];
 }
 
@@ -136,8 +138,9 @@ export interface Topology {
 export type SecretField = 'secret' | 'privateKey' | 'notes';
 export type Stage = 'wizard' | 'locked' | 'unlocked';
 export type LockReason = 'inactivity' | 'systemSuspend' | 'screenLocked' | 'manual';
-export type CloudProvider = 'drive' | 'onedrive' | 'mega';
+export type CloudProvider = 'drive' | 'onedrive' | 'mega' | 'folder';
 export type KdfProfile = 'standard' | 'hardened';
+export type EntityKind = 'tenant' | 'network' | 'host' | 'service' | 'proxy' | 'route' | 'credential';
 
 export interface AppStatus {
   stage: Stage;
@@ -149,6 +152,7 @@ export interface AppStatus {
   memoryLocked: boolean;
   demo: boolean;
   lastLockReason?: LockReason | null;
+  recentVaults?: string[];
 }
 
 export interface TotpEnrollment {
@@ -163,20 +167,123 @@ export interface CreateVaultArgs {
   password: string;
   kdf: KdfProfile;
   account: string;
-  seedDemo?: boolean;
+}
+
+/** `'keep'` leaves the stored value, `'clear'` removes it, `{ set }` replaces it. */
+export type SecretUpdate = 'keep' | 'clear' | { set: string };
+
+export interface CredentialInput {
+  id?: string | null;
+  owner: { kind: OwnerKind; id: string };
+  kind: string;
+  label: string;
+  username?: string | null;
+  url?: string | null;
+  publicKey?: string | null;
+  expiresAt?: string | null;
+  secret: SecretUpdate;
+  privateKey: SecretUpdate;
+  notes: SecretUpdate;
+}
+
+export interface Saved {
+  id: string;
+  topology: Topology;
+}
+
+export interface DeleteImpact {
+  hosts: number;
+  services: number;
+  proxies: number;
+  routes: number;
+  credentials: number;
+  networks: number;
+}
+
+export interface Settings {
+  displayName: string;
+  lockTimeoutSecs: number;
+  clipboardClearSecs: number;
+  lockOnSuspend: boolean;
+  totpEnabled: boolean;
+  kdf: { mCostKib: number; tCost: number; parallelism: number };
+  kdfProfile: 'standard' | 'hardened' | 'custom';
+  kdfMeetsFloor: boolean;
+  vaultPath: string;
+  memoryLocked: boolean;
+  autoSync: boolean;
+  appVersion: string;
+}
+
+export interface SettingsUpdate {
+  displayName: string;
+  lockTimeoutSecs: number;
+  clipboardClearSecs: number;
+  lockOnSuspend: boolean;
+}
+
+export interface Counts {
+  companies: number;
+  networks: number;
+  machines: number;
+  cards: number;
+  services: number;
+  ports: number;
+  proxies: number;
+  routes: number;
+  accounts: number;
+}
+
+export interface ImportReport {
+  created: Counts;
+  updated: Counts;
+  errors: { sheet: string; row: number; message: string }[];
+  warnings: { sheet: string; row: number; message: string }[];
+  applied: boolean;
+}
+
+export interface ImportPreview {
+  fileName: string;
+  format: 'xlsx' | 'json';
+  report: ImportReport;
+}
+
+export interface LinkedRemote {
+  id: string;
+  provider: string;
+  label: string;
+  remotePath: string;
+  transport: string;
+}
+
+export interface SyncConflict {
+  remoteId: string;
+  label: string;
+  conflictCopy: string;
+  localSavedAtMs: number;
+  remoteSavedAtMs: number;
 }
 
 export interface SyncStatus {
-  linked: { id: string; provider: string; label: string; remotePath: string }[];
-  transport?: 'container' | 'binary' | 'folder' | null;
-  lastOutcome?: string | null;
-  lastSyncedAtMs?: number | null;
+  linked: LinkedRemote[];
+  autoSync: boolean;
   busy: boolean;
+  transport?: string | null;
+  lastOutcome?: string | null;
+  lastError?: string | null;
+  lastSyncedAtMs?: number | null;
+  conflict?: SyncConflict | null;
 }
 
 export type CloudStep =
   | { step: 'provisioning'; done?: number; total?: number | null }
   | { step: 'consent'; url: string }
+  | { step: 'listing' }
   | { step: 'downloading' }
   | { step: 'done'; vaultPath: string }
   | { step: 'error'; message: string };
+
+export interface CloudConnect {
+  candidates: string[];
+  vaultPath?: string | null;
+}

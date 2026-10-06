@@ -2,6 +2,7 @@
 //! validation before anything is replaced.
 
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use kurogane_core::container::{self, Header, Lineage, HEADER_LEN};
 use kurogane_core::fsutil;
@@ -30,13 +31,13 @@ pub fn select_transport(
     sandbox: &Sandbox,
     pref: TransportPreference,
     progress: impl FnMut(u64, Option<u64>),
-) -> Result<Box<dyn Transport>> {
+) -> Result<Arc<dyn Transport>> {
     if pref != TransportPreference::Binary {
         match ContainerRuntime::detect() {
             Some(rt) => match rt.ensure_image(RCLONE_IMAGE) {
                 Ok(()) => {
                     let runner = ContainerRunner { runtime: rt, image: RCLONE_IMAGE.into() };
-                    return Ok(Box::new(RcloneTransport::new(Box::new(runner), sandbox.clone())));
+                    return Ok(Arc::new(RcloneTransport::new(Box::new(runner), sandbox.clone())));
                 }
                 Err(e) if pref == TransportPreference::Container => return Err(e),
                 Err(_) => {}
@@ -46,7 +47,7 @@ pub fn select_transport(
         }
     }
     let binary = Provisioner::new(sandbox)?.ensure(progress)?;
-    Ok(Box::new(RcloneTransport::new(Box::new(BinaryRunner { binary, sandbox: sandbox.clone() }), sandbox.clone())))
+    Ok(Arc::new(RcloneTransport::new(Box::new(BinaryRunner { binary, sandbox: sandbox.clone() }), sandbox.clone())))
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
@@ -80,7 +81,7 @@ pub type Validator<'a> = &'a dyn Fn(&[u8]) -> kurogane_core::Result<()>;
 
 pub struct SyncEngine {
     pub sandbox: Sandbox,
-    pub transport: Box<dyn Transport>,
+    pub transport: Arc<dyn Transport>,
 }
 
 fn conflict_path(local: &Path, remote: &Lineage) -> PathBuf {
@@ -90,7 +91,7 @@ fn conflict_path(local: &Path, remote: &Lineage) -> PathBuf {
 }
 
 impl SyncEngine {
-    pub fn new(sandbox: Sandbox, transport: Box<dyn Transport>) -> Self {
+    pub fn new(sandbox: Sandbox, transport: Arc<dyn Transport>) -> Self {
         Self { sandbox, transport }
     }
 
@@ -123,18 +124,63 @@ impl SyncEngine {
         res
     }
 
+    fn lock_file(job: &SyncJob<'_>) -> Result<fd_lock::RwLock<std::fs::File>> {
+        let mut s = job.local_vault.as_os_str().to_owned();
+        s.push(".sync.lock");
+        let f = std::fs::OpenOptions::new().create(true).truncate(false).write(true).open(PathBuf::from(s))?;
+        Ok(fd_lock::RwLock::new(f))
+    }
+
+    fn record(&self, job: &SyncJob<'_>, vault_id: String, save_id: String) -> Result<()> {
+        let mut state = DeviceSyncState::load(&self.sandbox)?;
+        state.remotes.insert(
+            job.remote_id.to_string(),
+            RemoteState { vault_id, last_synced_save_id: Some(save_id), last_synced_at_ms: Some(kurogane_core::vault::now_ms()) },
+        );
+        state.save(&self.sandbox)
+    }
+
+    /// Conflict resolution "keep this device": overwrite the remote with the
+    /// local vault (the previous remote copy is kept as `<path>.bak`).
+    pub fn force_push(&self, job: &SyncJob<'_>) -> Result<SyncOutcome> {
+        let mut lock = Self::lock_file(job)?;
+        let _guard = lock.try_write().map_err(|_| SyncError::Busy)?;
+        let l = kurogane_core::vault::peek(job.local_vault)?.lineage();
+        self.transport.upload(job.local_vault, job.section, job.remote_path)?;
+        let after = self.remote_lineage(job)?.ok_or_else(|| SyncError::Download("upload vanished".into()))?;
+        if after.save_id != l.save_id {
+            return Err(SyncError::Download("remote does not match the uploaded save".into()));
+        }
+        self.record(job, l.vault_id, l.save_id.clone())?;
+        Ok(SyncOutcome::Pushed { save_id: l.save_id })
+    }
+
+    /// Conflict resolution "use the other copy": validate `candidate` (e.g.
+    /// the conflict copy), back up the local vault and swap the candidate in.
+    pub fn adopt_file(&self, job: &SyncJob<'_>, candidate: &Path, validate: Validator<'_>) -> Result<SyncOutcome> {
+        let mut lock = Self::lock_file(job)?;
+        let _guard = lock.try_write().map_err(|_| SyncError::Busy)?;
+        let bytes = std::fs::read(candidate)?;
+        let header = container::read_header(&bytes)?;
+        if job.local_vault.exists() {
+            let local = kurogane_core::vault::peek(job.local_vault)?;
+            if local.vault_id != header.vault_id {
+                return Err(SyncError::ForeignVault { local: local.lineage().vault_id, remote: header.lineage().vault_id });
+            }
+        }
+        validate(&bytes)?;
+        fsutil::atomic_write(job.local_vault, &bytes, true)?;
+        let lin = header.lineage();
+        self.record(job, lin.vault_id, lin.save_id.clone())?;
+        Ok(SyncOutcome::Pulled { save_id: lin.save_id, local_backup: Some(fsutil::backup_path(job.local_vault)) })
+    }
+
     pub fn sync_once(&self, job: &SyncJob<'_>, validate: Validator<'_>) -> Result<SyncReport> {
         // One sync per vault at a time, across processes.
-        let lock_path = {
-            let mut s = job.local_vault.as_os_str().to_owned();
-            s.push(".sync.lock");
-            PathBuf::from(s)
-        };
-        let lock_file = std::fs::OpenOptions::new().create(true).truncate(false).write(true).open(&lock_path)?;
-        let mut lock = fd_lock::RwLock::new(lock_file);
+        let mut lock = Self::lock_file(job)?;
         let _guard = lock.try_write().map_err(|_| SyncError::Busy)?;
 
-        let mut state = DeviceSyncState::load(&self.sandbox)?;
+        let state = DeviceSyncState::load(&self.sandbox)?;
         let local = if job.local_vault.exists() { Some(kurogane_core::vault::peek(job.local_vault)?.lineage()) } else { None };
         let remote = self.remote_lineage(job)?;
         let base = state.remotes.get(job.remote_id).and_then(|s| s.last_synced_save_id.clone());
@@ -184,12 +230,7 @@ impl SyncEngine {
             _ => None,
         };
         if let Some(save_id) = synced {
-            let vault_id = local.or(remote).map(|l| l.vault_id).unwrap_or_default();
-            state.remotes.insert(
-                job.remote_id.to_string(),
-                RemoteState { vault_id, last_synced_save_id: Some(save_id), last_synced_at_ms: Some(kurogane_core::vault::now_ms()) },
-            );
-            state.save(&self.sandbox)?;
+            self.record(job, local.or(remote).map(|l| l.vault_id).unwrap_or_default(), save_id)?;
         }
         Ok(SyncReport { decision, outcome, refreshed_section: self.transport.take_refreshed() })
     }
@@ -206,7 +247,7 @@ mod tests {
     const PW: &[u8] = b"sync test password";
 
     fn opts() -> CreateOptions {
-        CreateOptions { display_name: "Sync".into(), kdf: KdfParams::insecure_for_tests(), totp_account: "t".into(), seed_demo: true }
+        CreateOptions { display_name: "Sync".into(), kdf: KdfParams::insecure_for_tests(), totp_account: "t".into() }
     }
 
     fn header_only(_: &[u8]) -> kurogane_core::Result<()> {
@@ -222,7 +263,7 @@ mod tests {
         let section = RemoteSection::new(Provider::Local);
         let mk = |name: &str| {
             let sb = Sandbox::open(tmp.path().join(name).join("sandbox")).unwrap();
-            SyncEngine::new(sb, Box::new(FolderTransport { root: remote_dir.clone() }))
+            SyncEngine::new(sb, Arc::new(FolderTransport { root: remote_dir.clone() }))
         };
         let (dev_a, dev_b) = (mk("a"), mk("b"));
         let path_a = tmp.path().join("a").join("infra.kurogane");
@@ -265,6 +306,24 @@ mod tests {
         let SyncOutcome::Conflict { conflict_copy, .. } = r.outcome else { panic!() };
         assert!(conflict_copy.exists());
         assert_eq!(std::fs::read(path_b).unwrap(), before_b, "local vault untouched on conflict");
+
+        // Resolve on B by adopting the cloud copy → back in sync.
+        let validate = |bytes: &[u8]| vb.validate_candidate(bytes).map(|_| ());
+        dev_b.adopt_file(&job(path_b), &conflict_copy, &validate).unwrap();
+        vb.reload().unwrap();
+        assert!(vb.icon("icons/only-a.svg").is_some());
+        assert_eq!(dev_b.sync_once(&job(path_b), &header_only).unwrap().decision, Decision::InSync);
+
+        // Fork again and resolve on B with "keep mine".
+        va.add_icon("a2.svg", vec![3]).unwrap();
+        va.save().unwrap();
+        dev_a.sync_once(&job(path_a), &header_only).unwrap();
+        vb.add_icon("b2.svg", vec![4]).unwrap();
+        vb.save().unwrap();
+        assert_eq!(dev_b.sync_once(&job(path_b), &header_only).unwrap().decision, Decision::Conflict);
+        dev_b.force_push(&job(path_b)).unwrap();
+        assert_eq!(dev_b.sync_once(&job(path_b), &header_only).unwrap().decision, Decision::InSync);
+        assert_eq!(dev_a.sync_once(&job(path_a), &header_only).unwrap().decision, Decision::Pull);
     }
 
     #[test]
@@ -276,7 +335,7 @@ mod tests {
         let p2 = tmp.path().join("two.kurogane");
         let (_v1, _) = UnlockedVault::create(&p1, &tmp.path().join("w1"), PW, &opts()).unwrap();
         let (_v2, _) = UnlockedVault::create(&p2, &tmp.path().join("w2"), PW, &opts()).unwrap();
-        let eng = SyncEngine::new(Sandbox::open(tmp.path().join("sb")).unwrap(), Box::new(FolderTransport { root: remote_dir }));
+        let eng = SyncEngine::new(Sandbox::open(tmp.path().join("sb")).unwrap(), Arc::new(FolderTransport { root: remote_dir }));
         let j1 = SyncJob { remote_id: "r", section: &section, remote_path: "v.kurogane", local_vault: &p1 };
         eng.sync_once(&j1, &header_only).unwrap();
         let j2 = SyncJob { remote_id: "r", section: &section, remote_path: "v.kurogane", local_vault: &p2 };

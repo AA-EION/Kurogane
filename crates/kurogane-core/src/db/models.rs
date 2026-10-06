@@ -106,6 +106,9 @@ pub struct Service {
     pub health_path: Option<String>,
     pub description: Option<String>,
     pub icon: Option<String>,
+    /// Company that owns the service when it differs from the machine's.
+    #[serde(default)]
+    pub owner_tenant_id: Option<String>,
     #[serde(default)]
     pub ports: Vec<ServicePort>,
 }

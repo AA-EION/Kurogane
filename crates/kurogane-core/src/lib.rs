@@ -22,6 +22,7 @@ pub mod crypto;
 pub mod db;
 pub mod error;
 pub mod fsutil;
+pub mod interchange;
 pub mod kdf;
 pub mod keys;
 pub mod launch;

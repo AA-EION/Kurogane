@@ -37,6 +37,8 @@ pub trait Transport: Send + Sync {
     /// Upload via a temporary name, keep the previous remote copy as `.bak`,
     /// then rename into place.
     fn upload(&self, local: &Path, remote: &RemoteSection, path: &str) -> Result<()>;
+    /// `.kurogane` files directly inside `dir` (for picking a vault to connect).
+    fn list_vaults(&self, remote: &RemoteSection, dir: &str) -> Result<Vec<String>>;
     /// If rclone refreshed OAuth tokens during the last call, the updated
     /// section to re-seal into the vault.
     fn take_refreshed(&self) -> Option<RemoteSection> {
@@ -331,6 +333,24 @@ impl Transport for RcloneTransport {
         Ok(())
     }
 
+    fn list_vaults(&self, remote: &RemoteSection, dir: &str) -> Result<Vec<String>> {
+        let spec = rclone::remote_spec(dir)?;
+        let out = self.exec(remote, vec!["lsjson".into(), spec.into(), "--files-only".into()])?;
+        if Self::is_not_found(&out) {
+            return Ok(Vec::new());
+        }
+        let out = out.into_result()?;
+        let entries: Vec<serde_json::Value> = serde_json::from_slice(&out.stdout)?;
+        let mut names: Vec<String> = entries
+            .iter()
+            .filter_map(|e| e.get("Name").and_then(|n| n.as_str()))
+            .filter(|n| n.ends_with(".kurogane"))
+            .map(|n| format!("{}/{n}", dir.trim_end_matches('/')))
+            .collect();
+        names.sort();
+        Ok(names)
+    }
+
     fn take_refreshed(&self) -> Option<RemoteSection> {
         self.refreshed.lock().unwrap().take()
     }
@@ -345,6 +365,14 @@ pub struct FolderTransport {
 }
 
 impl FolderTransport {
+    /// Transport + relative path for a vault file inside a synced folder
+    /// (Dropbox, Syncthing, NAS share, USB stick…).
+    pub fn for_file(path: &Path) -> Result<(Self, String)> {
+        let root = path.parent().ok_or_else(|| SyncError::Config("folder path has no parent".into()))?.to_path_buf();
+        let name = path.file_name().ok_or_else(|| SyncError::Config("folder path has no file name".into()))?.to_string_lossy().into_owned();
+        Ok((Self { root }, name))
+    }
+
     fn resolve(&self, path: &str) -> Result<PathBuf> {
         rclone::remote_spec(path)?; // same validation as remote paths
         Ok(self.root.join(path.trim_start_matches('/')))
@@ -372,6 +400,21 @@ impl Transport for FolderTransport {
     fn download(&self, _: &RemoteSection, path: &str, local: &Path) -> Result<()> {
         fs::copy(self.resolve(path)?, local)?;
         Ok(())
+    }
+
+    fn list_vaults(&self, _: &RemoteSection, dir: &str) -> Result<Vec<String>> {
+        let base = if dir.is_empty() || dir == "." { self.root.clone() } else { self.resolve(dir)? };
+        let mut out: Vec<String> = match fs::read_dir(&base) {
+            Ok(rd) => rd
+                .flatten()
+                .filter_map(|e| e.file_name().into_string().ok())
+                .filter(|n| n.ends_with(".kurogane"))
+                .map(|n| if dir.is_empty() || dir == "." { n } else { format!("{}/{n}", dir.trim_end_matches('/')) })
+                .collect(),
+            Err(_) => Vec::new(),
+        };
+        out.sort();
+        Ok(out)
     }
 
     fn upload(&self, local: &Path, _: &RemoteSection, path: &str) -> Result<()> {

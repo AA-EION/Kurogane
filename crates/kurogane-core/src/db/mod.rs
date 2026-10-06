@@ -1,9 +1,14 @@
 //! SQLCipher-backed data layer.
 
+mod edit;
 pub mod models;
 mod repo;
 
+pub use edit::{CredentialInput, DeleteImpact, EntityKind, SecretUpdate, SettingsUpdate};
 pub use repo::{NewSyncRemote, RouteTrace, SyncRemoteMeta, TotpRecord, VaultSettings};
+/// Demo topology for tests and UI development tooling only — never part of
+/// a production vault.
+#[cfg(any(test, feature = "demo-seed"))]
 pub mod seed;
 
 use std::path::Path;
@@ -15,7 +20,7 @@ use crate::error::{Error, Result};
 use crate::secure::Key256;
 
 /// Ordered migrations. Index + 1 = `PRAGMA user_version` after applying.
-const MIGRATIONS: &[&str] = &[include_str!("schema_v1.sql")];
+const MIGRATIONS: &[&str] = &[include_str!("schema_v1.sql"), include_str!("schema_v2.sql")];
 
 pub const SCHEMA_VERSION: u32 = MIGRATIONS.len() as u32;
 
@@ -48,7 +53,7 @@ impl Database {
 
     fn init(conn: Connection, key: &Key256) -> Result<Self> {
         let cipher_version: Option<String> = conn.query_row("PRAGMA cipher_version", [], |r| r.get(0)).optional()?;
-        if cipher_version.as_deref().map_or(true, str::is_empty) {
+        if cipher_version.as_deref().is_none_or(str::is_empty) {
             return Err(Error::SqlCipherMissing);
         }
         // Wrong-key attempts are reported to the caller; keep SQLCipher quiet on stderr.

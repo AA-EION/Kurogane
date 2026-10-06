@@ -48,8 +48,8 @@ export function buildIndex(topo: Topology, scene: Scene): SearchEntry[] {
       kind: 'service',
       target: node(s.id)!,
       title: s.name,
-      subtitle: `${h?.name} · ${s.runtime}${s.ports[0] ? ` · ${s.ports.map((p) => (p.hostPort ? `${p.hostPort}→${p.containerPort}` : `${p.containerPort}`)).join(', ')}` : ''}`,
-      fields: [s.name, s.image ?? '', ...ports, ports.map((p) => `:${p}`).join(' ')],
+      subtitle: `${s.ownerTenantId ? `${tenantName.get(s.ownerTenantId)} · ` : ''}${h?.name} · ${s.runtime}${s.ports[0] ? ` · ${s.ports.map((p) => (p.hostPort ? `${p.hostPort}→${p.containerPort}` : `${p.containerPort}`)).join(', ')}` : ''}`,
+      fields: [s.name, s.image ?? '', ...ports, ports.map((p) => `:${p}`).join(' '), s.ownerTenantId ? tenantName.get(s.ownerTenantId) ?? '' : ''],
     });
   }
   for (const p of topo.proxies) {

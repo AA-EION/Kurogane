@@ -16,7 +16,7 @@ use zeroize::Zeroizing;
 use crate::container::{self, flags, Archive, Header, DB_ENTRY, ICON_PREFIX};
 use crate::crypto;
 use crate::db::models::{SecretField, Topology};
-use crate::db::{seed, Database};
+use crate::db::Database;
 use crate::error::{Error, Result};
 use crate::fsutil;
 use crate::kdf::{derive_mek, KdfParams};
@@ -32,8 +32,6 @@ pub struct CreateOptions {
     pub kdf: KdfParams,
     /// Account label shown in the authenticator app.
     pub totp_account: String,
-    /// Load the demo topology (first-run "explore" mode and tests).
-    pub seed_demo: bool,
 }
 
 /// Shown once at creation; the user scans the QR and confirms with a code.
@@ -80,6 +78,7 @@ pub struct UnlockedVault {
     work_db: PathBuf,
     extra_entries: BTreeMap<String, Vec<u8>>,
     dirty: bool,
+    pending_totp: Option<Zeroizing<Vec<u8>>>,
 }
 
 impl std::fmt::Debug for UnlockedVault {
@@ -122,19 +121,20 @@ impl UnlockedVault {
         let work_db = prepare_workdir(workroot, &vault_id)?;
         let db = Database::open(&work_db, &keys.database)?;
         db.init_meta(&uuid::Uuid::from_bytes(vault_id).to_string(), &opts.display_name)?;
-        if opts.seed_demo {
-            seed::seed_demo(&db, &keys.field)?;
-        }
 
-        let secret = totp::generate_secret();
-        let cfg = TotpConfig::default();
-        db.store_totp_secret(&crypto::seal(&keys.totp, &totp_aad(&vault_id), &secret)?, &cfg)?;
-        let uri = totp::otpauth_uri(&secret, &cfg, TOTP_ISSUER, &opts.totp_account);
-        let enrollment = TotpEnrollment { secret_base32: totp::secret_to_base32(&secret), qr_svg: totp::qr_svg(&uri)?, otpauth_uri: uri };
-
-        let mut vault =
-            UnlockedVault { path: path.to_path_buf(), header, keys, db: Some(db), work_db, extra_entries: BTreeMap::new(), dirty: false };
+        let mut vault = UnlockedVault {
+            path: path.to_path_buf(),
+            header,
+            keys,
+            db: Some(db),
+            work_db,
+            extra_entries: BTreeMap::new(),
+            dirty: false,
+            pending_totp: None,
+        };
         vault.save()?;
+        // Offered right away; nothing is stored until the user confirms a code.
+        let enrollment = vault.begin_totp_enrollment(&opts.totp_account)?;
         Ok((vault, enrollment))
     }
 
@@ -170,6 +170,7 @@ impl UnlockedVault {
             work_db,
             extra_entries,
             dirty: false,
+            pending_totp: None,
         };
 
         let rec = vault.db().totp_record()?;
@@ -184,19 +185,53 @@ impl UnlockedVault {
         Ok(vault)
     }
 
-    /// Finish enrolment: verify a code from the user's authenticator, then
-    /// require TOTP on every future unlock.
+    /// Generate a fresh TOTP seed for pairing. It lives only in memory until
+    /// [`confirm_totp`](Self::confirm_totp) succeeds, so an abandoned re-pair
+    /// never weakens or breaks an existing 2FA setup.
+    pub fn begin_totp_enrollment(&mut self, account: &str) -> Result<TotpEnrollment> {
+        let secret = totp::generate_secret();
+        let cfg = TotpConfig::default();
+        let account = if account.trim().is_empty() { "admin" } else { account.trim() };
+        let uri = totp::otpauth_uri(&secret, &cfg, TOTP_ISSUER, account);
+        let enrollment = TotpEnrollment { secret_base32: totp::secret_to_base32(&secret), qr_svg: totp::qr_svg(&uri)?, otpauth_uri: uri };
+        self.pending_totp = Some(secret);
+        Ok(enrollment)
+    }
+
+    /// Finish pairing: verify a code against the pending seed, then require
+    /// TOTP on every future unlock.
     pub fn confirm_totp(&mut self, code: &str) -> Result<()> {
         self.confirm_totp_at(code, now_unix())
     }
 
     pub fn confirm_totp_at(&mut self, code: &str, now: u64) -> Result<()> {
-        let rec = self.db().totp_record()?;
-        let sealed = rec.sealed_secret.ok_or_else(|| Error::invalid("no TOTP seed enrolled"))?;
-        let secret = crypto::unseal(&self.keys.totp, &totp_aad(&self.header.vault_id), &sealed)?;
-        let counter = totp::verify(&secret, &rec.config, code, now, 1, rec.last_counter).ok_or(Error::TotpInvalid)?;
+        let secret = self.pending_totp.as_ref().ok_or_else(|| Error::invalid("start pairing first"))?;
+        let cfg = TotpConfig::default();
+        let counter = totp::verify(secret, &cfg, code, now, 1, 0).ok_or(Error::TotpInvalid)?;
+        let sealed = crypto::seal(&self.keys.totp, &totp_aad(&self.header.vault_id), secret)?;
+        self.db().store_totp_secret(&sealed, &cfg)?;
         self.db().set_totp_enabled(true, counter)?;
+        self.pending_totp = None;
         self.header.flags |= flags::TOTP_REQUIRED;
+        self.save()
+    }
+
+    /// Turn 2FA off. Requires a current code so a borrowed unlocked session
+    /// cannot silently remove the second factor.
+    pub fn disable_totp(&mut self, code: &str) -> Result<()> {
+        self.disable_totp_at(code, now_unix())
+    }
+
+    pub fn disable_totp_at(&mut self, code: &str, now: u64) -> Result<()> {
+        let rec = self.db().totp_record()?;
+        if !rec.enabled {
+            return Ok(());
+        }
+        let sealed = rec.sealed_secret.ok_or_else(|| Error::Integrity("TOTP enabled without a seed".into()))?;
+        let secret = crypto::unseal(&self.keys.totp, &totp_aad(&self.header.vault_id), &sealed)?;
+        totp::verify(&secret, &rec.config, code, now, 1, 0).ok_or(Error::TotpInvalid)?;
+        self.db().clear_totp()?;
+        self.header.flags &= !flags::TOTP_REQUIRED;
         self.save()
     }
 
@@ -229,6 +264,12 @@ impl UnlockedVault {
 
     pub fn mark_dirty(&mut self) {
         self.dirty = true;
+    }
+
+    /// Re-check the master password (sensitive settings ask for it again).
+    pub fn verify_password(&self, password: &[u8]) -> Result<()> {
+        let mek = derive_mek(password, &self.header.salt, &self.header.kdf)?;
+        self.header.unwrap_vdk(&mek).map(|_| ())
     }
 
     /// Re-wrap the VDK under a new password (and optionally new KDF costs).
@@ -349,13 +390,15 @@ impl Drop for UnlockedVault {
 mod tests {
     use super::*;
 
-    fn opts(seed: bool) -> CreateOptions {
-        CreateOptions {
-            display_name: "Test Vault".into(),
-            kdf: KdfParams::insecure_for_tests(),
-            totp_account: "ops@test".into(),
-            seed_demo: seed,
-        }
+    fn opts(_seed: bool) -> CreateOptions {
+        CreateOptions { display_name: "Test Vault".into(), kdf: KdfParams::insecure_for_tests(), totp_account: "ops@test".into() }
+    }
+
+    fn create_seeded(path: &Path, work: &Path, pw: &[u8]) -> (UnlockedVault, TotpEnrollment) {
+        let (mut v, e) = UnlockedVault::create(path, work, pw, &opts(true)).unwrap();
+        crate::db::seed::seed_demo(v.db(), &v.keys().field).unwrap();
+        v.save().unwrap();
+        (v, e)
     }
 
     #[test]
@@ -365,7 +408,7 @@ mod tests {
         let work_a = dir.path().join("machine-a");
         let pw = b"correct horse battery staple";
 
-        let (mut v, enrol) = UnlockedVault::create(&path, &work_a, pw, &opts(true)).unwrap();
+        let (mut v, enrol) = create_seeded(&path, &work_a, pw);
         assert!(enrol.otpauth_uri.starts_with("otpauth://totp/Kurogane:"));
         let secret = totp::secret_from_base32(&enrol.secret_base32).unwrap();
         let t0 = 1_800_000_000;
@@ -393,6 +436,33 @@ mod tests {
     }
 
     #[test]
+    fn totp_is_optional_and_repairable() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("v.kurogane");
+        let pw = b"0123456789abcdef";
+        let (v, _skipped) = UnlockedVault::create(&path, dir.path(), pw, &opts(false)).unwrap();
+        // Skipping pairing stores nothing: unlock needs only the password.
+        assert!(!v.totp_enabled().unwrap());
+        drop(v);
+        let mut v = UnlockedVault::unlock(&path, dir.path(), pw, None).unwrap();
+        // Pair later from Settings.
+        let e = v.begin_totp_enrollment("me").unwrap();
+        let s = totp::secret_from_base32(&e.secret_base32).unwrap();
+        let t = 1_900_000_000;
+        v.confirm_totp_at(&totp::code_at(&s, &TotpConfig::default(), t), t).unwrap();
+        // An abandoned re-pair keeps the old seed working.
+        let _ = v.begin_totp_enrollment("me").unwrap();
+        drop(v);
+        let t2 = t + 600;
+        let mut v = UnlockedVault::unlock_at(&path, dir.path(), pw, Some(&totp::code_at(&s, &TotpConfig::default(), t2)), t2).unwrap();
+        assert!(v.disable_totp_at("000000", t2).is_err());
+        v.disable_totp_at(&totp::code_at(&s, &TotpConfig::default(), t2 + 30), t2 + 30).unwrap();
+        assert!(!v.header().totp_required());
+        drop(v);
+        UnlockedVault::unlock(&path, dir.path(), pw, None).unwrap();
+    }
+
+    #[test]
     fn save_creates_backup_and_lineage() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("v.kurogane");
@@ -414,7 +484,7 @@ mod tests {
     fn change_password_rewraps_only() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("v.kurogane");
-        let (mut v, _) = UnlockedVault::create(&path, dir.path(), b"old password 123", &opts(true)).unwrap();
+        let (mut v, _) = create_seeded(&path, dir.path(), b"old password 123");
         v.change_password(b"new password 456", None).unwrap();
         drop(v);
         assert!(UnlockedVault::unlock(&path, dir.path(), b"old password 123", None).is_err());
@@ -426,8 +496,8 @@ mod tests {
     fn reveal_is_audited() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("v.kurogane");
-        let (mut v, _) = UnlockedVault::create(&path, dir.path(), b"0123456789abcdef", &opts(true)).unwrap();
-        let cred = seed::demo_id("c-app-ssh");
+        let (mut v, _) = create_seeded(&path, dir.path(), b"0123456789abcdef");
+        let cred = crate::db::seed::demo_id("c-app-ssh");
         assert_eq!(v.reveal(&cred, SecretField::Secret, "reveal_secret").unwrap().as_str(), "Tama-hagane!42");
         assert_eq!(v.db().audit_count("reveal_secret").unwrap(), 1);
     }

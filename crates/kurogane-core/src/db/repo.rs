@@ -12,7 +12,7 @@ use crate::error::{Error, Result};
 use crate::secure::Key256;
 use crate::totp::{Algorithm, TotpConfig};
 
-fn new_id() -> String {
+pub(crate) fn new_id() -> String {
     uuid::Uuid::new_v4().to_string()
 }
 
@@ -24,7 +24,7 @@ fn id_or_new(id: &str) -> String {
     }
 }
 
-fn field_aad(cred_id: &str, field: SecretField) -> Vec<u8> {
+pub(crate) fn field_aad(cred_id: &str, field: SecretField) -> Vec<u8> {
     format!("credentials:{cred_id}:{}", field.column()).into_bytes()
 }
 
@@ -151,6 +151,12 @@ impl Database {
         Ok(())
     }
 
+    pub fn clear_totp(&self) -> Result<()> {
+        self.conn()
+            .execute("UPDATE vault_security SET totp_enabled = 0, totp_secret_sealed = NULL, totp_last_counter = 0 WHERE id = 1", [])?;
+        Ok(())
+    }
+
     pub fn set_totp_last_counter(&self, counter: u64) -> Result<()> {
         self.conn().execute("UPDATE vault_security SET totp_last_counter = ?1 WHERE id = 1", [counter as i64])?;
         Ok(())
@@ -218,9 +224,9 @@ impl Database {
         let tx = self.conn().unchecked_transaction()?;
         let id = id_or_new(&s.id);
         tx.execute(
-            "INSERT INTO services (id, host_id, name, runtime, image, scheme, health_path, description, icon)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
-            params![id, s.host_id, s.name, s.runtime, s.image, s.scheme, s.health_path, s.description, s.icon],
+            "INSERT INTO services (id, host_id, name, runtime, image, scheme, health_path, description, icon, owner_tenant_id)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+            params![id, s.host_id, s.name, s.runtime, s.image, s.scheme, s.health_path, s.description, s.icon, s.owner_tenant_id],
         )?;
         for p in &s.ports {
             tx.execute(
@@ -521,7 +527,7 @@ impl Database {
             }
         }
         let mut st = self.conn().prepare(
-            "SELECT id, host_id, name, runtime, image, scheme, health_path, description, icon FROM services ORDER BY host_id, name",
+            "SELECT id, host_id, name, runtime, image, scheme, health_path, description, icon, owner_tenant_id FROM services ORDER BY host_id, name",
         )?;
         let rows = st.query_map([], |r| {
             Ok(Service {
@@ -534,6 +540,7 @@ impl Database {
                 health_path: r.get(6)?,
                 description: r.get(7)?,
                 icon: r.get(8)?,
+                owner_tenant_id: r.get(9)?,
                 ports: Vec::new(),
             })
         })?;
@@ -611,10 +618,10 @@ impl Database {
     }
 }
 
-const CRED_SELECT: &str = "SELECT id, tenant_id, host_id, service_id, proxy_id, kind, label, username, url, public_key,
+pub(crate) const CRED_SELECT: &str = "SELECT id, tenant_id, host_id, service_id, proxy_id, kind, label, username, url, public_key,
         secret_sealed IS NOT NULL, private_key_sealed IS NOT NULL, notes_sealed IS NOT NULL, expires_at FROM credentials";
 
-fn cred_from_row(r: &Row<'_>) -> rusqlite::Result<CredentialMeta> {
+pub(crate) fn cred_from_row(r: &Row<'_>) -> rusqlite::Result<CredentialMeta> {
     let owner = if let Some(id) = r.get::<_, Option<String>>(1)? {
         CredentialOwner { kind: OwnerKind::Tenant, id }
     } else if let Some(id) = r.get::<_, Option<String>>(2)? {

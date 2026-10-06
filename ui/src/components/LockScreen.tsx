@@ -10,27 +10,18 @@ const REASON: Record<LockReason, string> = {
   manual: 'Vault locked.',
 };
 
-export function LockScreen({ status, onUnlock, onSwitch, demoCredentials }: {
+export function LockScreen({ status, onUnlock, onSwitch }: {
   status: AppStatus;
   onUnlock: (pw: string, totp?: string) => Promise<void>;
   onSwitch: () => void;
-  demoCredentials?: () => Promise<{ password: string; totp: string }>;
 }) {
   const [pw, setPw] = useState('');
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [demo, setDemo] = useState<{ password: string; totp: string } | null>(null);
   const pwRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => pwRef.current?.focus(), []);
-  useEffect(() => {
-    if (!demoCredentials) return;
-    const tick = () => demoCredentials().then(setDemo);
-    tick();
-    const t = setInterval(tick, 1000);
-    return () => clearInterval(t);
-  }, [demoCredentials]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +45,7 @@ export function LockScreen({ status, onUnlock, onSwitch, demoCredentials }: {
         <Brand large />
         <div className="vault-chip">
           <Icon name="lock" size={14} />
-          <span className="mono ellipsis">{status.vaultPath}</span>
+          <span className="mono ellipsis" title={status.vaultPath ?? ''}>{status.vaultPath}</span>
         </div>
         {status.lastLockReason && <div className="notice">{REASON[status.lastLockReason]}</div>}
         <label className="field">
@@ -83,15 +74,6 @@ export function LockScreen({ status, onUnlock, onSwitch, demoCredentials }: {
           {busy ? 'Deriving key (Argon2id)…' : 'Unlock'}
         </button>
         <button type="button" className="ghost" onClick={onSwitch}>Open a different vault</button>
-        {demo && (
-          <div className="demo-hint">
-            <div><b>Browser demo.</b> Password <code>{demo.password}</code></div>
-            <div>
-              Live TOTP <code className="big">{demo.totp}</code>
-              <button type="button" className="chip-btn" onClick={() => (setPw(demo.password), setCode(demo.totp))}>autofill</button>
-            </div>
-          </div>
-        )}
       </form>
     </div>
   );

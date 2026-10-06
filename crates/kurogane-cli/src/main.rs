@@ -8,8 +8,11 @@ use std::time::Duration;
 
 use anyhow::{bail, Context, Result};
 use clap::{Parser, Subcommand, ValueEnum};
-use kurogane_core::db::{seed, Database, NewSyncRemote};
+use kurogane_core::db::NewSyncRemote;
+#[cfg(feature = "demo-seed")]
+use kurogane_core::db::{seed, Database};
 use kurogane_core::kdf::KdfParams;
+#[cfg(feature = "demo-seed")]
 use kurogane_core::secure::Key256;
 use kurogane_core::vault::{self, CreateOptions, UnlockedVault};
 use kurogane_sync::engine::{select_transport, SyncEngine, SyncJob, TransportPreference};
@@ -58,14 +61,15 @@ enum Cmd {
         name: String,
         #[arg(long, default_value = "admin")]
         account: String,
-        /// Pre-load the demo topology.
-        #[arg(long)]
-        demo: bool,
         #[arg(long, value_enum, default_value_t = KdfProfile::Standard)]
         kdf: KdfProfile,
     },
-    /// Confirm TOTP enrolment with a code from your authenticator app.
-    ConfirmTotp { path: PathBuf, code: String },
+    /// Pair an authenticator app (optional two-factor on unlock).
+    Totp {
+        path: PathBuf,
+        #[arg(long, default_value = "admin")]
+        account: String,
+    },
     /// Print the clear-text header (no password needed).
     Inspect { path: PathBuf },
     /// Unlock and print a topology summary.
@@ -77,7 +81,8 @@ enum Cmd {
         #[arg(long)]
         json: bool,
     },
-    /// Emit the UI mock fixture: demo topology + demo secrets as JSON.
+    /// Dev tooling: emit the UI test fixture (demo topology + fake secrets).
+    #[cfg(feature = "demo-seed")]
     DemoFixture {
         #[arg(long)]
         out: Option<PathBuf>,
@@ -99,6 +104,13 @@ enum Cmd {
         /// MEGA account e-mail.
         #[arg(long)]
         user: Option<String>,
+    },
+    /// Sync the vault into a folder you already sync (Dropbox, Syncthing, NAS…).
+    LinkFolder {
+        vault: PathBuf,
+        folder: PathBuf,
+        #[arg(long)]
+        totp: Option<String>,
     },
     /// Run one sync round for every linked remote (or a local folder remote).
     Sync {
@@ -162,7 +174,7 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
     let home = home(&cli.home)?;
     match cli.cmd {
-        Cmd::Create { path, name, account, demo, kdf } => {
+        Cmd::Create { path, name, account, kdf } => {
             let pw = password("New master password (≥12 chars): ")?;
             if std::env::var("KUROGANE_PASSWORD").is_err() && *pw != *password("Repeat: ")? {
                 bail!("passwords do not match");
@@ -172,18 +184,20 @@ fn main() -> Result<()> {
                 KdfProfile::Hardened => KdfParams::HARDENED,
             };
             eprintln!("Deriving key (Argon2id, {} MiB, t={}, p={})…", kdf.m_cost_kib / 1024, kdf.t_cost, kdf.parallelism);
-            let opts = CreateOptions { display_name: name, kdf, totp_account: account, seed_demo: demo };
-            let (_v, enrol) = UnlockedVault::create(&path, &home.join("work"), pw.as_bytes(), &opts)?;
+            let opts = CreateOptions { display_name: name, kdf, totp_account: account };
+            let (_v, _) = UnlockedVault::create(&path, &home.join("work"), pw.as_bytes(), &opts)?;
             println!("Created {}", path.display());
-            println!("\nScan with your authenticator app, then run `kurogane confirm-totp {} <code>`:\n", path.display());
-            print_qr(&enrol.otpauth_uri);
-            println!("Secret: {}\nURI:    {}", enrol.secret_base32, enrol.otpauth_uri);
+            println!("Optional: enable two-factor with `kurogane totp {}`", path.display());
         }
-        Cmd::ConfirmTotp { path, code } => {
-            let pw = password("Master password: ")?;
-            let mut v = UnlockedVault::unlock(&path, &home.join("work"), pw.as_bytes(), None)?;
-            v.confirm_totp(&code)?;
-            println!("TOTP enabled: future unlocks require a code.");
+        Cmd::Totp { path, account } => {
+            let mut v = unlock(&home, &path, None)?;
+            let enrol = v.begin_totp_enrollment(&account)?;
+            println!("Scan with your authenticator app:\n");
+            print_qr(&enrol.otpauth_uri);
+            println!("Secret: {}\n", enrol.secret_base32);
+            let code = std::env::var("KUROGANE_TOTP").or_else(|_| rpassword::prompt_password("Code from the app: "))?;
+            v.confirm_totp(code.trim())?;
+            println!("Two-factor enabled.");
         }
         Cmd::Inspect { path } => {
             let h = vault::peek(&path)?;
@@ -216,6 +230,7 @@ fn main() -> Result<()> {
                 );
             }
         }
+        #[cfg(feature = "demo-seed")]
         Cmd::DemoFixture { out } => {
             let db = Database::open_in_memory(&Key256::random())?;
             db.init_meta("00000000-0000-4000-8000-000000000000", "Demo Infrastructure")?;
@@ -316,6 +331,26 @@ fn main() -> Result<()> {
             v.save()?;
             println!("Linked {prov:?} as remote {id} → {remote_path}");
         }
+        Cmd::LinkFolder { vault: path, folder, totp } => {
+            let folder = std::fs::canonicalize(&folder).with_context(|| format!("{} must exist", folder.display()))?;
+            let mut v = unlock(&home, &path, totp.as_deref())?;
+            let target = folder.join(path.file_name().context("vault file name")?);
+            let body = RemoteSection::new(Provider::Local).to_body();
+            let target_s = target.display().to_string();
+            let id = v.db().upsert_sync_remote(
+                &v.keys().sync,
+                &NewSyncRemote {
+                    id: None,
+                    provider: "local",
+                    label: "Synced folder",
+                    remote_path: &target_s,
+                    rclone_section: &body,
+                    transport: "auto",
+                },
+            )?;
+            v.save()?;
+            println!("Linked folder remote {id} → {target_s}");
+        }
         Cmd::Sync { vault: path, totp, transport: t, local_remote } => {
             let sb = Sandbox::open(home.join("sandbox"))?;
             let pref = match t {
@@ -348,7 +383,13 @@ fn main() -> Result<()> {
             }
             for r in remotes {
                 let section = RemoteSection::parse(&v.db().sync_remote_section(&v.keys().sync, &r.id)?)?;
-                let job = SyncJob { remote_id: &r.id, section: &section, remote_path: &r.remote_path, local_vault: &path };
+                let (engine, remote_path) = if r.provider == "local" {
+                    let (t, rel) = kurogane_sync::transport::FolderTransport::for_file(std::path::Path::new(&r.remote_path))?;
+                    (SyncEngine::new(Sandbox::open(home.join("sandbox"))?, std::sync::Arc::new(t)), rel)
+                } else {
+                    (SyncEngine::new(engine.sandbox.clone(), engine.transport.clone()), r.remote_path.clone())
+                };
+                let job = SyncJob { remote_id: &r.id, section: &section, remote_path: &remote_path, local_vault: &path };
                 let report = {
                     let validate = |b: &[u8]| v.validate_candidate(b).map(|_| ());
                     engine.sync_once(&job, &validate)?

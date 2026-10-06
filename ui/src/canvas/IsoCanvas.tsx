@@ -111,6 +111,12 @@ const Block = memo(function Block({ node, selected, hovered, dim, onEnter, onLea
         <>
           <polygon points={stripe(f.left, 0.16)} fill={node.accent} opacity={0.85} />
           <polygon points={stripe(f.right, 0.16)} fill={shade(node.accent, -0.25)} opacity={0.85} />
+          {node.ownerColor && (
+            <>
+              <polygon points={stripe([f.left[3], f.left[2], f.left[1], f.left[0]], 0.12)} fill={node.ownerColor} />
+              <polygon points={stripe([f.right[3], f.right[2], f.right[1], f.right[0]], 0.12)} fill={shade(node.ownerColor, -0.2)} />
+            </>
+          )}
         </>
       )}
       <polygon
@@ -358,7 +364,7 @@ function GroundGrid({ scene }: { scene: Scene }) {
   return <path d={lines.join('')} className="ground-grid" />;
 }
 
-function sceneScreenBounds(scene: Scene) {
+export function sceneScreenBounds(scene: Scene) {
   const { min, max } = scene.bounds;
   const pts = [tileToScreen(min), tileToScreen({ x: max.x, y: min.y }), tileToScreen(max), tileToScreen({ x: min.x, y: max.y })];
   const inet = scene.byId.get('internet')?.screen;

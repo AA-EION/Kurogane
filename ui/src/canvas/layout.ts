@@ -27,7 +27,7 @@ export type Glyph =
   | 'cloud' | 'server' | 'vps' | 'vm' | 'switch' | 'ap' | 'router' | 'firewall' | 'nvr' | 'nas' | 'edge'
   | 'workstation' | 'container' | 'proxy' | 'tunnel' | 'share' | 'gear' | 'windows' | 'db' | 'globe';
 
-export type BadgeKind = 'runtime' | 'os' | 'port' | 'tls' | 'tlsWarn' | 'routes' | 'ip' | 'kind';
+export type BadgeKind = 'runtime' | 'os' | 'port' | 'tls' | 'tlsWarn' | 'routes' | 'ip' | 'kind' | 'owner';
 
 export interface Badge {
   kind: BadgeKind;
@@ -58,6 +58,8 @@ export interface SceneNode {
   badges: Badge[];
   /** Host has services standing on it (rendered as a slab, not a box). */
   slab?: boolean;
+  /** Owning company's colour when the service belongs to another company. */
+  ownerColor?: string;
 }
 
 export interface SceneZone {
@@ -361,6 +363,7 @@ export function layoutTopology(topo: Topology, now = Date.now()): Scene {
         const r = Math.floor(k / icols);
         const itTile = { x: tile.x + 1 + c * CELL, y: tile.y + 1 + r * CELL };
         const b: Badge[] = [];
+        let ownerColor: string | undefined;
         let glyph: Glyph;
         let accent: string;
         let sub: string | undefined;
@@ -375,6 +378,11 @@ export function layoutTopology(topo: Topology, now = Date.now()): Scene {
         } else {
           const s = it.service!;
           ({ glyph, accent } = serviceGlyph(s));
+          const owner = s.ownerTenantId && s.ownerTenantId !== p.tenant.id ? topo.tenants.find((x) => x.id === s.ownerTenantId) : undefined;
+          if (owner) {
+            b.push({ kind: 'owner', label: owner.name, tone: 'info' });
+            ownerColor = owner.color ?? undefined;
+          }
           b.push({ kind: 'runtime', label: RUNTIME_LABEL[s.runtime] ?? s.runtime, tone: 'neutral', glyph: s.runtime });
           const port = s.ports.find((x) => x.isPrimary) ?? s.ports[0];
           if (port) {
@@ -402,6 +410,7 @@ export function layoutTopology(topo: Topology, now = Date.now()): Scene {
           glyph,
           accent,
           badges: b,
+          ownerColor,
         };
         nodes.push(node);
         refToNode.set(it.id, node.id);

@@ -1,37 +1,32 @@
-//! IPC surface consumed by `ui/src/api/tauri.ts`. Every command that needs
-//! vault contents goes through `with_vault`, which also counts as activity
-//! for the inactivity lock.
+//! IPC surface consumed by `ui/src/api/tauri.ts`: vault lifecycle, editing,
+//! secrets, launchers and settings. Import/export lives in `io.rs`, sync in
+//! `sync.rs`. Every command that touches the vault counts as activity for the
+//! inactivity lock.
 
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
-use kurogane_core::db::models::{OwnerKind, SecretField, Topology};
-use kurogane_core::db::NewSyncRemote;
+use kurogane_core::db::models::{Host, Network, OwnerKind, ReverseProxy, SecretField, Service, Tenant, Topology};
+use kurogane_core::db::{CredentialInput, DeleteImpact, EntityKind, NewSyncRemote, SettingsUpdate};
 use kurogane_core::kdf::KdfParams;
 use kurogane_core::launch::{self, RdpTarget, SshTarget};
 use kurogane_core::session::{LockReason, SessionClock};
 use kurogane_core::vault::{self, CreateOptions, TotpEnrollment, UnlockedVault};
-use kurogane_sync::engine::{select_transport, SyncEngine, SyncJob, SyncOutcome, TransportPreference};
-use kurogane_sync::provision::Provisioner;
-use kurogane_sync::rclone::{Provider, RemoteSection};
-use kurogane_sync::sandbox::Sandbox;
-use kurogane_sync::transport;
 use serde::{Deserialize, Serialize};
-use tauri::ipc::Channel;
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_opener::OpenerExt;
 use zeroize::Zeroizing;
 
-use crate::state::{AppConfig, AppState, Inner, PendingRemote};
+use crate::state::{AppState, Inner};
 
-type CmdResult<T> = Result<T, String>;
+pub type CmdResult<T> = Result<T, String>;
 
-fn err(e: impl std::fmt::Display) -> String {
-    e.to_string()
+pub fn err(e: impl std::fmt::Display) -> String {
+    let s = e.to_string();
+    // Core errors are prefixed for logs; the UI wants the sentence.
+    s.strip_prefix("invalid input: ").map(str::to_string).unwrap_or(s)
 }
-
-const DEFAULT_REMOTE_PATH: &str = "Kurogane/vault.kurogane";
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -45,9 +40,10 @@ pub struct AppStatus {
     memory_locked: bool,
     demo: bool,
     last_lock_reason: Option<LockReason>,
+    recent_vaults: Vec<String>,
 }
 
-fn status_of(inner: &Inner) -> AppStatus {
+pub fn status_of(inner: &Inner) -> AppStatus {
     let header = inner.vault_path.as_deref().and_then(|p| vault::peek(p).ok());
     let (timeout, remaining) = inner.session.as_ref().map(|s| (s.timeout().as_secs(), s.remaining().as_secs())).unwrap_or((900, 0));
     AppStatus {
@@ -63,10 +59,10 @@ fn status_of(inner: &Inner) -> AppStatus {
         totp_required: header.map(|h| h.totp_required()).unwrap_or(false),
         lock_timeout_secs: timeout,
         remaining_secs: remaining,
-        memory_locked: inner.vault.as_ref().map_or(true, |v| v.keys().all_memory_locked())
-            && !kurogane_core::secure::memory_lock_degraded(),
+        memory_locked: inner.vault.as_ref().is_none_or(|v| v.keys().all_memory_locked()) && !kurogane_core::secure::memory_lock_degraded(),
         demo: false,
         last_lock_reason: inner.last_lock_reason,
+        recent_vaults: inner.config.recent_vaults.iter().filter(|p| p.exists()).map(|p| p.display().to_string()).collect(),
     }
 }
 
@@ -76,7 +72,8 @@ fn start_session(inner: &mut Inner) {
     inner.last_lock_reason = None;
 }
 
-fn with_vault<T>(state: &State<'_, AppState>, f: impl FnOnce(&mut UnlockedVault) -> kurogane_core::Result<T>) -> CmdResult<T> {
+/// Run `f` against the unlocked vault (read-only intent).
+pub fn with_vault<T>(state: &State<'_, AppState>, f: impl FnOnce(&mut UnlockedVault) -> kurogane_core::Result<T>) -> CmdResult<T> {
     let mut inner = state.inner.lock().unwrap();
     if let Some(s) = inner.session.as_mut() {
         s.touch();
@@ -85,8 +82,32 @@ fn with_vault<T>(state: &State<'_, AppState>, f: impl FnOnce(&mut UnlockedVault)
     f(v).map_err(err)
 }
 
-fn remember(state: &AppState, path: &std::path::Path) {
-    AppConfig { last_vault_path: Some(path.to_path_buf()) }.save(&state.paths.config_file);
+/// Run an edit, persist the vault atomically, schedule a sync and return the
+/// fresh topology. On failure the working copy is rolled back from disk.
+pub fn mutate<T>(state: &State<'_, AppState>, f: impl FnOnce(&mut UnlockedVault) -> kurogane_core::Result<T>) -> CmdResult<(T, Topology)> {
+    let mut inner = state.inner.lock().unwrap();
+    if let Some(s) = inner.session.as_mut() {
+        s.touch();
+    }
+    let v = inner.vault.as_mut().ok_or("Vault is locked")?;
+    let out = match f(v) {
+        Ok(x) => x,
+        Err(e) => {
+            let _ = v.reload();
+            return Err(err(e));
+        }
+    };
+    v.save().map_err(err)?;
+    let topo = v.topology().map_err(err)?;
+    inner.request_sync(Duration::from_secs(15));
+    Ok((out, topo))
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Saved {
+    id: String,
+    topology: Topology,
 }
 
 // ------------------------------------------------------------------ lifecycle
@@ -104,18 +125,18 @@ pub struct CreateVaultArgs {
     password: Zeroizing<String>,
     kdf: String,
     account: String,
-    #[serde(default)]
-    seed_demo: bool,
 }
 
 #[tauri::command]
 pub async fn create_vault(args: CreateVaultArgs, state: State<'_, AppState>) -> CmdResult<TotpEnrollment> {
-    let path = PathBuf::from(args.path.ok_or("Choose where to save the vault first")?);
+    let mut path = PathBuf::from(args.path.ok_or("Choose where to save the vault first")?);
+    if path.extension().is_none_or(|e| e != "kurogane") {
+        path.set_extension("kurogane");
+    }
     let opts = CreateOptions {
-        display_name: args.display_name,
+        display_name: if args.display_name.trim().is_empty() { "Infrastructure".into() } else { args.display_name.trim().into() },
         kdf: if args.kdf == "hardened" { KdfParams::HARDENED } else { KdfParams::STANDARD },
-        totp_account: if args.account.is_empty() { "admin".into() } else { args.account },
-        seed_demo: args.seed_demo,
+        totp_account: args.account,
     };
     let work = state.paths.work();
     let pw = args.password;
@@ -129,13 +150,8 @@ pub async fn create_vault(args: CreateVaultArgs, state: State<'_, AppState>) -> 
     inner.vault = Some(v);
     inner.vault_path = Some(path.clone());
     start_session(&mut inner);
-    remember(&state, &path);
+    state.remember(&mut inner, &path);
     Ok(enrol)
-}
-
-#[tauri::command]
-pub fn confirm_totp(code: String, state: State<'_, AppState>) -> CmdResult<()> {
-    with_vault(&state, |v| v.confirm_totp(&code))
 }
 
 #[tauri::command]
@@ -165,8 +181,19 @@ pub async fn open_vault(path: Option<String>, app: AppHandle, state: State<'_, A
     state.lock_inner(&mut inner, LockReason::Manual);
     inner.vault_path = Some(path.clone());
     inner.last_lock_reason = None;
-    remember(&state, &path);
+    inner.pending_remote = None;
+    state.remember(&mut inner, &path);
     Ok(Some(status_of(&inner)))
+}
+
+/// "Open a different vault" from the lock screen.
+#[tauri::command]
+pub fn close_vault(state: State<'_, AppState>) -> AppStatus {
+    let mut inner = state.inner.lock().unwrap();
+    state.lock_inner(&mut inner, LockReason::Manual);
+    inner.vault_path = None;
+    inner.last_lock_reason = None;
+    status_of(&inner)
 }
 
 #[tauri::command]
@@ -189,7 +216,7 @@ pub async fn unlock(password: Zeroizing<String>, totp: Option<String>, state: St
     match result {
         Ok(mut v) => {
             if let Some(p) = inner.pending_remote.take() {
-                let label = format!("{:?}", p.provider);
+                let label = crate::sync::provider_label(p.provider).to_string();
                 let body = p.section.to_body();
                 let link = NewSyncRemote {
                     id: None,
@@ -197,13 +224,10 @@ pub async fn unlock(password: Zeroizing<String>, totp: Option<String>, state: St
                     label: &label,
                     remote_path: &p.remote_path,
                     rclone_section: &body,
+                    // The provider ("local") already selects the folder transport.
                     transport: "auto",
                 };
-                let res = v.db().upsert_sync_remote(&v.keys().sync, &link).and_then(|_| {
-                    v.mark_dirty();
-                    v.save()
-                });
-                if let Err(e) = res {
+                if let Err(e) = v.db().upsert_sync_remote(&v.keys().sync, &link).and_then(|_| v.save()) {
                     eprintln!("could not store cloud link: {e}");
                 }
             }
@@ -211,6 +235,7 @@ pub async fn unlock(password: Zeroizing<String>, totp: Option<String>, state: St
             inner.failed_unlocks = 0;
             inner.unlock_not_before = None;
             start_session(&mut inner);
+            inner.request_sync(Duration::from_secs(2));
             Ok(status_of(&inner))
         }
         Err(e) => {
@@ -223,12 +248,17 @@ pub async fn unlock(password: Zeroizing<String>, totp: Option<String>, state: St
 }
 
 #[tauri::command]
-pub fn lock(app: AppHandle, state: State<'_, AppState>) {
-    let mut inner = state.inner.lock().unwrap();
-    if state.lock_inner(&mut inner, LockReason::Manual) {
-        use tauri::Emitter;
-        let _ = app.emit("vault://locked", LockReason::Manual);
-    }
+pub async fn lock(app: AppHandle) -> CmdResult<()> {
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::sync::flush_pending(&app);
+        let state = app.state::<AppState>();
+        let mut inner = state.inner.lock().unwrap();
+        if state.lock_inner(&mut inner, LockReason::Manual) {
+            let _ = app.emit("vault://locked", LockReason::Manual);
+        }
+    })
+    .await
+    .map_err(err)
 }
 
 #[tauri::command]
@@ -241,6 +271,53 @@ pub fn touch(state: State<'_, AppState>) {
 #[tauri::command]
 pub fn topology(state: State<'_, AppState>) -> CmdResult<Topology> {
     with_vault(&state, |v| v.topology())
+}
+
+// -------------------------------------------------------------------- editing
+
+#[tauri::command]
+pub fn save_tenant(tenant: Tenant, state: State<'_, AppState>) -> CmdResult<Saved> {
+    mutate(&state, |v| v.db().save_tenant(&tenant)).map(|(id, topology)| Saved { id, topology })
+}
+
+#[tauri::command]
+pub fn save_network(network: Network, state: State<'_, AppState>) -> CmdResult<Saved> {
+    mutate(&state, |v| v.db().save_network(&network)).map(|(id, topology)| Saved { id, topology })
+}
+
+#[tauri::command]
+pub fn save_host(host: Host, state: State<'_, AppState>) -> CmdResult<Saved> {
+    mutate(&state, |v| v.db().save_host(&host)).map(|(id, topology)| Saved { id, topology })
+}
+
+#[tauri::command]
+pub fn save_service(service: Service, state: State<'_, AppState>) -> CmdResult<Saved> {
+    mutate(&state, |v| v.db().save_service(&service)).map(|(id, topology)| Saved { id, topology })
+}
+
+#[tauri::command]
+pub fn save_proxy(proxy: ReverseProxy, state: State<'_, AppState>) -> CmdResult<Saved> {
+    mutate(&state, |v| v.db().save_proxy(&proxy)).map(|(id, topology)| Saved { id, topology })
+}
+
+#[tauri::command]
+pub fn save_credential(credential: CredentialInput, state: State<'_, AppState>) -> CmdResult<Saved> {
+    mutate(&state, |v| {
+        let id = v.db().save_credential(&v.keys().field, &credential)?;
+        v.db().audit("save_credential", Some("credential"), Some(&id), None)?;
+        Ok(id)
+    })
+    .map(|(id, topology)| Saved { id, topology })
+}
+
+#[tauri::command]
+pub fn delete_impact(kind: EntityKind, id: String, state: State<'_, AppState>) -> CmdResult<DeleteImpact> {
+    with_vault(&state, |v| v.db().delete_impact(kind, &id))
+}
+
+#[tauri::command]
+pub fn delete_entity(kind: EntityKind, id: String, state: State<'_, AppState>) -> CmdResult<Topology> {
+    mutate(&state, |v| v.db().delete_entity(kind, &id)).map(|(_, t)| t)
 }
 
 // ------------------------------------------------------------------- secrets
@@ -303,7 +380,10 @@ pub fn launch_ssh(host_id: String, credential_id: Option<String>, state: State<'
     let _ = std::fs::create_dir_all(&scratch);
     let (target, note) = with_vault(&state, |v| {
         let host = v.db().host(&host_id)?;
-        let addr = host.management_address().ok_or_else(|| kurogane_core::Error::Invalid("host has no address".into()))?.to_string();
+        let addr = host
+            .management_address()
+            .ok_or_else(|| kurogane_core::Error::Invalid("this machine has no IP address or FQDN".into()))?
+            .to_string();
         let mut user = None;
         let mut note = String::new();
         let mut identity_file = None;
@@ -323,7 +403,7 @@ pub fn launch_ssh(host_id: String, credential_id: Option<String>, state: State<'
                 if ssh_agent_add(&key) {
                     note = "key loaded into ssh-agent for 10 min".into();
                 } else {
-                    // Fallback: 0600 temp file, removed shortly after ssh has read it.
+                    // Fallback: 0600 temp file, shredded shortly after ssh has read it.
                     let p = scratch.join(format!("id-{}", uuid::Uuid::new_v4().simple()));
                     {
                         use std::io::Write;
@@ -337,19 +417,20 @@ pub fn launch_ssh(host_id: String, credential_id: Option<String>, state: State<'
                         kurogane_core::fsutil::shred(&cleanup);
                     });
                     identity_file = Some(p);
-                    note = "temporary key file (auto-shredded in 20 s)".into();
+                    note = "temporary key file (shredded in 20 s)".into();
                 }
             } else if meta.has_secret {
                 let pw = v.reveal(&cid, SecretField::Secret, "launch_ssh_password")?;
                 state.clipboard.copy_secret(pw, Duration::from_secs(30));
-                note = "password copied — clears in 30 s".into();
+                note = "password copied — paste it when asked (clears in 30 s)".into();
             }
         }
         v.audit("launch_ssh", "host", &host_id)?;
         Ok((SshTarget { user, host: addr, port: host.ssh_port.unwrap_or(22), identity_file }, note))
     })?;
     let how = launch::launch_ssh(&target, &scratch).map_err(err)?;
-    Ok(format!("{} via {how}{}", target.argv().map_err(err)?.join(" "), if note.is_empty() { String::new() } else { format!(" · {note}") }))
+    let _ = with_vault(&state, |v| v.save_if_dirty());
+    Ok(format!("Opened {how}{}", if note.is_empty() { String::new() } else { format!(" · {note}") }))
 }
 
 #[tauri::command]
@@ -358,7 +439,10 @@ pub fn launch_rdp(host_id: String, credential_id: Option<String>, state: State<'
     let _ = std::fs::create_dir_all(&scratch);
     let (target, note) = with_vault(&state, |v| {
         let host = v.db().host(&host_id)?;
-        let addr = host.management_address().ok_or_else(|| kurogane_core::Error::Invalid("host has no address".into()))?.to_string();
+        let addr = host
+            .management_address()
+            .ok_or_else(|| kurogane_core::Error::Invalid("this machine has no IP address or FQDN".into()))?
+            .to_string();
         let mut user = None;
         let mut note = String::new();
         let cred_id = credential_id.clone().or_else(|| {
@@ -372,14 +456,15 @@ pub fn launch_rdp(host_id: String, credential_id: Option<String>, state: State<'
             user = meta.username.clone();
             if meta.has_secret {
                 state.clipboard.copy_secret(v.reveal(&cid, SecretField::Secret, "launch_rdp_password")?, Duration::from_secs(30));
-                note = " · password copied — clears in 30 s".into();
+                note = " · password copied (clears in 30 s)".into();
             }
         }
         v.audit("launch_rdp", "host", &host_id)?;
         Ok((RdpTarget { host: addr, port: host.rdp_port.unwrap_or(3389), user }, note))
     })?;
     let how = launch::launch_rdp(&target, &scratch).map_err(err)?;
-    Ok(format!("{how}{note}"))
+    let _ = with_vault(&state, |v| v.save_if_dirty());
+    Ok(format!("Opened {how}{note}"))
 }
 
 #[tauri::command]
@@ -389,234 +474,104 @@ pub fn launch_web(url: String, app: AppHandle, state: State<'_, AppState>) -> Cm
     app.opener().open_url(url, None::<&str>).map_err(err)
 }
 
+// ------------------------------------------------------------------- settings
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SettingsDto {
+    display_name: String,
+    lock_timeout_secs: u32,
+    clipboard_clear_secs: u32,
+    lock_on_suspend: bool,
+    totp_enabled: bool,
+    kdf: KdfParams,
+    kdf_profile: &'static str,
+    kdf_meets_floor: bool,
+    vault_path: String,
+    memory_locked: bool,
+    auto_sync: bool,
+    app_version: &'static str,
+}
+
 #[tauri::command]
-pub async fn export_text(suggested_name: String, content: String, app: AppHandle) -> CmdResult<bool> {
-    let Some(path) = app.dialog().file().set_file_name(&suggested_name).add_filter("JSON", &["json"]).blocking_save_file() else {
-        return Ok(false);
-    };
-    std::fs::write(path.into_path().map_err(err)?, content).map_err(err)?;
-    Ok(true)
-}
-
-// ---------------------------------------------------------------------- sync
-
-#[derive(Deserialize)]
-pub struct MegaLogin {
-    user: String,
-    password: Zeroizing<String>,
-}
-
-#[derive(Clone, Serialize)]
-#[serde(rename_all = "camelCase", tag = "step")]
-pub enum CloudStep {
-    Provisioning { done: u64, total: Option<u64> },
-    Consent { url: String },
-    Downloading,
-    Done { vault_path: String },
-    Error { message: String },
-}
-
-/// First-run "Connect cloud vault": provision the engine, link the account,
-/// download the vault. The link is sealed into the vault after unlock.
-#[tauri::command]
-pub async fn connect_cloud(
-    provider: String,
-    mega: Option<MegaLogin>,
-    on_step: Channel<CloudStep>,
-    app: AppHandle,
-    state: State<'_, AppState>,
-) -> CmdResult<()> {
-    let provider = match provider.as_str() {
-        "drive" => Provider::Drive,
-        "onedrive" => Provider::OneDrive,
-        "mega" => Provider::Mega,
-        other => return Err(format!("unsupported provider {other}")),
-    };
-    let sandbox_dir = state.paths.sandbox();
-    let vaults = state.paths.vaults();
-    let step = on_step.clone();
-    let opener = app.clone();
-    let run = tauri::async_runtime::spawn_blocking(move || -> Result<(RemoteSection, PathBuf), String> {
-        let sb = Sandbox::open(&sandbox_dir).map_err(err)?;
-        sb.sweep_stale_runs();
-        let bin = Provisioner::new(&sb)
-            .map_err(err)?
-            .ensure(|done, total| {
-                let _ = step.send(CloudStep::Provisioning { done, total });
-            })
-            .map_err(err)?;
-        let section = match provider {
-            Provider::Mega => {
-                let m = mega.ok_or("MEGA login required")?;
-                transport::mega_section(&bin, &sb, &m.user, &m.password).map_err(err)?
-            }
-            _ => transport::authorize_oauth(
-                &bin,
-                &sb,
-                provider,
-                &mut |url| {
-                    let _ = step.send(CloudStep::Consent { url: url.to_string() });
-                    let _ = opener.opener().open_url(url, None::<&str>);
-                },
-                Duration::from_secs(300),
-            )
-            .map_err(err)?,
-        };
-        let _ = step.send(CloudStep::Downloading);
-        let transport = select_transport(&sb, TransportPreference::Auto, |_, _| {}).map_err(err)?;
-        let engine = SyncEngine::new(sb, transport);
-        std::fs::create_dir_all(&vaults).map_err(err)?;
-        let local = vaults.join(format!("{}-vault.kurogane", provider.rclone_type()));
-        let job = SyncJob {
-            remote_id: &format!("pending:{}", provider.rclone_type()),
-            section: &section,
-            remote_path: DEFAULT_REMOTE_PATH,
-            local_vault: &local,
-        };
-        let report = engine.sync_once(&job, &|_| Ok(())).map_err(err)?;
-        match report.outcome {
-            SyncOutcome::Pulled { .. } | SyncOutcome::InSync => Ok((report.refreshed_section.unwrap_or(section), local)),
-            _ => Err(format!("No vault found at {DEFAULT_REMOTE_PATH} in this account")),
-        }
+pub fn get_settings(state: State<'_, AppState>) -> CmdResult<SettingsDto> {
+    let auto_sync = state.inner.lock().unwrap().config.auto_sync;
+    with_vault(&state, |v| {
+        let s = v.db().settings()?;
+        let kdf = v.header().kdf;
+        Ok(SettingsDto {
+            display_name: s.display_name,
+            lock_timeout_secs: s.lock_timeout_secs,
+            clipboard_clear_secs: s.clipboard_clear_secs,
+            lock_on_suspend: s.lock_on_suspend,
+            totp_enabled: v.totp_enabled()?,
+            kdf,
+            kdf_profile: if kdf == KdfParams::STANDARD {
+                "standard"
+            } else if kdf == KdfParams::HARDENED {
+                "hardened"
+            } else {
+                "custom"
+            },
+            kdf_meets_floor: kdf.meets_recommended_floor(),
+            vault_path: v.path().display().to_string(),
+            memory_locked: v.keys().all_memory_locked() && !kurogane_core::secure::memory_lock_degraded(),
+            auto_sync,
+            app_version: env!("CARGO_PKG_VERSION"),
+        })
     })
-    .await
-    .map_err(err)?;
-    match run {
-        Ok((section, local)) => {
-            let mut inner = state.inner.lock().unwrap();
-            state.lock_inner(&mut inner, LockReason::Manual);
-            inner.vault_path = Some(local.clone());
-            inner.pending_remote = Some(PendingRemote { provider, section, remote_path: DEFAULT_REMOTE_PATH.into() });
-            remember(&state, &local);
-            let _ = on_step.send(CloudStep::Done { vault_path: local.display().to_string() });
-            Ok(())
-        }
-        Err(e) => {
-            let _ = on_step.send(CloudStep::Error { message: e.clone() });
-            Err(e)
-        }
+}
+
+#[tauri::command]
+pub fn update_settings(settings: SettingsUpdate, state: State<'_, AppState>) -> CmdResult<()> {
+    mutate(&state, |v| v.db().update_settings(&settings))?;
+    if let Some(s) = state.inner.lock().unwrap().session.as_mut() {
+        s.set_timeout(Duration::from_secs(settings.lock_timeout_secs as u64));
+        s.touch();
     }
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LinkedRemote {
-    id: String,
-    provider: String,
-    label: String,
-    remote_path: String,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SyncStatusDto {
-    linked: Vec<LinkedRemote>,
-    transport: Option<String>,
-    last_outcome: Option<String>,
-    last_synced_at_ms: Option<i64>,
-    busy: bool,
+    Ok(())
 }
 
 #[tauri::command]
-pub fn sync_status(state: State<'_, AppState>) -> CmdResult<SyncStatusDto> {
-    let inner = state.inner.lock().unwrap();
-    let linked = inner
-        .vault
-        .as_ref()
-        .ok_or("Vault is locked")?
-        .db()
-        .sync_remotes()
-        .map_err(err)?
-        .into_iter()
-        .map(|r| LinkedRemote { id: r.id, provider: r.provider, label: r.label, remote_path: r.remote_path })
-        .collect();
-    Ok(SyncStatusDto {
-        linked,
-        transport: inner.sync.transport.clone(),
-        last_outcome: inner.sync.last_outcome.clone(),
-        last_synced_at_ms: inner.sync.last_synced_at_ms,
-        busy: inner.sync.busy,
-    })
-}
-
-/// One sync round for every linked remote. The state lock is *not* held
-/// during network I/O; the validator re-acquires it only to decrypt.
-#[tauri::command]
-pub async fn sync_now(app: AppHandle) -> CmdResult<String> {
-    let jobs = {
+pub async fn change_password(
+    current: Zeroizing<String>,
+    new_password: Zeroizing<String>,
+    kdf: Option<String>,
+    app: AppHandle,
+) -> CmdResult<()> {
+    tauri::async_runtime::spawn_blocking(move || {
         let state = app.state::<AppState>();
         let mut inner = state.inner.lock().unwrap();
-        if inner.sync.busy {
-            return Err("A sync is already running".into());
-        }
         let v = inner.vault.as_mut().ok_or("Vault is locked")?;
-        v.save_if_dirty().map_err(err)?;
-        let path = v.path().to_path_buf();
-        let mut jobs = Vec::new();
-        for r in v.db().sync_remotes().map_err(err)? {
-            let section = RemoteSection::parse(&v.db().sync_remote_section(&v.keys().sync, &r.id).map_err(err)?).map_err(err)?;
-            jobs.push((r, section, path.clone()));
-        }
-        if jobs.is_empty() {
-            return Err("No cloud remote linked to this vault".into());
-        }
-        inner.sync.busy = true;
-        jobs
-    };
-    let handle = app.clone();
-    let result = tauri::async_runtime::spawn_blocking(move || -> Result<Vec<String>, String> {
-        let state = handle.state::<AppState>();
-        let sb = Sandbox::open(state.paths.sandbox()).map_err(err)?;
-        let transport = select_transport(&sb, TransportPreference::Auto, |_, _| {}).map_err(err)?;
-        state.inner.lock().unwrap().sync.transport = Some(format!("{:?}", transport.kind()).to_lowercase());
-        let engine = SyncEngine::new(sb, transport);
-        let mut lines = Vec::new();
-        for (r, section, path) in jobs {
-            let job = SyncJob { remote_id: &r.id, section: &section, remote_path: &r.remote_path, local_vault: &path };
-            let validate = |bytes: &[u8]| -> kurogane_core::Result<()> {
-                let inner = state.inner.lock().unwrap();
-                let v = inner.vault.as_ref().ok_or(kurogane_core::Error::Invalid("vault locked during sync".into()))?;
-                v.validate_candidate(bytes).map(|_| ())
-            };
-            let report = engine.sync_once(&job, &validate).map_err(err)?;
-            let mut inner = state.inner.lock().unwrap();
-            if let Some(v) = inner.vault.as_mut() {
-                if matches!(report.outcome, SyncOutcome::Pulled { .. }) {
-                    v.reload().map_err(err)?;
-                }
-                if let Some(fresh) = report.refreshed_section {
-                    let body = fresh.to_body();
-                    let link = NewSyncRemote {
-                        id: Some(&r.id),
-                        provider: &r.provider,
-                        label: &r.label,
-                        remote_path: &r.remote_path,
-                        rclone_section: &body,
-                        transport: &r.transport,
-                    };
-                    v.db().upsert_sync_remote(&v.keys().sync, &link).map_err(err)?;
-                    v.mark_dirty();
-                }
-                let _ = v.audit("sync", "sync_remote", &r.id);
-            }
-            lines.push(format!("{}: {:?}", r.label, report.decision));
-        }
-        Ok(lines)
+        v.verify_password(current.as_bytes()).map_err(|_| "Current password is incorrect".to_string())?;
+        let kdf = match kdf.as_deref() {
+            Some("standard") => Some(KdfParams::STANDARD),
+            Some("hardened") => Some(KdfParams::HARDENED),
+            _ => None,
+        };
+        v.change_password(new_password.as_bytes(), kdf).map_err(err)?;
+        inner.request_sync(Duration::from_secs(5));
+        Ok(())
     })
     .await
-    .map_err(err)?;
-    let state = app.state::<AppState>();
-    let mut inner = state.inner.lock().unwrap();
-    inner.sync.busy = false;
-    match result {
-        Ok(lines) => {
-            inner.sync.last_outcome = Some(lines.join(", "));
-            inner.sync.last_synced_at_ms = Some(vault::now_ms());
-            Ok(lines.join(", "))
-        }
-        Err(e) => {
-            inner.sync.last_outcome = Some(format!("error: {e}"));
-            Err(e)
-        }
-    }
+    .map_err(err)?
+}
+
+#[tauri::command]
+pub fn totp_begin(account: String, state: State<'_, AppState>) -> CmdResult<TotpEnrollment> {
+    with_vault(&state, |v| v.begin_totp_enrollment(&account))
+}
+
+#[tauri::command]
+pub fn confirm_totp(code: String, state: State<'_, AppState>) -> CmdResult<()> {
+    with_vault(&state, |v| v.confirm_totp(&code))?;
+    state.inner.lock().unwrap().request_sync(Duration::from_secs(5));
+    Ok(())
+}
+
+#[tauri::command]
+pub fn totp_disable(code: String, state: State<'_, AppState>) -> CmdResult<()> {
+    with_vault(&state, |v| v.disable_totp(&code))?;
+    state.inner.lock().unwrap().request_sync(Duration::from_secs(5));
+    Ok(())
 }

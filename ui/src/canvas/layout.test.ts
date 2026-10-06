@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import fixture from '../mock/demo-fixture.json';
+import fixture from './__fixtures__/demo-topology.json';
 import type { Topology } from '../api/types';
 import { buildIndex, search } from '../search/index';
 import { fuzzyMatch } from '../search/fuzzy';

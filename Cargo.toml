@@ -19,6 +19,8 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.85"
 publish = false
+license = "AGPL-3.0-or-later"
+repository = "https://github.com/AA-EION/Kurogane"
 
 [workspace.dependencies]
 kurogane-core = { path = "crates/kurogane-core" }

@@ -52,6 +52,8 @@ jobs:
         working-directory: ui
     steps:
       - uses: actions/checkout@v4
+      - name: Verify dependency license inventory
+        run: node ../scripts/license-audit.mjs --check
       - uses: actions/setup-node@v4
         with:
           node-version: 22

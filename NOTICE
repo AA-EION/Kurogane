@@ -1,0 +1,36 @@
+Kurogane
+Copyright (C) 2026 Issen Software Group and Kurogane contributors
+
+Kurogane's original code, documentation and project-created assets are licensed
+under the GNU Affero General Public License, version 3 or (at your option) any
+later version: SPDX-License-Identifier: AGPL-3.0-or-later.
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for details.
+
+You should have received a copy of the GNU Affero General Public License along
+with this program. If not, see https://www.gnu.org/licenses/.
+
+The AGPL permits commercial use and paid distribution. It requires preservation
+of notices and compliant Corresponding Source access when conveying covered
+works; section 13 additionally applies to modified versions supporting remote
+network interaction. Private use does not by itself require publication.
+
+Third-party code and assets retain their respective licenses and copyright
+notices. See THIRD_PARTY_NOTICES.md and THIRD_PARTY_LICENSES.txt. In particular,
+the original Isoflow/FossFLOW portions of ui/src/canvas/ retain MIT permissions;
+Kurogane's modifications and the combined application are AGPL-3.0-or-later.
+This notice does not claim ownership of third-party work or relicense it.
+
+Source, exact locked dependency versions and build instructions:
+https://github.com/AA-EION/Kurogane
+Distributor requirements and audit scope: docs/LICENSING.md
+
+The license does not apply to users' vaults, passwords or exported inventory.
+It grants no trademark rights in the names or logos of third-party products.

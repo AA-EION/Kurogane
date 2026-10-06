@@ -7,3 +7,7 @@
 *.tsbuildinfo
 /.npm-cache
 /.impeccable/review
+/.license-cache
+/src-tauri/legal-platform/Linux
+/platform-license-manifest.json
+/platform-source-packages.txt

@@ -44,6 +44,17 @@
       "appimage"
     ],
     "publisher": "Issen Software Group",
+    "license": "AGPL-3.0-or-later",
+    "licenseFile": "../LICENSE",
+    "resources": {
+      "../LICENSE": "legal/LICENSE",
+      "../NOTICE": "legal/NOTICE",
+      "../THIRD_PARTY_NOTICES.md": "legal/THIRD_PARTY_NOTICES.md",
+      "../THIRD_PARTY_LICENSES.txt": "legal/THIRD_PARTY_LICENSES.txt",
+      "../docs/LICENSING.md": "legal/LICENSING.md",
+      "../docs/legal/rclone-COPYING": "legal/rclone-COPYING",
+      "legal-platform/": "legal/platform/"
+    },
     "copyright": "Copyright © 2026 Issen Software Group and Kurogane contributors",
     "category": "DeveloperTool",
     "shortDescription": "Map your infrastructure and keep its passwords in one encrypted vault",

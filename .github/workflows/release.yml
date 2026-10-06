@@ -90,10 +90,21 @@ jobs:
         run: node node_modules/vitest/vitest.mjs run
         working-directory: ui
 
+      - name: Verify dependency licenses
+        run: node scripts/license-audit.mjs --check
+
+      - name: Collect distro notices for the Linux bundle
+        if: runner.os == 'Linux'
+        run: python3 scripts/linux-license-audit.py prepare
+
       - name: Build installer
         env:
           MACOSX_DEPLOYMENT_TARGET: "13.0"
         run: node ui/node_modules/@tauri-apps/cli/tauri.js build ${{ matrix.args }}
+
+      - name: Archive exact project source
+        shell: bash
+        run: git archive --format=tar.gz --output=kurogane-source.tar.gz HEAD
 
       - name: Smoke-test the AppImage
         if: runner.os == 'Linux'
@@ -103,6 +114,25 @@ jobs:
           "$app" --appimage-extract >/dev/null
           test -x squashfs-root/usr/bin/kurogane-desktop
           ldd squashfs-root/usr/bin/kurogane-desktop | (! grep "not found")
+          python3 scripts/linux-license-audit.py inspect --appdir squashfs-root
+
+      - name: Platform license and source evidence
+        if: runner.os == 'Linux'
+        run: |
+          sudo sh -c "grep '^deb ' /etc/apt/sources.list | sed 's/^deb /deb-src /' > /etc/apt/sources.list.d/kurogane-source.list"
+          sudo apt-get update
+          mkdir -p platform-source
+          cd platform-source
+          while IFS= read -r package; do apt-get source --download-only "$package"; done < ../platform-source-packages.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kurogane-source-${{ runner.os }}
+          path: |
+            kurogane-source.tar.gz
+            platform-license-manifest.json
+            platform-source-packages.txt
+            platform-source/
 
       - name: Verify the macOS signature
         if: runner.os == 'macOS'

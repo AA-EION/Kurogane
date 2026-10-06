@@ -7,6 +7,7 @@ import { Icon } from './Icon';
 import { setAppearance, useAppearance, type Appearance } from '../theme';
 import { TotpPairing } from './TotpPairing';
 import { Button, Field, FormError, Modal, NumberInput, SecretInput, Segmented, Text, Toggle } from './ui';
+import licenseText from '../../../LICENSE?raw';
 
 const TABS: { id: SettingsTab; label: string; icon: string }[] = [
   { id: 'general', label: 'General', icon: 'settings' },
@@ -364,6 +365,9 @@ function About({ s }: { s: Settings }) {
     <div className="stack">
       <p><b>Kurogane</b> {s.appVersion} — offline infrastructure map and credential vault.</p>
       <p>A product of <b>Issen Software Group</b>.</p>
+      <p className="small">Copyright © 2026 Issen Software Group and Kurogane contributors. AGPLv3-or-later; redistribution is permitted under its terms. Provided without warranty.</p>
+      <details><summary>Read the AGPL license</summary><pre className="small" style={{ whiteSpace: 'pre-wrap', maxHeight: 240, overflow: 'auto' }}>{licenseText}</pre></details>
+      <button className="link-btn" onClick={() => run(() => backend.launchWeb('https://github.com/AA-EION/Kurogane'))}>Source code and third-party notices</button>
       <button className="link-btn" onClick={() => run(() => backend.launchWeb('https://issen.kurokamicorp.com'))}>issen.kurokamicorp.com</button>
       <p className="small muted mono">{s.vaultPath}</p>
       <p className="small">

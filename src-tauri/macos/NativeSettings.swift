@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct NativeSettings: View {
     @ObservedObject var model: NativeModel
@@ -59,7 +60,20 @@ struct NativeSettings: View {
         }.formStyle(.grouped)
     }
     var about: some View {
-        VStack(spacing:18) { Image(systemName:"cube.fill").font(.system(size:48)).foregroundStyle(NativePalette.secondary); Text("Kurogane").font(.largeTitle); Text("Version \(settings.text("appVersion"))").foregroundStyle(NativePalette.secondary); Text("A product of Issen Software Group"); Button("issen.kurokamicorp.com") { model.perform { _ = try await model.call("launch_web",["url":"https://issen.kurokamicorp.com"]) } }.buttonStyle(.link).tint(NativePalette.link); Text("SwiftUI on macOS · Rust encryption and sync core").font(.caption).foregroundStyle(NativePalette.secondary) }.frame(maxWidth:.infinity,maxHeight:.infinity)
+        VStack(spacing:18) {
+            Image(systemName:"cube.fill").font(.system(size:48)).foregroundStyle(NativePalette.secondary)
+            Text("Kurogane").font(.largeTitle)
+            Text("Version \(settings.text("appVersion"))").foregroundStyle(NativePalette.secondary)
+            Text("A product of Issen Software Group")
+            Text("Copyright © 2026 Issen Software Group and Kurogane contributors.\nAGPLv3-or-later; redistribution is permitted under its terms.\nProvided without warranty.").font(.caption).multilineTextAlignment(.center).foregroundStyle(NativePalette.secondary)
+            Button("Read the AGPL license") {
+                guard let url = Bundle.main.url(forResource:"LICENSE",withExtension:nil,subdirectory:"legal") else { model.error = "The installed license file is missing."; return }
+                NSWorkspace.shared.open(url)
+            }
+            Button("Source code and third-party notices") { model.perform { _ = try await model.call("launch_web",["url":"https://github.com/AA-EION/Kurogane"]) } }.buttonStyle(.link).tint(NativePalette.link)
+            Button("issen.kurokamicorp.com") { model.perform { _ = try await model.call("launch_web",["url":"https://issen.kurokamicorp.com"]) } }.buttonStyle(.link).tint(NativePalette.link)
+            Text("SwiftUI on macOS · Rust encryption and sync core").font(.caption).foregroundStyle(NativePalette.secondary)
+        }.frame(maxWidth:.infinity,maxHeight:.infinity)
     }
     func intBinding(_ key: String) -> Binding<Int> { Binding(get:{settings.number(key)},set:{settings[key] = $0}) }
     func load() { error = nil; Task { do { settings = try await model.call("get_settings") as? Row ?? [:] } catch { self.error = error.localizedDescription } } }

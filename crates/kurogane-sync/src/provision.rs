@@ -77,7 +77,10 @@ impl<'a> Provisioner<'a> {
     /// `progress(done, total)` is called as bytes arrive.
     pub fn ensure(&self, mut progress: impl FnMut(u64, Option<u64>)) -> Result<PathBuf> {
         match self.installed() {
-            Ok(Some(p)) => return Ok(p),
+            Ok(Some(p)) => {
+                self.write_license()?;
+                return Ok(p);
+            }
             Ok(None) => {}
             Err(SyncError::Checksum { .. }) => {
                 // Tampered or half-written: wipe and reinstall from the pinned source.
@@ -160,7 +163,15 @@ impl<'a> Provisioner<'a> {
             return Err(SyncError::Download(format!("{} not found in archive", self.asset.binary_name)));
         }
         fs::write(self.record_path(), sha256_file(&self.binary_path())?)?;
+        self.write_license()?;
         Ok(self.binary_path())
+    }
+
+    fn write_license(&self) -> Result<()> {
+        // Extraction keeps only the executable; preserve its upstream notice
+        // beside it, including for engines installed by older app versions.
+        fs::write(self.dir().join("COPYING"), include_str!("../../../docs/legal/rclone-COPYING"))?;
+        Ok(())
     }
 }
 
@@ -192,6 +203,11 @@ mod tests {
         assert!(p.installed().unwrap().is_none());
         let bin = p.install_from_zip(&zip).unwrap();
         assert_eq!(p.installed().unwrap(), Some(bin.clone()));
+        let copying = p.dir().join("COPYING");
+        assert!(fs::read_to_string(&copying).unwrap().contains("Nick Craig-Wood"));
+        fs::remove_file(&copying).unwrap();
+        assert_eq!(p.ensure(|_, _| {}).unwrap(), bin);
+        assert!(copying.is_file());
         fs::write(&bin, b"malware").unwrap();
         assert!(matches!(p.installed(), Err(SyncError::Checksum { .. })));
 

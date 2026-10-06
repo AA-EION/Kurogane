@@ -6,6 +6,8 @@ You enter companies, machines, services, reverse proxies and accounts in simple 
 
 A product of [Issen Software Group](https://issen.kurokamicorp.com).
 
+**Open source under [AGPLv3-or-later](LICENSE).** Commercial use and paid distribution are permitted; covered derivatives must follow AGPL source-sharing requirements, including its network-use provision for modified versions. There is no warranty. See [licensing and compatibility](docs/LICENSING.md) and [contributing](CONTRIBUTING.md).
+
 Runs offline on Windows, macOS and Linux. The vault is a single encrypted file that you can sync through Google Drive, OneDrive, MEGA or any folder you already sync.
 
 ![Light map with the service drawer open](docs/img/map-light.jpg)

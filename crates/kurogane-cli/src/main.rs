@@ -23,7 +23,12 @@ use kurogane_sync::transport::{self, ContainerRuntime};
 use zeroize::Zeroizing;
 
 #[derive(Parser)]
-#[command(name = "kurogane", version, about = "KUROGANE (黒鉄) headless vault & sync manager")]
+#[command(
+    name = "kurogane",
+    version,
+    about = "KUROGANE (黒鉄) headless vault & sync manager",
+    after_help = "Copyright (C) 2026 Issen Software Group and Kurogane contributors.\nAGPL-3.0-or-later; redistribution is permitted under its terms. NO WARRANTY.\nLicense and source: https://github.com/AA-EION/Kurogane"
+)]
 struct Cli {
     /// Directory for the sync sandbox and working copies.
     #[arg(long, env = "KUROGANE_HOME", global = true)]

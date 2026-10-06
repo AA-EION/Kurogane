@@ -9,10 +9,10 @@
   --line-2: #b9b6ae;
   --text: #20211f;
   --text-2: #52534e;
-  --text-3: #696a64;
+  --text-3: #62635d;
   --ember: #343d42;
   --ember-2: #475961;
-  --ok: #25784b;
+  --ok: #206c42;
   --warn: #925500;
   --danger: #bc3029;
   --info: #315f91;
@@ -161,6 +161,8 @@ kbd {
 .lock-pill .bar.low { stroke: var(--danger); }
 
 .stage { position: relative; overflow: hidden; }
+.native-graph-stage { position: absolute; inset: 0; overflow: hidden; background: var(--bg); }
+.native-graph-empty { display: grid; place-items: center; height: 100%; color: var(--text-2); }
 
 /* ---------------------------------------------------------------- canvas */
 .canvas-wrap { position: absolute; inset: 0; }

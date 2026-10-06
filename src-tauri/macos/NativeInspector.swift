@@ -8,13 +8,13 @@ struct NativeInspector: View {
     var body: some View {
         ScrollView {
             VStack(alignment:.leading,spacing:18) {
-                HStack { Label(model.title(item.kind).uppercased(),systemImage:model.icon(item.kind)).font(.caption).foregroundStyle(.secondary); Spacer(); Button { model.selected = nil } label: { Image(systemName:"xmark") }.buttonStyle(.plain).help("Close inspector") }
+                HStack { Label(model.title(item.kind).uppercased(),systemImage:model.icon(item.kind)).font(.caption).foregroundStyle(NativePalette.secondary); Spacer(); Button { model.selected = nil } label: { Image(systemName:"xmark") }.buttonStyle(.plain).help("Close inspector") }
                 Text(model.name(item)).font(.title2).textSelection(.enabled)
                 HStack { Button("Edit") { model.edit(item.kind,value) }; Spacer(); Button("Delete…",role:.destructive) { model.sheet = NativeSheet(kind:"delete:\(item.kind)",item:value) } }
                 Divider()
                 ForEach(editorFields(item.kind)) { f in
                     let text = display(f)
-                    if !text.isEmpty { VStack(alignment:.leading,spacing:4) { Text(f.label.uppercased()).font(.system(size:9,weight:.semibold)).foregroundStyle(.secondary); Text(text).font(.system(size:12)).textSelection(.enabled) } }
+                    if !text.isEmpty { VStack(alignment:.leading,spacing:4) { Text(f.label.uppercased()).font(.system(size:9,weight:.semibold)).foregroundStyle(NativePalette.secondary); Text(text).font(.system(size:12)).textSelection(.enabled) } }
                 }
                 if item.kind == "host" { hostActions; childList("service","Services", { $0.text("hostId") == item.id }); childList("proxy","Reverse proxies", { $0.text("hostId") == item.id }) }
                 if item.kind == "tenant" { childList("host","Machines", { $0.text("tenantId") == item.id }); childList("network","Networks", { $0.text("tenantId") == item.id }) }
@@ -25,11 +25,11 @@ struct NativeInspector: View {
                             let r = pair.element
                             VStack(alignment:.leading,spacing:5) {
                                 if key == "interfaces" { Text(r.text("name")).font(.caption.bold()); Text([r.text("internalIp"),r.text("publicIp"),r.text("mac")].filter { !$0.isEmpty }.joined(separator:" · ")) }
-                                else if key == "ports" { Text("\(r.number("hostPort",r.number("containerPort"))) → \(r.number("containerPort"))/\(r.text("protocol"))"); Text(r.text("bindAddress")).foregroundStyle(.secondary) }
+                                else if key == "ports" { Text("\(r.number("hostPort",r.number("containerPort"))) → \(r.number("containerPort"))/\(r.text("protocol"))"); Text(r.text("bindAddress")).foregroundStyle(NativePalette.secondary) }
                                 else {
                                     Text(r.text("domain")+r.text("pathPrefix")).font(.caption.bold())
                                     Text("\(r.text("targetIp")):\(r.number("targetPort"))")
-                                    Text(r.flag("enabled") ? "Enabled · \(r.text("tlsMode"))" : "Disabled").foregroundStyle(.secondary)
+                                    Text(r.flag("enabled") ? "Enabled · \(r.text("tlsMode"))" : "Disabled").foregroundStyle(NativePalette.secondary)
                                     if ["http","https"].contains(r.text("inboundProtocol")) {
                                         Button("Open domain") {
                                             model.perform { _ = try await model.call("launch_web",["url":"\(r.text("inboundProtocol"))://\(r.text("domain")):\(r.number("inboundPort"))\(r.text("pathPrefix"))"]) }
@@ -51,7 +51,7 @@ struct NativeInspector: View {
                             NativeAccount(model:model,value:credential).id(credential.text("id"))
                         }.modifier(TactilePanel())
                     }
-                    if credentials.isEmpty { Text("No accounts stored.").font(.caption).foregroundStyle(.secondary) }
+                    if credentials.isEmpty { Text("No accounts stored.").font(.caption).foregroundStyle(NativePalette.secondary) }
                 }
             }.padding(18)
         }.background(Color(nsColor:.controlBackgroundColor))
@@ -79,7 +79,7 @@ struct NativeInspector: View {
             Text("Public domains").font(.headline)
             ForEach(model.rows("proxy"),id:\.entityID) { proxy in
                 ForEach(proxy.rows("routes").filter { $0.text("serviceId") == item.id },id:\.entityID) { route in
-                    Button(route.text("domain")) { model.selected = NativeItem(kind:"proxy",id:proxy.text("id")) }.buttonStyle(.link)
+                    Button(route.text("domain")) { model.selected = NativeItem(kind:"proxy",id:proxy.text("id")) }.buttonStyle(.link).tint(NativePalette.link)
                 }
             }
             Menu("Publish a domain…") {
@@ -93,7 +93,7 @@ struct NativeInspector: View {
         VStack(alignment:.leading,spacing:8) {
             Text("How to reach it").font(.headline)
             ForEach(nativeServiceEndpoints(value,model.topology),id:\.url) { endpoint in
-                VStack(alignment:.leading,spacing:4) { Text(endpoint.label).font(.caption).foregroundStyle(.secondary); Button(endpoint.url) { model.perform { _ = try await model.call("launch_web",["url":endpoint.url]) } }.buttonStyle(.link).font(.system(.caption,design:.monospaced)) }
+                VStack(alignment:.leading,spacing:4) { Text(endpoint.label).font(.caption).foregroundStyle(NativePalette.secondary); Button(endpoint.url) { model.perform { _ = try await model.call("launch_web",["url":endpoint.url]) } }.buttonStyle(.link).tint(NativePalette.link).font(.system(.caption,design:.monospaced)) }
             }
         }
     }
@@ -161,7 +161,7 @@ struct NativeSecret: View {
     @State private var expiry: Task<Void,Never>?
     var body: some View {
         VStack(alignment:.leading,spacing:6) {
-            Text(title).font(.caption).foregroundStyle(.secondary)
+            Text(title).font(.caption).foregroundStyle(NativePalette.secondary)
             HStack {
                 Text(revealed.isEmpty ? "••••••••" : revealed).font(.system(.caption,design:.monospaced)).textSelection(.enabled)
                 Spacer()

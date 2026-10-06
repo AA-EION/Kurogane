@@ -47,7 +47,7 @@ struct NativeFields: View {
     }
     var body: some View {
         ForEach(editorFields(kind)) { f in
-            if f.type == "bool" { Toggle(f.label, isOn: Binding(get: { value.flag(f.key) }, set: { value[f.key] = $0 })) }
+            if f.type == "bool" { Toggle(f.label, isOn: Binding(get: { value.flag(f.key) }, set: { value[f.key] = $0 })).toggleStyle(.switch) }
             else if f.type == "choice" {
                 Picker(f.label, selection: textBinding(f)) {
                     if !f.choices.contains(value.text(f.key)), !value.text(f.key).isEmpty { Text(value.text(f.key)).tag(value.text(f.key)) }
@@ -60,7 +60,11 @@ struct NativeFields: View {
                 }
             } else if f.type == "multiline" {
                 VStack(alignment: .leading) { Text(f.label); TextEditor(text: textBinding(f)).font(.body).frame(height: 72).border(.gray.opacity(0.25)) }
-            } else { TextField(f.label + (f.required ? " *" : ""), text: textBinding(f)) }
+            } else {
+                LabeledContent {
+                    TextField("",text:textBinding(f)).textFieldStyle(.roundedBorder).accessibilityLabel(f.label)
+                } label: { Text(f.label + (f.required ? " *" : "")).foregroundStyle(NativePalette.secondary) }
+            }
         }
     }
 }
@@ -121,18 +125,18 @@ struct NativeEditor: View {
                         }
                     }
                 }
-                if let error { Text(error).foregroundStyle(.red).textSelection(.enabled) }
+                if let error { Text(error).foregroundStyle(NativePalette.danger).textSelection(.enabled) }
             }.formStyle(.grouped)
             Divider()
-            HStack { Spacer(); Button("Cancel") { model.sheet = nil }.keyboardShortcut(.cancelAction); Button(model.busy ? "Saving…" : "Save") { save() }.buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction) }.padding(16).disabled(model.busy)
-        }.frame(width: 680, height: 680).onDisappear { secrets.removeAll(); modes.removeAll() }
+            HStack { Spacer(); Button("Cancel") { model.sheet = nil }.keyboardShortcut(.cancelAction); Button(model.busy ? "Saving…" : "Save") { save() }.buttonStyle(.borderedProminent).tint(NativePalette.primaryFill).foregroundStyle(NativePalette.primaryInk).keyboardShortcut(.defaultAction) }.padding(16).disabled(model.busy)
+        }.nativeSheetSize(model,width:680,height:680).onDisappear { secrets.removeAll(); modes.removeAll() }
     }
     private func nested(_ key: String, _ child: String, _ title: String) -> some View {
         Section(title) {
             ForEach(Array(value.rows(key).indices), id: \.self) { index in
                 DisclosureGroup("\(child.capitalized) \(index + 1)") {
                     NativeFields(model:model, kind:child, value:Binding(get: { let rows = value.rows(key); return rows.indices.contains(index) ? rows[index] : [:] }, set: { next in var rows = value.rows(key); if rows.indices.contains(index) { rows[index] = next; value[key] = rows } }))
-                    Button("Remove \(child)", role:.destructive) { var rows = value.rows(key); rows.remove(at:index); value[key] = rows }
+                    Button("Remove \(child)", role:.destructive) { var rows = value.rows(key); if rows.indices.contains(index) { rows.remove(at:index); value[key] = rows } }
                 }
             }
             Button("Add \(child)") { value[key] = value.rows(key) + [blankEntity(child)] }
@@ -164,8 +168,8 @@ struct NativeDelete: View {
         VStack(alignment:.leading,spacing:18) {
             Text("Delete \(item.text("name",item.text("label")))?").font(.title2)
             Text("This also removes its dependent inventory and encrypted accounts.")
-            if let impact { ForEach(impact.keys.sorted(), id:\.self) { key in if impact.number(key) > 0 { Text("\(impact.number(key)) \(key)").foregroundStyle(.secondary) } } }
-            else if let error { Text(error).foregroundStyle(.red); Button("Retry") { load() } }
+            if let impact { ForEach(impact.keys.sorted(), id:\.self) { key in if impact.number(key) > 0 { Text("\(impact.number(key)) \(key)").foregroundStyle(NativePalette.secondary) } } }
+            else if let error { Text(error).foregroundStyle(NativePalette.danger); Button("Retry") { load() } }
             else { ProgressView("Checking dependencies…") }
             HStack { Spacer(); Button("Cancel") { model.sheet = nil }.keyboardShortcut(.cancelAction); Button("Delete",role:.destructive) { model.perform { model.topology = try await model.call("delete_entity",["kind":kind,"id":item.text("id")]) as? Row ?? [:]; model.selected = nil; model.sheet = nil } }.disabled(impact == nil || model.busy) }
         }.padding(24).frame(width:460).task { load() }
@@ -179,7 +183,7 @@ struct NativeSheetView: View {
     @ViewBuilder var body: some View {
         if sheet.kind.hasPrefix("edit:") { NativeEditor(model:model,kind:String(sheet.kind.dropFirst(5)),item:sheet.item) }
         else if sheet.kind.hasPrefix("delete:") { NativeDelete(model:model,kind:String(sheet.kind.dropFirst(7)),item:sheet.item) }
-        else if sheet.kind == "settings" { NativeSettings(model:model) }
+        else if sheet.kind == "settings" { NativeSettings(model:model,section:sheet.item.text("section","general")) }
         else if sheet.kind == "import" { NativeImport(model:model) }
         else if sheet.kind == "export" { NativeExport(model:model) }
         else if sheet.kind == "cloud" { NativeCloud(model:model,linking:model.unlocked) }

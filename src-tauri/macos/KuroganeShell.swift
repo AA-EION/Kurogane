@@ -1,6 +1,7 @@
 import AppKit
 import SwiftUI
 import Combine
+import WebKit
 
 typealias Row = [String: Any]
 extension Dictionary where Key == String, Value == Any {
@@ -75,6 +76,9 @@ public func receiveNativeJSON(_ pointer: UnsafePointer<CChar>) {
     @Published var cloudURL = ""
     @Published var fit = UUID()
     @Published var mapMode = true
+    @Published var graphReady = false
+    @Published var graphExporting = false
+    lazy var graph = NativeGraphController(model:self)
     @Published var appearance = UserDefaults.standard.string(forKey: "kurogane.appearance") ?? "light" {
         didSet { UserDefaults.standard.set(appearance, forKey: "kurogane.appearance"); applyAppearance() }
     }
@@ -116,7 +120,7 @@ public func receiveNativeJSON(_ pointer: UnsafePointer<CChar>) {
         else { clearVault() }
         loading = false
     }
-    func clearVault() { vaultGeneration += 1; topology = [:]; sync = [:]; selected = nil; sheet = nil; query = ""; notice = nil; cloudStep = ""; cloudURL = "" }
+    func clearVault() { vaultGeneration += 1; topology = [:]; sync = [:]; selected = nil; sheet = nil; query = ""; notice = nil; cloudStep = ""; cloudURL = ""; graphExporting = false; graph.clear() }
     func start() {
         NativeBridge.shared.event = { [weak self] name, payload in
             guard let self else { return }
@@ -155,7 +159,7 @@ public func receiveNativeJSON(_ pointer: UnsafePointer<CChar>) {
         topology = saved.row("topology"); selected = NativeItem(kind: kind, id: saved.text("id")); sheet = nil
     }
     func edit(_ kind: String, _ row: Row = [:]) { sheet = NativeSheet(kind: "edit:\(kind)", item: row) }
-    func openSettings() { sheet = NativeSheet(kind: "settings") }
+    func openSettings(_ section: String = "general") { sheet = NativeSheet(kind: "settings",item:["section":section]) }
     func finishPairing(_ code: String) async throws {
         _ = try await call("confirm_totp",["code":code])
         sheet = nil
@@ -182,7 +186,9 @@ struct NativeRoot: View {
             if model.loading { ProgressView("Opening Kurogane…").frame(maxWidth: .infinity, maxHeight: .infinity) }
             else if model.unlocked { NativeWorkspace(model: model) }
             else { NativeVaultScreen(model: model) }
-        }.background(Color(nsColor: .windowBackgroundColor)).frame(minWidth: 920, minHeight: 640)
+        }.foregroundStyle(NativePalette.text)
+        .preferredColorScheme(model.appearance == "system" ? nil : model.appearance == "dark" ? .dark : .light)
+        .background(Color(nsColor: .windowBackgroundColor)).frame(maxWidth: .infinity, maxHeight: .infinity)
         .sheet(item: $model.sheet) { sheet in NativeSheetView(model: model, sheet: sheet).background(Color(nsColor: .windowBackgroundColor)).id(sheet.id).interactiveDismissDisabled(model.busy) }
         .alert("Operation failed", isPresented: Binding(get: { model.error != nil }, set: { if !$0 { model.error = nil } })) {
             Button("OK") { model.error = nil }
@@ -196,11 +202,11 @@ struct NativeWorkspace: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
-                Label(model.topology.text("vaultName", "Kurogane"), systemImage: "cube.fill").font(.headline)
-                Text("ISSEN").font(.system(size: 10, weight: .semibold, design: .rounded)).foregroundStyle(.secondary)
+                Label(model.topology.text("vaultName", "Kurogane"), systemImage: "cube.fill").font(.headline).lineLimit(1).truncationMode(.tail)
+                Text("ISSEN").font(.system(size: 10, weight: .semibold, design: .rounded)).foregroundStyle(NativePalette.secondary)
                 Spacer()
-                if !model.status.flag("memoryLocked") { Label("Memory not locked", systemImage: "exclamationmark.shield").font(.caption).foregroundStyle(.orange).help("The OS refused to lock key memory. See Security settings.") }
-                Text("\(model.status.number("remainingSecs"))s").monospacedDigit().foregroundStyle(.secondary).font(.caption)
+                if !model.status.flag("memoryLocked") { Label("Memory not locked", systemImage: "exclamationmark.shield").font(.caption).foregroundStyle(NativePalette.warning).help("The OS refused to lock key memory. See Security settings.") }
+                Text("\(model.status.number("remainingSecs"))s").monospacedDigit().foregroundStyle(NativePalette.secondary).font(.caption)
                 HStack(spacing: 10) {
                     Button { searching = true } label: { Image(systemName: "magnifyingglass") }.help("Search inventory").keyboardShortcut("k")
                     Button { model.fit = UUID() } label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }.help("Fit map")
@@ -210,7 +216,7 @@ struct NativeWorkspace: View {
                         }
                         Divider(); Button("Import inventory…") { model.sheet = NativeSheet(kind: "import") }
                     } label: { Label("New", systemImage: "plus") }
-                    Button { if model.sync.rows("linked").isEmpty { model.openSettings() } else { model.perform { model.sync = try await model.call("sync_now") as? Row ?? [:] } } } label: { Image(systemName: "arrow.triangle.2.circlepath") }.help("Sync vault").disabled(model.busy || model.sync.flag("busy"))
+                    Button { if model.sync.rows("linked").isEmpty { model.openSettings("sync") } else { model.perform { model.sync = try await model.call("sync_now") as? Row ?? [:] } } } label: { Image(systemName: "arrow.triangle.2.circlepath") }.help("Sync vault").disabled(model.busy || model.sync.flag("busy"))
                     Button { model.openSettings() } label: { Image(systemName: "gearshape") }.help("Settings").keyboardShortcut(",")
                     Button { model.perform { _ = try await model.call("lock") } } label: { Image(systemName: "lock") }.help("Lock vault").keyboardShortcut("l")
                 }.buttonStyle(.borderless).padding(12).modifier(NativeMaterial())
@@ -221,32 +227,39 @@ struct NativeWorkspace: View {
                     TextField("Search inventory", text: $model.query).textFieldStyle(.roundedBorder).focused($searching).padding(.horizontal, 12).padding(.top, 12)
                     List(selection: $model.selected) {
                         ForEach(["tenant", "host", "service", "proxy", "network", "credential"], id: \.self) { kind in
-                            Section(model.title(kind)) {
+                            Section {
                                 ForEach(model.items.filter { $0.kind == kind }) { item in
-                                    Label(model.name(item), systemImage: model.icon(kind)).tag(item)
+                                    Label(model.name(item), systemImage: model.icon(kind)).foregroundStyle(NativePalette.text).tag(item)
                                         .contextMenu { Button("Edit…") { model.edit(kind, model.row(item)) }; Button("Delete…", role: .destructive) { model.sheet = NativeSheet(kind: "delete:\(kind)", item: model.row(item)) } }
                                 }
-                            }
+                            } header: { Text(model.title(kind)).font(.caption).foregroundStyle(NativePalette.secondary) }
                         }
                     }.listStyle(.sidebar)
-                    Text("Encrypted infrastructure inventory").font(.caption2).foregroundStyle(.secondary).padding(12)
+                    Text("Encrypted infrastructure inventory").font(.caption2).foregroundStyle(NativePalette.secondary).padding(12)
                 }.frame(minWidth: 185, idealWidth: 220, maxWidth: 240)
                 VStack(spacing: 0) {
                     HStack {
                         Picker("View", selection: $model.mapMode) { Text("Map").tag(true); Text("Inventory").tag(false) }.pickerStyle(.segmented).frame(width: 180)
                         Spacer()
                         Menu("Export") {
-                            Button("Map as PNG…") { exportNativeMap(model) }; Button("Map as SVG…") { exportNativeSVG(model) }; Button("FossFLOW JSON…") { exportNativeFoss(model) }
+                            Button("Map as PNG…") { model.graph.export("png") }.disabled(!model.mapMode || !model.graphReady || model.graphExporting)
+                            Button("Map as SVG…") { model.graph.export("svg") }.disabled(!model.mapMode || !model.graphReady || model.graphExporting)
+                            Button("FossFLOW JSON…") { model.graph.export("json") }.disabled(!model.mapMode || !model.graphReady || model.graphExporting)
                             Divider(); Button("Inventory…") { model.sheet = NativeSheet(kind: "export") }
                         }
                     }.padding(12)
-                    if model.mapMode { NativeMap(model: model) } else { NativeInventory(model: model) }
+                    if model.mapMode {
+                        ZStack {
+                            NativeGraphView(model:model)
+                            if !model.graphReady { ProgressView("Opening topology…").padding(20).background(.regularMaterial,in:RoundedRectangle(cornerRadius:12)) }
+                        }.frame(maxWidth:.infinity,maxHeight:.infinity).clipped()
+                    } else { NativeInventory(model: model) }
                     HStack {
-                        Text("\(model.rows("host").count) machines · \(model.rows("service").count) services").font(.caption).foregroundStyle(.secondary)
+                        Text("\(model.rows("host").count) machines · \(model.rows("service").count) services").font(.caption).foregroundStyle(NativePalette.secondary)
                         Spacer()
                         if model.sync.flag("busy") { ProgressView().controlSize(.small); Text("Syncing…").font(.caption) }
-                        else if !model.sync.text("lastError").isEmpty { Button("Sync needs attention") { model.openSettings() }.font(.caption).foregroundStyle(.orange) }
-                        else { Text(model.notice ?? model.sync.text("lastOutcome", "Saved locally")).font(.caption).foregroundStyle(.secondary) }
+                        else if !model.sync.text("lastError").isEmpty { Button("Sync needs attention") { model.openSettings("sync") }.font(.caption).foregroundStyle(NativePalette.warning) }
+                        else { Text(model.notice ?? model.sync.text("lastOutcome", "Saved locally")).font(.caption).foregroundStyle(NativePalette.secondary) }
                     }.padding(12)
                 }.frame(minWidth: 360, maxWidth: .infinity, maxHeight: .infinity)
                 if let selected = model.selected { NativeInspector(model: model, item: selected).frame(minWidth: 240, idealWidth: 285, maxWidth: 320) }
@@ -259,9 +272,9 @@ struct NativeInventory: View {
     var body: some View {
         List {
             ForEach(model.items) { item in
-                Button { model.selected = item } label: { HStack { Image(systemName: model.icon(item.kind)).frame(width: 24); Text(model.name(item)); Spacer(); Text(model.title(item.kind)).font(.caption).foregroundStyle(.secondary) }.padding(.vertical, 6) }.buttonStyle(.plain)
+                Button { model.selected = item } label: { HStack { Image(systemName: model.icon(item.kind)).frame(width: 24); Text(model.name(item)); Spacer(); Text(model.title(item.kind)).font(.caption).foregroundStyle(NativePalette.secondary) }.padding(.vertical, 6) }.buttonStyle(.plain)
             }
-            if model.items.isEmpty { Text(model.query.isEmpty ? "Your inventory is empty. Add a company to begin." : "No matching inventory.").foregroundStyle(.secondary).padding() }
+            if model.items.isEmpty { Text(model.query.isEmpty ? "Your inventory is empty. Add a company to begin." : "No matching inventory.").foregroundStyle(NativePalette.secondary).padding() }
         }
     }
 }
@@ -271,10 +284,13 @@ public func installShell(_ pointer: UnsafeMutableRawPointer) {
     MainActor.assumeIsolated {
         let window = Unmanaged<NSWindow>.fromOpaque(pointer).takeUnretainedValue()
         let model = NativeModel(); model.window = window; nativeModel = model
-        // The entire visible content is SwiftUI. No WKWebView is embedded.
+        // Reuse the original renderer only for the graph; SwiftUI owns all
+        // navigation, inspectors, editors, vault flows and settings.
+        if let webView = findGraphWebView(window.contentView) { model.graph.attach(webView) }
+        else { model.error = "The topology renderer could not be attached. Reopen Kurogane to retry." }
         window.contentView = NSHostingView(rootView: NativeRoot(model: model))
         window.title = "Kurogane"; window.titlebarAppearsTransparent = true; window.toolbarStyle = .unified
-        window.minSize = NSSize(width: 920, height: 640); model.applyAppearance(); model.start()
+        window.contentMinSize = NSSize(width: 960, height: 600); model.applyAppearance(); model.start()
         #if NATIVE_SMOKE
         startNativeSmoke(model)
         #endif

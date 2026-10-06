@@ -41,7 +41,8 @@ import SwiftUI
                 var port = blankEntity("port"); port["containerPort"] = "70000"
                 do { _ = try normalized("port",port); fatalError("Invalid port was accepted") } catch {}
                 let valid = try normalized("port",blankEntity("port")); precondition(valid.number("containerPort") == 80)
-                let layout = MapLayout(NativeFixture.topology); precondition(layout.nodes.count == 4 && layout.size.height >= 500)
+                let compactSize = nativeSheetSize(model,width:680,height:680)
+                precondition(compactSize.height <= window.contentLayoutRect.height - 64)
                 let endpoints = nativeServiceEndpoints(NativeFixture.service,NativeFixture.topology)
                 precondition(endpoints.map(\.url) == ["https://git.issen.local/","http://10.0.0.10:3000/"])
                 var privateOnly = NativeFixture.topology; privateOnly["proxies"] = []
@@ -52,52 +53,65 @@ import SwiftUI
                 privateOnly["hosts"] = [v6Host]
                 precondition(nativeServiceEndpoints(NativeFixture.service,privateOnly).first?.url == "http://[fd00::1]:3000/")
                 let folder = CommandLine.arguments[1]
+                if CommandLine.arguments.count > 2 {
+                    let data = try Data(contentsOf:URL(fileURLWithPath:CommandLine.arguments[2]))
+                    model.topology = try JSONSerialization.jsonObject(with:data) as? Row ?? NativeFixture.topology
+                    if let service = model.rows("service").first(where: { $0.text("name") == "gitea" }) { model.selected = NativeItem(kind:"service",id:service.entityID) }
+                }
+                for _ in 0..<100 { if model.graphReady { break }; try await Task.sleep(nanoseconds:100_000_000) }
+                precondition(model.graphReady,"Shared graph did not connect")
+                let count = try await model.graph.webView?.evaluateJavaScript("document.querySelectorAll('[data-node]').length") as? Int ?? 0
+                precondition(count >= model.rows("host").count,"Topology did not render its machines")
                 for theme in ["light","dark"] {
                     model.appearance = theme; model.applyAppearance()
                     try await Task.sleep(nanoseconds:500_000_000)
-                    try capture(window,folder+"/workspace-"+theme+".png")
+                    try await capture(window,folder+"/workspace-"+theme+".png")
                 }
                 model.appearance = "light"; model.applyAppearance()
-                let cases: [(String,AnyView)] = [
-                    ("machine-editor",AnyView(NativeEditor(model:model,kind:"host",item:NativeFixture.host))),
-                    ("service-editor",AnyView(NativeEditor(model:model,kind:"service",item:NativeFixture.service))),
-                    ("proxy-editor",AnyView(NativeEditor(model:model,kind:"proxy",item:NativeFixture.proxy))),
-                    ("account-editor",AnyView(NativeEditor(model:model,kind:"credential",item:[:]))),
-                    ("settings",AnyView(NativeSettings(model:model))),
-                    ("security-settings",AnyView(NativeSettings(model:model,section:"security"))),
-                    ("sync-settings",AnyView(NativeSettings(model:model,section:"sync"))),
-                    ("data-settings",AnyView(NativeSettings(model:model,section:"data"))),
-                    ("about-settings",AnyView(NativeSettings(model:model,section:"about"))),
-                    ("company-editor",AnyView(NativeEditor(model:model,kind:"tenant",item:NativeFixture.tenant))),
-                    ("network-editor",AnyView(NativeEditor(model:model,kind:"network",item:[:]))),
-                    ("cloud",AnyView(NativeCloud(model:model,linking:true))),
-                    ("import",AnyView(NativeImport(model:model))),
-                    ("export",AnyView(NativeExport(model:model))),
-                    ("create-vault",AnyView(NativeCreateVault(model:model)))
+                window.setContentSize(NSSize(width:960,height:640))
+                try await Task.sleep(nanoseconds:500_000_000)
+                try await capture(window,folder+"/workspace-compact.png")
+                model.topology = NativeFixture.topology; model.selected = NativeItem(kind:"service",id:"service")
+                let cases: [(String,String,Row)] = [
+                    ("machine-editor","edit:host",NativeFixture.host),
+                    ("service-editor","edit:service",NativeFixture.service),
+                    ("proxy-editor","edit:proxy",NativeFixture.proxy),
+                    ("account-editor","edit:credential",[:]),
+                    ("settings","settings",[:]),
+                    ("security-settings","settings",["section":"security"]),
+                    ("sync-settings","settings",["section":"sync"]),
+                    ("data-settings","settings",["section":"data"]),
+                    ("about-settings","settings",["section":"about"]),
+                    ("company-editor","edit:tenant",NativeFixture.tenant),
+                    ("network-editor","edit:network",[:]),
+                    ("cloud","cloud",[:]),
+                    ("import","import",[:]),
+                    ("export","export",[:]),
+                    ("create-vault","create",[:])
                 ]
-                for (name,view) in cases {
-                    window.contentView = NSHostingView(rootView:view.frame(maxWidth:.infinity,maxHeight:.infinity).background(Color(nsColor:.windowBackgroundColor)))
-                    window.setContentSize(NSSize(width:720,height:740))
-                    try await Task.sleep(nanoseconds:350_000_000)
-                    try capture(window,folder+"/"+name+".png")
+                for (name,kind,item) in cases {
+                    model.sheet = NativeSheet(kind:kind,item:item)
+                    for _ in 0..<30 { if window.attachedSheet != nil { break }; try await Task.sleep(nanoseconds:100_000_000) }
+                    try await Task.sleep(nanoseconds:400_000_000)
+                    guard let sheet = window.attachedSheet else { throw NativeFailure(message:"Sheet \(name) was not presented") }
+                    precondition(sheet.frame.height <= (window.screen?.visibleFrame.height ?? 900),"Sheet \(name) exceeds the display")
+                    try await capture(sheet,folder+"/"+name+".png")
+                    model.sheet = nil
+                    for _ in 0..<30 { if window.attachedSheet == nil { break }; try await Task.sleep(nanoseconds:100_000_000) }
                 }
                 model.status = ["stage":"locked","vaultName":"Issen Infrastructure","vaultPath":"/Users/issen/Infrastructure.kurogane","totpRequired":true]
                 window.contentView = NSHostingView(rootView:NativeVaultScreen(model:model).background(Color(nsColor:.windowBackgroundColor)))
                 try await Task.sleep(nanoseconds:350_000_000)
-                try capture(window,folder+"/locked-vault.png")
-                print("Native SwiftUI validation and 18 view captures passed")
+                try await capture(window,folder+"/locked-vault.png")
+                print("Native validation passed: original isometric graph, compact window, real attached sheets and 19 captures")
                 exit(0)
             } catch { fputs("Native preview failed: \(error)\n",stderr); exit(1) }
         }
         app.run()
     }
-    @MainActor static func capture(_ window: NSWindow,_ path: String) throws {
-        guard let view = window.contentView else { throw NativeFailure(message:"No native view") }
-        view.layoutSubtreeIfNeeded()
-        guard let bitmap = view.bitmapImageRepForCachingDisplay(in:view.bounds) else { throw NativeFailure(message:"No bitmap") }
-        view.cacheDisplay(in:view.bounds,to:bitmap)
-        guard let data = bitmap.representation(using:.png,properties:[:]), data.count > 1000 else { throw NativeFailure(message:"Empty capture") }
+    @MainActor static func capture(_ window: NSWindow,_ path: String) async throws {
+        let data = try await nativeCapture(window)
         try data.write(to:URL(fileURLWithPath:path))
-        print("Captured \(URL(fileURLWithPath:path).lastPathComponent): \(Int(view.bounds.width)) × \(Int(view.bounds.height)) points")
+        print("Captured \(URL(fileURLWithPath:path).lastPathComponent): \(Int(window.contentLayoutRect.width)) × \(Int(window.contentLayoutRect.height)) points")
     }
 }

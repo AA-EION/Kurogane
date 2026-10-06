@@ -2,13 +2,14 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { isTauri } from '@tauri-apps/api/core';
 import { App } from './App';
+import { NativeGraph } from './NativeGraph';
 import './styles.css';
 import './theme';
 
-// macOS installs an NSHostingView and talks directly to Rust. Its webview
-// remains an empty lifecycle container; no React views or IPC listeners mount.
-if (!(isTauri() && /Mac/.test(navigator.platform))) createRoot(document.getElementById('root')!).render(
+// macOS embeds only the proven topology renderer inside the SwiftUI workspace.
+const nativeGraph = window.__KUROGANE_NATIVE_GRAPH__ || (isTauri() && /Mac/.test(navigator.platform));
+createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    {nativeGraph ? <NativeGraph /> : <App />}
   </StrictMode>,
 );

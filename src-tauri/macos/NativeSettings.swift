@@ -10,7 +10,7 @@ struct NativeSettings: View {
         VStack(spacing:0) {
             HStack { Text("Settings").font(.title2); Spacer(); Button("Done") { model.sheet = nil }.keyboardShortcut(.cancelAction) }.padding(20)
             if settings.isEmpty {
-                if let error { VStack(spacing:12) { Text(error).foregroundStyle(.red); Button("Retry") { load() } }.frame(maxHeight:.infinity) }
+                if let error { VStack(spacing:12) { Text(error).foregroundStyle(NativePalette.danger); Button("Retry") { load() } }.frame(maxHeight:.infinity) }
                 else { ProgressView("Loading settings…").frame(maxHeight:.infinity) }
             } else {
                 Picker("Settings section",selection:$section) {
@@ -26,20 +26,20 @@ struct NativeSettings: View {
                     }
                 }.padding(.horizontal,12).padding(.bottom,12).frame(maxHeight:.infinity)
             }
-        }.frame(width:680,height:650).task { load() }
+        }.nativeSheetSize(model,width:680,height:650).task { load() }
     }
     var general: some View {
         Form {
             Section("Appearance") {
                 Picker("Theme",selection:$model.appearance) { Text("Light").tag("light"); Text("Dark").tag("dark"); Text("System").tag("system") }.pickerStyle(.segmented)
-                Text("Light by default. Choose the appearance that feels comfortable.").font(.caption).foregroundStyle(.secondary)
+                Text("Light by default. Choose the appearance that feels comfortable.").font(.caption).foregroundStyle(NativePalette.secondary)
             }
             Section("Vault") {
                 TextField("Name",text:Binding(get:{ settings.text("displayName") },set:{ settings["displayName"] = $0 }))
                 Stepper("Lock after \(settings.number("lockTimeoutSecs")) seconds",value:intBinding("lockTimeoutSecs"),in:min(30,settings.number("lockTimeoutSecs"))...max(14400,settings.number("lockTimeoutSecs")),step:30)
                 Stepper("Clear clipboard after \(settings.number("clipboardClearSecs")) seconds",value:intBinding("clipboardClearSecs"),in:min(5,settings.number("clipboardClearSecs"))...max(600,settings.number("clipboardClearSecs")),step:5)
                 Toggle("Lock on system suspend",isOn:Binding(get:{ settings.flag("lockOnSuspend") },set:{ settings["lockOnSuspend"] = $0 }))
-                Text(settings.text("vaultPath")).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
+                Text(settings.text("vaultPath")).font(.caption).foregroundStyle(NativePalette.secondary).textSelection(.enabled)
                 Button("Save preferences") { model.perform { _ = try await model.call("update_settings",["settings":["displayName":settings.text("displayName"),"lockTimeoutSecs":settings.number("lockTimeoutSecs"),"clipboardClearSecs":settings.number("clipboardClearSecs"),"lockOnSuspend":settings.flag("lockOnSuspend")]]); try await model.refresh(); model.notice = "Preferences saved" } }.disabled(model.busy || settings.text("displayName").trimmingCharacters(in:.whitespaces).isEmpty)
             }
         }.formStyle(.grouped)
@@ -53,13 +53,13 @@ struct NativeSettings: View {
             }
             Section("Encrypted vault") {
                 Button("Save encrypted backup…") { model.perform { if let path = try await model.call("export_backup") as? String { model.notice = "Saved \(path)" } } }
-                Text("The backup keeps passwords and account keys encrypted.").font(.caption).foregroundStyle(.secondary)
+                Text("The backup keeps passwords and account keys encrypted.").font(.caption).foregroundStyle(NativePalette.secondary)
                 Button("Close vault") { model.perform { _ = try await model.call("lock"); _ = try await model.call("close_vault"); try await model.refresh() } }
             }
         }.formStyle(.grouped)
     }
     var about: some View {
-        VStack(spacing:18) { Image(systemName:"cube.fill").font(.system(size:48)).foregroundStyle(.secondary); Text("Kurogane").font(.largeTitle); Text("Version \(settings.text("appVersion"))").foregroundStyle(.secondary); Text("A product of Issen Software Group"); Button("issen.kurokamicorp.com") { model.perform { _ = try await model.call("launch_web",["url":"https://issen.kurokamicorp.com"]) } }.buttonStyle(.link); Text("SwiftUI on macOS · Rust encryption and sync core").font(.caption).foregroundStyle(.secondary) }.frame(maxWidth:.infinity,maxHeight:.infinity)
+        VStack(spacing:18) { Image(systemName:"cube.fill").font(.system(size:48)).foregroundStyle(NativePalette.secondary); Text("Kurogane").font(.largeTitle); Text("Version \(settings.text("appVersion"))").foregroundStyle(NativePalette.secondary); Text("A product of Issen Software Group"); Button("issen.kurokamicorp.com") { model.perform { _ = try await model.call("launch_web",["url":"https://issen.kurokamicorp.com"]) } }.buttonStyle(.link).tint(NativePalette.link); Text("SwiftUI on macOS · Rust encryption and sync core").font(.caption).foregroundStyle(NativePalette.secondary) }.frame(maxWidth:.infinity,maxHeight:.infinity)
     }
     func intBinding(_ key: String) -> Binding<Int> { Binding(get:{settings.number(key)},set:{settings[key] = $0}) }
     func load() { error = nil; Task { do { settings = try await model.call("get_settings") as? Row ?? [:] } catch { self.error = error.localizedDescription } } }
@@ -77,9 +77,9 @@ struct NativeSecurity: View {
     var body: some View {
         Form {
             Section("Memory protection") {
-                Label(settings.flag("memoryLocked") ? "Key memory is locked" : "The OS refused to lock key memory",systemImage:settings.flag("memoryLocked") ? "checkmark.shield" : "exclamationmark.shield").foregroundStyle(settings.flag("memoryLocked") ? Color.secondary : Color.orange)
+                Label(settings.flag("memoryLocked") ? "Key memory is locked" : "The OS refused to lock key memory",systemImage:settings.flag("memoryLocked") ? "checkmark.shield" : "exclamationmark.shield").foregroundStyle(settings.flag("memoryLocked") ? NativePalette.secondary : NativePalette.warning)
                 Text("Key derivation: \(settings.text("kdfProfile")) · \(settings.row("kdf").number("mCostKib") / 1024) MiB · \(settings.row("kdf").number("tCost")) passes").font(.caption)
-                if !settings.flag("kdfMeetsFloor") { Text("Upgrade key derivation when changing your password.").foregroundStyle(.orange) }
+                if !settings.flag("kdfMeetsFloor") { Text("Upgrade key derivation when changing your password.").foregroundStyle(NativePalette.warning) }
             }
             Section("Change master password") {
                 SecureField("Current password",text:$current); SecureField("New password",text:$password); SecureField("Repeat new password",text:$confirmation)
@@ -104,15 +104,15 @@ struct NativeSyncSettings: View {
         Form {
             Section("Destinations") {
                 ForEach(model.sync.rows("linked"),id:\.entityID) { remote in
-                    HStack { VStack(alignment:.leading) { Text(remote.text("label")).font(.headline); Text(remote.text("remotePath")).font(.caption).foregroundStyle(.secondary).textSelection(.enabled) }; Spacer(); Button("Unlink",role:.destructive) { model.perform { model.sync = try await model.call("unlink_remote",["id":remote.text("id")]) as? Row ?? [:] } }.disabled(model.sync.flag("busy") || model.busy) }
+                    HStack { VStack(alignment:.leading) { Text(remote.text("label")).font(.headline); Text(remote.text("remotePath")).font(.caption).foregroundStyle(NativePalette.secondary).textSelection(.enabled) }; Spacer(); Button("Unlink",role:.destructive) { model.perform { model.sync = try await model.call("unlink_remote",["id":remote.text("id")]) as? Row ?? [:] } }.disabled(model.sync.flag("busy") || model.busy) }
                 }
                 Button("Add destination…") { model.sheet = NativeSheet(kind:"cloud") }.disabled(model.sync.flag("busy") || model.busy)
                 Toggle("Sync automatically",isOn:Binding(get:{model.sync.flag("autoSync")},set:{ enabled in model.perform { model.sync = try await model.call("set_auto_sync",["enabled":enabled]) as? Row ?? [:] } }))
                 Button(model.sync.flag("busy") ? "Syncing…" : "Sync now") { model.perform { model.sync = try await model.call("sync_now") as? Row ?? [:] } }.disabled(model.sync.rows("linked").isEmpty || model.sync.flag("busy") || model.busy)
             }
             Section("Status") {
-                if !model.sync.text("lastError").isEmpty { Text(model.sync.text("lastError")).foregroundStyle(.red).textSelection(.enabled) }
-                else { Text(model.sync.text("lastOutcome","No sync yet")).foregroundStyle(.secondary) }
+                if !model.sync.text("lastError").isEmpty { Text(model.sync.text("lastError")).foregroundStyle(NativePalette.danger).textSelection(.enabled) }
+                else { Text(model.sync.text("lastOutcome","No sync yet")).foregroundStyle(NativePalette.secondary) }
                 if model.sync.number("lastSyncedAtMs") > 0 { Text(Date(timeIntervalSince1970:Double(model.sync.number("lastSyncedAtMs"))/1000),style:.date).font(.caption) }
             }
             if !model.sync.row("conflict").isEmpty {
@@ -135,7 +135,7 @@ struct NativeImport: View {
     var body: some View {
         VStack(alignment:.leading,spacing:16) {
             Text("Import inventory").font(.title2)
-            Text("Review the file before applying it. Imports are validated and saved together.").foregroundStyle(.secondary)
+            Text("Review the file before applying it. Imports are validated and saved together.").foregroundStyle(NativePalette.secondary)
             Button("Choose Excel or JSON…") { model.perform { preview = try await model.call("import_preview") as? Row } }.disabled(model.busy)
             if let preview {
                 Text(preview.text("fileName")).font(.headline)
@@ -143,12 +143,12 @@ struct NativeImport: View {
                     let report = preview.row("report")
                     VStack(alignment:.leading,spacing:10) {
                         ForEach(["created","updated"],id:\.self) { key in Text(key.capitalized).font(.headline); ForEach(report.row(key).keys.sorted(),id:\.self) { entity in if report.row(key).number(entity) > 0 { Text("\(report.row(key).number(entity)) \(entity)") } } }
-                        ForEach(["errors","warnings"],id:\.self) { key in ForEach(Array(report.rows(key).enumerated()),id:\.offset) { pair in Text("\(pair.element.text("sheet")) row \(pair.element.number("row")): \(pair.element.text("message"))").foregroundStyle(key == "errors" ? .red : .orange) } }
+                        ForEach(["errors","warnings"],id:\.self) { key in ForEach(Array(report.rows(key).enumerated()),id:\.offset) { pair in Text("\(pair.element.text("sheet")) row \(pair.element.number("row")): \(pair.element.text("message"))").foregroundStyle(key == "errors" ? NativePalette.danger : NativePalette.warning) } }
                     }.frame(maxWidth:.infinity,alignment:.leading)
                 }
             }
-            HStack { Spacer(); Button("Cancel") { model.sheet = nil }.keyboardShortcut(.cancelAction); Button("Apply import") { model.perform { let result = try await model.call("import_apply") as? Row ?? [:]; model.topology = result.row("topology"); model.sheet = nil; model.notice = "Inventory imported" } }.buttonStyle(.borderedProminent).disabled(preview == nil || !(preview?.row("report").rows("errors").isEmpty ?? false) || model.busy) }
-        }.padding(24).frame(width:600,height:550)
+            HStack { Spacer(); Button("Cancel") { model.sheet = nil }.keyboardShortcut(.cancelAction); Button("Apply import") { model.perform { let result = try await model.call("import_apply") as? Row ?? [:]; model.topology = result.row("topology"); model.sheet = nil; model.notice = "Inventory imported" } }.buttonStyle(.borderedProminent).tint(NativePalette.primaryFill).foregroundStyle(NativePalette.primaryInk).disabled(preview == nil || !(preview?.row("report").rows("errors").isEmpty ?? false) || model.busy) }
+        }.padding(24).nativeSheetSize(model,width:600,height:550)
     }
 }
 struct NativeExport: View {
@@ -161,8 +161,8 @@ struct NativeExport: View {
             Text("Export inventory").font(.title2)
             Picker("Format",selection:$format) { Text("Excel").tag("xlsx"); Text("JSON").tag("json") }.pickerStyle(.segmented)
             Toggle("Include passwords and private keys",isOn:$include)
-            if include { Text("The exported file will contain readable secrets. Enter your master password to confirm.").foregroundStyle(.orange); SecureField("Master password",text:$password) }
-            HStack { Spacer(); Button("Cancel") { model.sheet = nil }; Button("Export…") { let pw = password; password = ""; model.perform { if let path = try await model.call("export_data",["format":format,"includeSecrets":include,"password":include ? pw as Any : NSNull()]) as? String { model.notice = "Saved \(path)"; model.sheet = nil } } }.buttonStyle(.borderedProminent).disabled(model.busy || include && password.isEmpty) }
+            if include { Text("The exported file will contain readable secrets. Enter your master password to confirm.").foregroundStyle(NativePalette.warning); SecureField("Master password",text:$password) }
+            HStack { Spacer(); Button("Cancel") { model.sheet = nil }; Button("Export…") { let pw = password; password = ""; model.perform { if let path = try await model.call("export_data",["format":format,"includeSecrets":include,"password":include ? pw as Any : NSNull()]) as? String { model.notice = "Saved \(path)"; model.sheet = nil } } }.buttonStyle(.borderedProminent).tint(NativePalette.primaryFill).foregroundStyle(NativePalette.primaryInk).disabled(model.busy || include && password.isEmpty) }
         }.padding(24).frame(width:500).onDisappear { password = "" }
     }
 }

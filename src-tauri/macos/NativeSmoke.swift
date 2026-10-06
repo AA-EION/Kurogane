@@ -51,14 +51,17 @@ import CryptoKit
             try await model.refresh()
             precondition(model.rows("host").count == 1 && model.rows("service").count == 1 && model.rows("credential").first?.flag("hasSecret") == true)
             model.selected = NativeItem(kind:"service",id:serviceID)
+            for _ in 0..<100 { if model.graphReady { break }; try await Task.sleep(nanoseconds:100_000_000) }
+            precondition(model.graphReady,"The shared topology renderer did not connect")
+            try await Task.sleep(nanoseconds:500_000_000)
+            let nodes = try await model.graph.webView?.evaluateJavaScript("document.querySelectorAll('[data-node]').length") as? Int ?? 0
+            precondition(nodes >= 3,"The original topology graph did not render the inventory")
             if let window = model.window {
                 window.setContentSize(NSSize(width:1440,height:900))
                 for theme in ["light","dark"] {
                     model.appearance = theme; model.applyAppearance()
                     try await Task.sleep(nanoseconds:500_000_000)
-                    guard let view = window.contentView, let bitmap = view.bitmapImageRepForCachingDisplay(in:view.bounds) else { throw NativeFailure(message:"Native window did not render") }
-                    view.cacheDisplay(in:view.bounds,to:bitmap)
-                    guard let data = bitmap.representation(using:.png,properties:[:]) else { throw NativeFailure(message:"Capture failed") }
+                    let data = try await nativeCapture(window)
                     try data.write(to:URL(fileURLWithPath:folder).appendingPathComponent("native-integrated-\(theme).png"))
                 }
             }

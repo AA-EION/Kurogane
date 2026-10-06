@@ -2,7 +2,7 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Kurogane",
   "version": "0.1.0",
-  "identifier": "dev.kurogane.app",
+  "identifier": "dev.kurogane.desktop",
   "build": {
     "frontendDist": "../ui/dist",
     "devUrl": "http://127.0.0.1:1420",
@@ -99,6 +99,9 @@
     "linux": {
       "appimage": {
         "bundleMediaFramework": false
+      },
+      "deb": {
+        "desktopTemplate": "linux/kurogane.desktop"
       }
     }
   }

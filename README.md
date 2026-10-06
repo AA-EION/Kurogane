@@ -24,7 +24,7 @@ Download the installer for your system from the [Releases](../../releases) page.
 |---|---|---|
 | Windows 10/11 | `Kurogane_<version>_x64-setup.exe` | Installs for your user only, so no admin rights are needed. Until the installer is code-signed, SmartScreen asks first: choose *More info → Run anyway*. |
 | macOS 11+ (Apple silicon and Intel) | `Kurogane_<version>_universal.dmg` | Open it and drag **Kurogane** onto **Applications**. The app is ad-hoc signed but not notarized. On first launch, right-click → *Open*, or run `xattr -dr com.apple.quarantine /Applications/Kurogane.app`. |
-| Linux (x86-64) | `Kurogane_<version>_amd64.AppImage` | `chmod +x` it and run it. Needs WebKitGTK 4.1, present on current Ubuntu/Fedora/Debian desktops. |
+| Linux (x86-64) | `Kurogane_<version>_amd64.AppImage` | `chmod +x` it and run it. Everything it needs is bundled. Works on Ubuntu 22.04, Debian 12, Fedora 36 or newer. |
 
 Double-clicking a `.kurogane` file opens it in Kurogane.
 

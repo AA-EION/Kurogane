@@ -58,6 +58,8 @@ describe('graph model', () => {
     expect(node.badges[0]).toMatchObject({ kind: 'owner', label: owner.name });
     expect(node.ownerColor).toBe(owner.color);
     expect(node.tenantId).toBe(hostTenant);
+    // Selecting the owning company lights its service on the other company's machine.
+    expect(litNodes(m, `tenant:${owner.id}`, litEdges(m, `tenant:${owner.id}`)).has(node.id)).toBe(true);
   });
 
   it('never carries secrets', () => {

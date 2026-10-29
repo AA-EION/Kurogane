@@ -1,8 +1,14 @@
 import type { GraphModel } from './build';
 
-/** The node and everything it contains (a company's machines and workloads, a machine's workloads). */
+/**
+ * The node and everything it contains (a company's machines and workloads, a
+ * machine's workloads). A company also owns its services running on other
+ * companies' machines.
+ */
 export function membersOf(model: GraphModel, nodeId: string): Set<string> {
   const out = new Set<string>([nodeId]);
+  const node = model.byId.get(nodeId);
+  if (node?.kind === 'tenant') for (const n of model.nodes) if (n.ownerTenantId === node.refId) out.add(n.id);
   const stack = [nodeId];
   while (stack.length) for (const child of model.children.get(stack.pop()!) ?? []) if (!out.has(child)) (out.add(child), stack.push(child));
   return out;

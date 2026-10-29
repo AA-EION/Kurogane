@@ -38,6 +38,8 @@ export interface GraphNode {
   color?: string;
   /** Owning company's colour when the service belongs to another company. */
   ownerColor?: string;
+  /** Owning company when it differs from the machine's company. */
+  ownerTenantId?: string;
   /** Machine with no workloads (switch, AP, NVR…): drawn as a compact leaf. */
   appliance?: boolean;
   /** Direct children: machines in a company, workloads on a machine. */
@@ -193,7 +195,7 @@ export function buildGraph(topo: Topology, now = Date.now()): GraphModel {
         const kind = it.proxy ? 'proxy' : 'service';
         push(children, hid, id);
         nodes.push({
-          id, kind, refId: it.id, tenantId: tenant.id, hostId: host.id, parentId: hid, color, ...d,
+          id, kind, refId: it.id, tenantId: tenant.id, hostId: host.id, parentId: hid, color, ...d, ...(owner ? { ownerTenantId: owner.id } : {}),
           ariaLabel: `${kind === 'proxy' ? 'Proxy' : 'Service'} ${d.label}${d.sublabel ? `, ${d.sublabel}` : ''}, on ${host.name}${owner ? `, owned by ${owner.name}` : ''}`,
         });
         refToNode.set(it.id, id);

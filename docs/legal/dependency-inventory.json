@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "cargoLockSha256": "e80cd0dcdc8969e0580b6a063b00417b50b36841dc28fe5b948e49067d585275",
-  "npmLockSha256": "79c61ef6027da02c1c2a373a044ff38efc8050e1e82b3a474a6d829198d004c9",
-  "noticesSha256": "5e94160f090002342643afb6887c8c8c676d681e634f81ae95eccb9437c6d21e",
+  "npmLockSha256": "0ed23727e79b5604ea34c4e48cb447e9bc850783a3dadff56be8a3a7621b4a12",
+  "noticesSha256": "0bc711cd7c16827a27f5fedcb154030c744324c31f79cb9c6a81182787918433",
   "packages": [
     {
       "ecosystem": "cargo",
@@ -14035,6 +14035,144 @@
     },
     {
       "ecosystem": "npm",
+      "name": "@types/d3-color",
+      "version": "3.1.3",
+      "source": "https://registry.npmjs.org/@types/d3-color/-/d3-color-3.1.3.tgz",
+      "integrity": "sha512-iO90scth9WAbmgv7ogoq57O9YpKmFBbmoEoCHDB2xMBY0+/KVrqAaCDyCE16dUspeOvIxFFRI+0sEtqDqy2b4A==",
+      "declaredLicense": "MIT",
+      "development": false,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "MIT",
+      "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/@types/d3-color/-/d3-color-3.1.3.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "@types/d3-drag",
+      "version": "3.0.7",
+      "source": "https://registry.npmjs.org/@types/d3-drag/-/d3-drag-3.0.7.tgz",
+      "integrity": "sha512-HE3jVKlzU9AaMazNufooRJ5ZpWmLIoc90A37WU2JMmeq28w1FQqCZswHZ3xR+SuxYftzHq6WU6KJHvqxKzTxxQ==",
+      "declaredLicense": "MIT",
+      "development": false,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "MIT",
+      "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/@types/d3-drag/-/d3-drag-3.0.7.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "@types/d3-interpolate",
+      "version": "3.0.4",
+      "source": "https://registry.npmjs.org/@types/d3-interpolate/-/d3-interpolate-3.0.4.tgz",
+      "integrity": "sha512-mgLPETlrpVV1YRJIglr4Ez47g7Yxjl1lj7YKsiMCb27VJH9W8NVM6Bb9d8kkpG/uAQS5AmbA48q2IAolKKo1MA==",
+      "declaredLicense": "MIT",
+      "development": false,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "MIT",
+      "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/@types/d3-interpolate/-/d3-interpolate-3.0.4.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "@types/d3-selection",
+      "version": "3.0.12",
+      "source": "https://registry.npmjs.org/@types/d3-selection/-/d3-selection-3.0.12.tgz",
+      "integrity": "sha512-Qe/KWYhEiIIxGs7HrAAjMfShxKldx19SJtr5zu53f3afPsdZNz7HHtdTLXo/kqeiWNXVycI24kSnfzBYkTzpgw==",
+      "declaredLicense": "MIT",
+      "development": false,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "MIT",
+      "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/@types/d3-selection/-/d3-selection-3.0.12.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "@types/d3-transition",
+      "version": "3.0.9",
+      "source": "https://registry.npmjs.org/@types/d3-transition/-/d3-transition-3.0.9.tgz",
+      "integrity": "sha512-uZS5shfxzO3rGlu0cC3bjmMFKsXv+SmZZcgp0KD22ts4uGXp5EVYGzu/0YdwZeKmddhcAccYtREJKkPfXkZuCg==",
+      "declaredLicense": "MIT",
+      "development": false,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "MIT",
+      "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/@types/d3-transition/-/d3-transition-3.0.9.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "@types/d3-zoom",
+      "version": "3.0.9",
+      "source": "https://registry.npmjs.org/@types/d3-zoom/-/d3-zoom-3.0.9.tgz",
+      "integrity": "sha512-0sE1406XBYJGiqD3AusTl9ZqC//2mIXix51tbom25gDCA8ri4xnSZg28CaSE8Srl6FClqABUKfsn0qghgdepMA==",
+      "declaredLicense": "MIT",
+      "development": false,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "MIT",
+      "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/@types/d3-zoom/-/d3-zoom-3.0.9.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
       "name": "@types/deep-eql",
       "version": "4.0.2",
       "source": "https://registry.npmjs.org/@types/deep-eql/-/deep-eql-4.0.2.tgz",
@@ -14109,7 +14247,7 @@
       "source": "https://registry.npmjs.org/@types/prop-types/-/prop-types-15.7.15.tgz",
       "integrity": "sha512-F6bEyamV9jKGAFBEmlQnesRPGOQqS2+Uwi0Em15xenOxHaf2hv6L8YCVn3rPdPJOiJfPiCnLIRyvwVaqMY3MIw==",
       "declaredLicense": "MIT",
-      "development": true,
+      "development": false,
       "optional": false,
       "platforms": [],
       "architectures": [],
@@ -14132,7 +14270,7 @@
       "source": "https://registry.npmjs.org/@types/react-dom/-/react-dom-18.3.7.tgz",
       "integrity": "sha512-MEe3UeoENYVFXzoXEWsvcpg6ZvlrFNlOQ7EOsvhI3CfAXwzPfO8Qwuxd40nepsYKqyyVQnTdEfv68q91yLcKrQ==",
       "declaredLicense": "MIT",
-      "development": true,
+      "development": false,
       "optional": false,
       "platforms": [],
       "architectures": [],
@@ -14155,7 +14293,7 @@
       "source": "https://registry.npmjs.org/@types/react/-/react-18.3.31.tgz",
       "integrity": "sha512-vfEqpXTvwT91yhmwdfouStN2hSKwTvyRs8qpLfADyrq/kxDw0hZM7Wk9Ug1FELj8hIby+S/+kQCSRFF32nv2Qw==",
       "declaredLicense": "MIT",
-      "development": true,
+      "development": false,
       "optional": false,
       "platforms": [],
       "architectures": [],
@@ -14242,6 +14380,52 @@
     },
     {
       "ecosystem": "npm",
+      "name": "@xyflow/react",
+      "version": "12.12.0",
+      "source": "https://registry.npmjs.org/@xyflow/react/-/react-12.12.0.tgz",
+      "integrity": "sha512-74oXI0Rgm1Eu33cHQAd74J6oVgCH9mbFyTVQbsGgp2kmWwh0HdtBr2VP04z8mbPD+M/xO69nqG5dDEt7/EN2rQ==",
+      "declaredLicense": "MIT",
+      "development": false,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "MIT",
+      "repository": "https://github.com/xyflow/xyflow.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/@xyflow/react/-/react-12.12.0.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "023119ac20fb1c8c9930abe0bcd196989a1960388529a96fc43cebf96f07c9ff"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "@xyflow/system",
+      "version": "0.0.83",
+      "source": "https://registry.npmjs.org/@xyflow/system/-/system-0.0.83.tgz",
+      "integrity": "sha512-a//eDjez3WZF47aaPTfVUDD0OINOq+WVwBZCRTqG+m0a5euX8EwlJ4jMY1Wxz0Ocj4xOeekJ70V22Pq0ll8RJw==",
+      "declaredLicense": "MIT",
+      "development": false,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "MIT",
+      "repository": "https://github.com/xyflow/xyflow.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/@xyflow/system/-/system-0.0.83.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "023119ac20fb1c8c9930abe0bcd196989a1960388529a96fc43cebf96f07c9ff"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
       "name": "assertion-error",
       "version": "2.0.1",
       "source": "https://registry.npmjs.org/assertion-error/-/assertion-error-2.0.1.tgz",
@@ -14288,12 +14472,35 @@
     },
     {
       "ecosystem": "npm",
+      "name": "classcat",
+      "version": "5.0.5",
+      "source": "https://registry.npmjs.org/classcat/-/classcat-5.0.5.tgz",
+      "integrity": "sha512-JhZUT7JFcQy/EzW605k/ktHtncoo9vnyW/2GspNYwFlN1C/WmjuV/xtS04e9SOkL2sTdw0VAZ2UGCcQ9lR6p6w==",
+      "declaredLicense": "MIT",
+      "development": false,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "MIT",
+      "repository": "jorgebucaran/classcat",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/classcat/-/classcat-5.0.5.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE.md",
+          "sha256": "f101c761d255d0dddc77dd8a9327733b03d381798ec54a1bb718367207b48a8e"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
       "name": "csstype",
       "version": "3.2.3",
       "source": "https://registry.npmjs.org/csstype/-/csstype-3.2.3.tgz",
       "integrity": "sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==",
       "declaredLicense": "MIT",
-      "development": true,
+      "development": false,
       "optional": false,
       "platforms": [],
       "architectures": [],
@@ -14306,6 +14513,213 @@
         {
           "path": "LICENSE",
           "sha256": "11d55bd4541c75ee7879547ac49089c489163dae49551389713c3d026cab383e"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "d3-color",
+      "version": "3.1.0",
+      "source": "https://registry.npmjs.org/d3-color/-/d3-color-3.1.0.tgz",
+      "integrity": "sha512-zg/chbXyeBtMQ1LbD/WSoW2DpC3I0mpmPdW+ynRTj/x2DAWYrIY7qeZIHidozwV24m4iavr15lNwIwLxRmOxhA==",
+      "declaredLicense": "ISC",
+      "development": false,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "ISC",
+      "repository": "https://github.com/d3/d3-color.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/d3-color/-/d3-color-3.1.0.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "faa682e3e430941f958d26180458f5934a62f58dac4d70ccdd15608c15d0f884"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "d3-dispatch",
+      "version": "3.0.1",
+      "source": "https://registry.npmjs.org/d3-dispatch/-/d3-dispatch-3.0.1.tgz",
+      "integrity": "sha512-rzUyPU/S7rwUflMyLc1ETDeBj0NRuHKKAcvukozwhshr6g6c5d8zh4c2gQjY2bZ0dXeGLWc1PF174P2tVvKhfg==",
+      "declaredLicense": "ISC",
+      "development": false,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "ISC",
+      "repository": "https://github.com/d3/d3-dispatch.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/d3-dispatch/-/d3-dispatch-3.0.1.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "e008c5e25a6be382593089c29bfabbc553c6378eee02895aec46ce396cc404ee"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "d3-drag",
+      "version": "3.0.0",
+      "source": "https://registry.npmjs.org/d3-drag/-/d3-drag-3.0.0.tgz",
+      "integrity": "sha512-pWbUJLdETVA8lQNJecMxoXfH6x+mO2UQo8rSmZ+QqxcbyA3hfeprFgIT//HW2nlHChWeIIMwS2Fq+gEARkhTkg==",
+      "declaredLicense": "ISC",
+      "development": false,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "ISC",
+      "repository": "https://github.com/d3/d3-drag.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/d3-drag/-/d3-drag-3.0.0.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "e008c5e25a6be382593089c29bfabbc553c6378eee02895aec46ce396cc404ee"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "d3-ease",
+      "version": "3.0.1",
+      "source": "https://registry.npmjs.org/d3-ease/-/d3-ease-3.0.1.tgz",
+      "integrity": "sha512-wR/XK3D3XcLIZwpbvQwQ5fK+8Ykds1ip7A2Txe0yxncXSdq1L9skcG7blcedkOX+ZcgxGAmLX1FrRGbADwzi0w==",
+      "declaredLicense": "BSD-3-Clause",
+      "development": false,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "BSD-3-Clause",
+      "repository": "https://github.com/d3/d3-ease.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/d3-ease/-/d3-ease-3.0.1.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "b989d9085148d21ff64a75e14462aefa06b2589a55553b07b1460c70081c7d08"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "d3-interpolate",
+      "version": "3.0.1",
+      "source": "https://registry.npmjs.org/d3-interpolate/-/d3-interpolate-3.0.1.tgz",
+      "integrity": "sha512-3bYs1rOD33uo8aqJfKP3JWPAibgw8Zm2+L9vBKEHJ2Rg+viTR7o5Mmv5mZcieN+FRYaAOWX5SJATX6k1PWz72g==",
+      "declaredLicense": "ISC",
+      "development": false,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "ISC",
+      "repository": "https://github.com/d3/d3-interpolate.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/d3-interpolate/-/d3-interpolate-3.0.1.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "e008c5e25a6be382593089c29bfabbc553c6378eee02895aec46ce396cc404ee"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "d3-selection",
+      "version": "3.0.0",
+      "source": "https://registry.npmjs.org/d3-selection/-/d3-selection-3.0.0.tgz",
+      "integrity": "sha512-fmTRWbNMmsmWq6xJV8D19U/gw/bwrHfNXxrIN+HfZgnzqTHp9jOmKMhsTUjXOJnZOdZY9Q28y4yebKzqDKlxlQ==",
+      "declaredLicense": "ISC",
+      "development": false,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "ISC",
+      "repository": "https://github.com/d3/d3-selection.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/d3-selection/-/d3-selection-3.0.0.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "e008c5e25a6be382593089c29bfabbc553c6378eee02895aec46ce396cc404ee"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "d3-timer",
+      "version": "3.0.1",
+      "source": "https://registry.npmjs.org/d3-timer/-/d3-timer-3.0.1.tgz",
+      "integrity": "sha512-ndfJ/JxxMd3nw31uyKoY2naivF+r29V+Lc0svZxe1JvvIRmi8hUsrMvdOwgS1o6uBHmiz91geQ0ylPP0aj1VUA==",
+      "declaredLicense": "ISC",
+      "development": false,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "ISC",
+      "repository": "https://github.com/d3/d3-timer.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/d3-timer/-/d3-timer-3.0.1.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "e008c5e25a6be382593089c29bfabbc553c6378eee02895aec46ce396cc404ee"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "d3-transition",
+      "version": "3.0.1",
+      "source": "https://registry.npmjs.org/d3-transition/-/d3-transition-3.0.1.tgz",
+      "integrity": "sha512-ApKvfjsSR6tg06xrL434C0WydLr7JewBB3V+/39RMHsaXTOG0zmt/OAXeng5M5LBm0ojmxJrpomQVZ1aPvBL4w==",
+      "declaredLicense": "ISC",
+      "development": false,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "ISC",
+      "repository": "https://github.com/d3/d3-transition.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/d3-transition/-/d3-transition-3.0.1.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "e008c5e25a6be382593089c29bfabbc553c6378eee02895aec46ce396cc404ee"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "d3-zoom",
+      "version": "3.0.0",
+      "source": "https://registry.npmjs.org/d3-zoom/-/d3-zoom-3.0.0.tgz",
+      "integrity": "sha512-b8AmV3kfQaqWAuacbPuNbL6vahnOJflOhexLzMMNLga62+/nh0JzvJ0aO/5a5MVgUFGS7Hu1P9P03o3fJkDCyw==",
+      "declaredLicense": "ISC",
+      "development": false,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "ISC",
+      "repository": "https://github.com/d3/d3-zoom.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/d3-zoom/-/d3-zoom-3.0.0.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "e008c5e25a6be382593089c29bfabbc553c6378eee02895aec46ce396cc404ee"
         }
       ]
     },
@@ -14446,6 +14860,29 @@
         {
           "path": "LICENSE",
           "sha256": "2a8a5d6197bb97a018b8a190dd3ed853d750ca87c8e80c17aad41d6c6ff448e1"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "html-to-image",
+      "version": "1.11.11",
+      "source": "https://registry.npmjs.org/html-to-image/-/html-to-image-1.11.11.tgz",
+      "integrity": "sha512-9gux8QhvjRO/erSnDPv28noDZcPZmYE7e1vFsBLKLlRlKDSqNJYebj6Qz1TGd5lsRV+X+xYyjCKjuZdABinWjA==",
+      "declaredLicense": "MIT",
+      "development": false,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "MIT",
+      "repository": "git+https://github.com/bubkoo/html-to-image.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/html-to-image/-/html-to-image-1.11.11.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "4a9c5927734ced922395fb6df8f39ca1a6e026389b6af7e58d8d1f80bc98e2cd"
         }
       ]
     },
@@ -15208,6 +15645,29 @@
     },
     {
       "ecosystem": "npm",
+      "name": "use-sync-external-store",
+      "version": "1.7.0",
+      "source": "https://registry.npmjs.org/use-sync-external-store/-/use-sync-external-store-1.7.0.tgz",
+      "integrity": "sha512-6L+EeigHMQhdaIPNIFUKwfWJSwWFQ8gJbJ2DLOs5sDIegTwR9fRxvnM3uciHKjIZhFz+KAv2emhWMRvDmMcY8A==",
+      "declaredLicense": "MIT",
+      "development": false,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "MIT",
+      "repository": "https://github.com/react/react.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/use-sync-external-store/-/use-sync-external-store-1.7.0.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
       "name": "vite",
       "version": "8.3.3",
       "source": "https://registry.npmjs.org/vite/-/vite-8.3.3.tgz",
@@ -15272,6 +15732,29 @@
         {
           "path": "LICENSE",
           "sha256": "6a134e51aa31496c15a741592fc5d782b2dbf8d8b6b8524e15c8520ae0cd6374"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "zustand",
+      "version": "4.5.7",
+      "source": "https://registry.npmjs.org/zustand/-/zustand-4.5.7.tgz",
+      "integrity": "sha512-CHOUy7mu3lbD6o6LJLfllpjkzhHXSBlX8B9+qPddUsIfeF5S/UZ5q0kmCsnRqT1UHFQZchNFDDzMbQsuesHWlw==",
+      "declaredLicense": "MIT",
+      "development": false,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "MIT",
+      "repository": "git+https://github.com/pmndrs/zustand.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/zustand/-/zustand-4.5.7.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "c1e6e266563517467b1bf874817d23e426f3149252bd7d42758cd697514b8417"
         }
       ]
     }

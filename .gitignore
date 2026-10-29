@@ -12,3 +12,6 @@
 /platform-license-manifest.json
 /platform-source-packages.txt
 /dependency-source
+/ui/e2e-report
+/ui/e2e-results
+/ui/e2e-screenshots

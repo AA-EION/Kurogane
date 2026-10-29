@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "cargoLockSha256": "e80cd0dcdc8969e0580b6a063b00417b50b36841dc28fe5b948e49067d585275",
-  "npmLockSha256": "0ed23727e79b5604ea34c4e48cb447e9bc850783a3dadff56be8a3a7621b4a12",
-  "noticesSha256": "0bc711cd7c16827a27f5fedcb154030c744324c31f79cb9c6a81182787918433",
+  "npmLockSha256": "6733ec5fee18bec573d3b2fb37f5c1c19eec9053012a4caee0c8dbcc9dd8ea5f",
+  "noticesSha256": "b42add1db2d7db766434e2a0abd787323bbc46da1134da1038ee298602beddb4",
   "packages": [
     {
       "ecosystem": "cargo",
@@ -13111,6 +13111,33 @@
     },
     {
       "ecosystem": "npm",
+      "name": "@playwright/test",
+      "version": "1.63.0",
+      "source": "https://registry.npmjs.org/@playwright/test/-/test-1.63.0.tgz",
+      "integrity": "sha512-oxMK4vllB9RK5NQ2l1pq1IfOf2AvnEuj/vYGDj0H2nMtmtZpKtCwt/l00GEO6xjGfpBNAvjovvYdCm50dRQkpQ==",
+      "declaredLicense": "Apache-2.0",
+      "development": true,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "Apache-2.0",
+      "repository": "git+https://github.com/microsoft/playwright.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/@playwright/test/-/test-1.63.0.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "45873d00a0dd243596deb4aa23b2493b3d1f0671921bf2538ea431d7380220eb"
+        },
+        {
+          "path": "NOTICE",
+          "sha256": "6d602191187b35b9b01d2cffa01c8469c2c8d9de8a96f1bf868e0f264f51c81d"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
       "name": "@rolldown/binding-android-arm-eabi",
       "version": "1.2.12",
       "source": "https://registry.npmjs.org/@rolldown/binding-android-arm-eabi/-/binding-android-arm-eabi-1.2.12.tgz",
@@ -15364,6 +15391,60 @@
         {
           "path": "LICENSE",
           "sha256": "d0cd141b0c322fded5dfad1d4645bb2fedfc05b7321fe1009469638190d59ef9"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "playwright-core",
+      "version": "1.63.0",
+      "source": "https://registry.npmjs.org/playwright-core/-/playwright-core-1.63.0.tgz",
+      "integrity": "sha512-rYCsBF/M5HjUch52bbtVONEFjv6Xu8sm8h72dNlR5bzIE1fvC/bxgspzkjSfU+MweEMmPM8KJebG6nnyxo5mCg==",
+      "declaredLicense": "Apache-2.0",
+      "development": true,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "Apache-2.0",
+      "repository": "git+https://github.com/microsoft/playwright.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/playwright-core/-/playwright-core-1.63.0.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "45873d00a0dd243596deb4aa23b2493b3d1f0671921bf2538ea431d7380220eb"
+        },
+        {
+          "path": "NOTICE",
+          "sha256": "6d602191187b35b9b01d2cffa01c8469c2c8d9de8a96f1bf868e0f264f51c81d"
+        }
+      ]
+    },
+    {
+      "ecosystem": "npm",
+      "name": "playwright",
+      "version": "1.63.0",
+      "source": "https://registry.npmjs.org/playwright/-/playwright-1.63.0.tgz",
+      "integrity": "sha512-+7ziBLidS4NaNCdt57SUDT+wYmmd5fmiQejUic/kb+YsYSCPyOOE9sebzMjNmQrsnNpDJqd4WHvV/8lfKfUDUg==",
+      "declaredLicense": "Apache-2.0",
+      "development": true,
+      "optional": false,
+      "platforms": [],
+      "architectures": [],
+      "license": "Apache-2.0",
+      "repository": "git+https://github.com/microsoft/playwright.git",
+      "secondaryLicenseExclusions": [],
+      "archiveUrl": "https://registry.npmjs.org/playwright/-/playwright-1.63.0.tgz",
+      "archiveVerified": true,
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "45873d00a0dd243596deb4aa23b2493b3d1f0671921bf2538ea431d7380220eb"
+        },
+        {
+          "path": "NOTICE",
+          "sha256": "6d602191187b35b9b01d2cffa01c8469c2c8d9de8a96f1bf868e0f264f51c81d"
         }
       ]
     },

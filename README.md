@@ -111,6 +111,7 @@ kurogane sync ~/infra.kurogane
 | Sync engine | [docs/SYNC.md](docs/SYNC.md) |
 | Database schema | [docs/SCHEMA.md](docs/SCHEMA.md) |
 | How the map is drawn | [docs/GRAPH.md](docs/GRAPH.md) |
+| Cross-platform tests and screenshots | [docs/PARITY.md](docs/PARITY.md) |
 
 ## Repository layout
 

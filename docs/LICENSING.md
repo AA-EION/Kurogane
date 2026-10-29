@@ -29,7 +29,7 @@ build workflows, runtime rclone provisioning, and both complete lockfiles.
 | Area | Evidence and handling |
 | --- | --- |
 | 582 registry crates | Exact Cargo archive SHA-256 checked before manifest/notice extraction, all platforms and build/development packages included. |
-| 107 npm packages | Exact lockfile SRI checked before extraction, including optional architecture binaries. |
+| 110 npm packages | Exact lockfile SRI checked before extraction, including optional architecture binaries. |
 | 35 upstream license expressions | Reviewed in `docs/legal/license-decisions.json`; preserve AND obligations and select a permitted OR alternative. Upstream legacy slash notation is retained as evidence. |
 | MIT/BSD/ISC/Zlib/Boost/Unicode/Apache | Preserve copyright/license and applicable notice/patent terms. Apache 2 is GPLv3 compatible; see [Apache's explanation](https://www.apache.org/licenses/GPL-compatibility). |
 | MPL-2.0 | Preserve file-level terms and provide source. No Exhibit B secondary-license exclusion was detected in audited source headers. No MPL files were relicensed or modified by this task. See [Mozilla's compatibility guidance](https://www.mozilla.org/en-US/MPL/2.0/FAQ/). |

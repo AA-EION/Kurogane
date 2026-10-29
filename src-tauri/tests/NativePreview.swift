@@ -62,8 +62,15 @@ import SwiftUI
                 }
                 for _ in 0..<100 { if model.graphReady { break }; try await Task.sleep(nanoseconds:100_000_000) }
                 precondition(model.graphReady,"Shared graph did not connect")
-                let count = try await model.graph.webView?.evaluateJavaScript("document.querySelectorAll('[data-node]').length") as? Int ?? 0
-                precondition(count > 0 && count >= model.rows("host").count,"Topology did not render its machines")
+                // Same rule as the Linux/Windows desktop runs: Internet + companies + machines + services + standalone proxies.
+                let expected = 1 + model.rows("tenant").count + model.rows("host").count + model.rows("service").count + model.rows("proxy").filter { $0.text("serviceId").isEmpty }.count
+                var count = 0
+                for _ in 0..<50 {
+                    count = try await model.graph.webView?.evaluateJavaScript("document.querySelectorAll('[data-node]').length") as? Int ?? 0
+                    if count == expected { break }
+                    try await Task.sleep(nanoseconds:100_000_000)
+                }
+                precondition(count == expected,"Topology drew \(count) of \(expected) nodes")
                 for theme in ["light","dark"] {
                     model.appearance = theme; model.applyAppearance()
                     try await Task.sleep(nanoseconds:500_000_000)

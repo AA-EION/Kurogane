@@ -17,7 +17,7 @@
 
 ## Complete locked dependency inventory
 
-The audit covers all 582 registry crates in `Cargo.lock` and all 107 npm packages in `ui/package-lock.json`, including optional platform bindings and development/build packages. Registry archives were verified against their lockfile SHA-256/SRI before reading their manifests and notices.
+The audit covers all 582 registry crates in `Cargo.lock` and all 110 npm packages in `ui/package-lock.json`, including optional platform bindings and development/build packages. Registry archives were verified against their lockfile SHA-256/SRI before reading their manifests and notices.
 
 - [Machine-readable inventory](docs/legal/dependency-inventory.json): versions, declared expressions, archive integrity, license paths/hashes and supplemental provenance.
 - [Original license/copyright texts](THIRD_PARTY_LICENSES.txt): including SQLCipher and vendored OpenSSL, ring/BoringSSL and Unicode/certificate-root data notices.

@@ -86,6 +86,14 @@ enum Cmd {
         #[arg(long)]
         json: bool,
     },
+    /// Dev tooling: create an encrypted vault filled with the demo inventory
+    /// (CI screenshots of the real desktop app).
+    #[cfg(feature = "demo-seed")]
+    DemoVault {
+        path: PathBuf,
+        #[arg(long, default_value = "Demo Infrastructure")]
+        name: String,
+    },
     /// Dev tooling: emit the UI test fixture (demo topology + fake secrets).
     #[cfg(feature = "demo-seed")]
     DemoFixture {
@@ -234,6 +242,15 @@ fn main() -> Result<()> {
                     v.keys().all_memory_locked()
                 );
             }
+        }
+        #[cfg(feature = "demo-seed")]
+        Cmd::DemoVault { path, name } => {
+            let pw = password("New master password (≥12 chars): ")?;
+            let opts = CreateOptions { display_name: name, kdf: KdfParams::STANDARD, totp_account: "admin".into() };
+            let (mut v, _) = UnlockedVault::create(&path, &home.join("work"), pw.as_bytes(), &opts)?;
+            seed::seed_demo(v.db(), &v.keys().field)?;
+            v.save()?;
+            println!("Created demo vault {}", path.display());
         }
         #[cfg(feature = "demo-seed")]
         Cmd::DemoFixture { out } => {

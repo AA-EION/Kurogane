@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, 'codex/**']
+    branches: [main, 'codex/**', 'claude/**']
   pull_request:
 
 concurrency:
@@ -45,14 +45,19 @@ jobs:
       - run: cargo test -p kurogane-core -p kurogane-sync -p kurogane-cli
 
   ui:
-    name: UI (typecheck, tests, build)
-    runs-on: ubuntu-latest
+    name: UI (typecheck, tests, build) · ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     defaults:
       run:
         working-directory: ui
     steps:
       - uses: actions/checkout@v4
       - name: Verify dependency license inventory
+        if: runner.os == 'Linux'
         run: node ../scripts/license-audit.mjs --check
       - uses: actions/setup-node@v4
         with:

@@ -1,14 +1,11 @@
 name: Native SwiftUI verification
+# Runs as part of parity.yml (on every push), next to the Linux and Windows
+# captures; it can also be started on its own.
 on:
-  push:
-    branches: ['codex/**', main]
-    paths: ['src-tauri/macos/**', 'src-tauri/tests/**', '.github/workflows/native.yml']
   workflow_dispatch:
+  workflow_call:
 permissions:
   contents: read
-concurrency:
-  group: native-${{ github.ref }}
-  cancel-in-progress: true
 jobs:
   swift:
     runs-on: macos-latest
@@ -37,10 +34,12 @@ jobs:
       - name: Native layout and validation checks
         run: |
           xcrun swiftc -D NATIVE_PREVIEW -parse-as-library -target arm64-apple-macosx13.0 src-tauri/macos/*.swift src-tauri/tests/NativePreview.swift -o /tmp/kurogane-native-preview
-          mkdir -p native-screenshots
-          KUROGANE_NATIVE_GRAPH_URL=http://127.0.0.1:1420 /tmp/kurogane-native-preview "$PWD/native-screenshots" "$PWD/ui/src/graph/__fixtures__/demo-topology.json"
+          for fixture in demo-topology multi-company; do
+            mkdir -p "native-screenshots/$fixture"
+            KUROGANE_NATIVE_GRAPH_URL=http://127.0.0.1:1420 /tmp/kurogane-native-preview "$PWD/native-screenshots/$fixture" "$PWD/ui/src/graph/__fixtures__/$fixture.json"
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: native-ui-review
-          path: native-screenshots/*.png
+          path: native-screenshots/**/*.png
           if-no-files-found: error

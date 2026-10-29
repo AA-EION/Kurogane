@@ -20,6 +20,14 @@ export function mapToSvg(scene: Scene): { svg: string; width: number; height: nu
   clone.setAttribute('height', String(height));
   clone.setAttribute('viewBox', `0 0 ${width} ${height}`);
   clone.removeAttribute('style');
+  clone.dataset.theme = document.documentElement.dataset.theme ?? 'light';
+  // Export resolved custom properties so SVG renderers and PNG conversion do
+  // not depend on the host document's theme or browser color-mix support.
+  const computed = getComputedStyle(document.documentElement);
+  for (let i = 0; i < computed.length; i++) {
+    const name = computed.item(i);
+    if (name.startsWith('--')) clone.style.setProperty(name, computed.getPropertyValue(name));
+  }
   let css = '';
   for (const sheet of Array.from(document.styleSheets)) {
     try {
@@ -34,7 +42,7 @@ export function mapToSvg(scene: Scene): { svg: string; width: number; height: nu
   const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
   bg.setAttribute('width', '100%');
   bg.setAttribute('height', '100%');
-  bg.setAttribute('fill', '#0b0d10');
+  bg.setAttribute('fill', computed.getPropertyValue('--bg').trim());
   clone.insertBefore(bg, style.nextSibling);
   return { svg: `<?xml version="1.0" encoding="UTF-8"?>\n${new XMLSerializer().serializeToString(clone)}`, width, height };
 }

@@ -48,7 +48,7 @@ export function Omnibox({ index, onPick, onClose }: { index: SearchEntry[]; onPi
             placeholder="Search companies, hosts, IPs, ports, domains, services…"
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'ArrowDown') (e.preventDefault(), setCursor((c) => Math.min(c + 1, hits.length - 1)));
+              if (e.key === 'ArrowDown') (e.preventDefault(), setCursor((c) => Math.max(0, Math.min(c + 1, hits.length - 1))));
               else if (e.key === 'ArrowUp') (e.preventDefault(), setCursor((c) => Math.max(c - 1, 0)));
               else if (e.key === 'Enter') pick(hits[cursor]);
               else if (e.key === 'Escape') onClose();

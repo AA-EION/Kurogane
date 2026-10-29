@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "projectLicense": "AGPL-3.0-or-later",
+  "expressions": {
+    "(Apache-2.0 OR MIT) AND BSD-3-Clause": {
+      "selected": "MIT AND BSD-3-Clause",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "(MIT OR Apache-2.0) AND Unicode-3.0": {
+      "selected": "MIT AND Unicode-3.0",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "0BSD OR MIT OR Apache-2.0": {
+      "selected": "MIT",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "Apache-2.0": {
+      "selected": "Apache-2.0",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "Apache-2.0 / MIT": {
+      "selected": "MIT",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "Apache-2.0 AND ISC": {
+      "selected": "Apache-2.0 AND ISC",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "Apache-2.0 AND MIT": {
+      "selected": "Apache-2.0 AND MIT",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "Apache-2.0 OR ISC OR MIT": {
+      "selected": "MIT",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "Apache-2.0 OR MIT": {
+      "selected": "MIT",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "Apache-2.0 WITH LLVM-exception": {
+      "selected": "Apache-2.0 WITH LLVM-exception",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT": {
+      "selected": "MIT",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "Apache-2.0/MIT": {
+      "selected": "MIT",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "BSD-2-Clause OR Apache-2.0 OR MIT": {
+      "selected": "MIT",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "BSD-2-Clause OR MIT OR Apache-2.0": {
+      "selected": "MIT",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "BSD-3-Clause": {
+      "selected": "BSD-3-Clause",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "BSD-3-Clause AND MIT": {
+      "selected": "BSD-3-Clause AND MIT",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "BSD-3-Clause OR Apache-2.0": {
+      "selected": "BSD-3-Clause OR Apache-2.0",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "BSD-3-Clause OR MIT OR Apache-2.0": {
+      "selected": "MIT",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "BSD-3-Clause/MIT": {
+      "selected": "MIT",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "BSL-1.0": {
+      "selected": "BSL-1.0",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "CC0-1.0 OR MIT-0 OR Apache-2.0": {
+      "selected": "MIT",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "CDLA-Permissive-2.0": {
+      "selected": "CDLA-Permissive-2.0",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain agreement with certificate-root data; no restrictions on results."
+    },
+    "ISC": {
+      "selected": "ISC",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "MIT": {
+      "selected": "MIT",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "MIT OR Apache-2.0": {
+      "selected": "MIT",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "MIT OR Apache-2.0 OR LGPL-2.1-or-later": {
+      "selected": "MIT",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "MIT OR Apache-2.0 OR Zlib": {
+      "selected": "MIT",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "MIT OR Zlib OR Apache-2.0": {
+      "selected": "MIT",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "MIT/Apache-2.0": {
+      "selected": "MIT",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "MPL-2.0": {
+      "selected": "MPL-2.0",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain MPL file notices and provide exact source; no Exhibit B declaration detected in package source."
+    },
+    "Unicode-3.0": {
+      "selected": "Unicode-3.0",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "Unlicense OR MIT": {
+      "selected": "MIT",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "Unlicense/MIT": {
+      "selected": "MIT",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "Zlib": {
+      "selected": "Zlib",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    },
+    "Zlib OR Apache-2.0 OR MIT": {
+      "selected": "MIT",
+      "compatibleWith": "AGPL-3.0-or-later",
+      "obligations": "Retain original copyright, license and applicable NOTICE/patent terms."
+    }
+  }
+}

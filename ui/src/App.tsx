@@ -23,6 +23,7 @@ import { ProxyForm } from './forms/ProxyForm';
 import { ServiceForm } from './forms/ServiceForm';
 import { TenantForm } from './forms/TenantForm';
 import { buildLookup } from './model';
+
 import { buildIndex } from './search/index';
 import { type ModalSpec, type Store, StoreContext } from './store';
 
@@ -65,6 +66,7 @@ export function App() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [sync, setSync] = useState<SyncStatus | null>(null);
   const [remaining, setRemaining] = useState(0);
+  const [topologyError, setTopologyError] = useState<string | null>(null);
   const lastTouch = useRef(Date.now());
   const lastSent = useRef(0);
 
@@ -106,9 +108,13 @@ export function App() {
 
   useEffect(() => {
     if (!backend || status?.stage !== 'unlocked') return;
-    backend.topology().then(setTopo).catch((e) => toast(String(e), 'error'));
-    backend.syncStatus().then(setSync).catch(() => setSync(null));
+    let active = true;
+    setTopologyError(null);
+    backend.topology().then((value) => { if (active) setTopo(value); }).catch((e) => { if (active) setTopologyError(String(e)); });
+    backend.syncStatus().then((value) => { if (active) setSync(value); }).catch(() => { if (active) setSync(null); });
     lastTouch.current = Date.now();
+    lastSent.current = 0;
+    return () => { active = false; };
   }, [backend, status?.stage, toast]);
 
   // Activity keeps the session alive (throttled) and drives the countdown.
@@ -150,9 +156,9 @@ export function App() {
   }, [scene, topo, pendingFocusRef, focus]);
 
   const lock = useCallback(async () => {
-    await backend?.lock();
+    try { await backend?.lock(); } catch (error) { toast(String(error), 'error'); }
     // The mock backend's listener covers the UI; Tauri emits vault://locked too.
-  }, [backend]);
+  }, [backend, toast]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -192,7 +198,8 @@ export function App() {
       />
     );
 
-  if (!topo || !scene || !lookup) return <div className="boot"><span className="spinner" /></div>;
+  if (topologyError) return <div className="boot error-screen"><div><p>{topologyError}</p><button className="btn" onClick={() => { setTopologyError(null); backend.topology().then(setTopo).catch((e) => setTopologyError(String(e))); }}>Try again</button></div></div>;
+  if (!topo || !scene || !lookup) return <div className="boot" role="status" aria-label="Loading inventory"><span className="spinner" /></div>;
 
   const store: Store = {
     backend,
@@ -221,7 +228,7 @@ export function App() {
   return (
     <StoreContext.Provider value={store}>
       <div className="app">
-        <TopBar onSearch={() => setOmni(true)} remainingSecs={remaining || status.remainingSecs} timeoutSecs={status.lockTimeoutSecs} onLock={lock} memoryLocked={status.memoryLocked} />
+        <TopBar onSearch={() => setOmni(true)} remainingSecs={remaining} timeoutSecs={status.lockTimeoutSecs} onLock={lock} memoryLocked={status.memoryLocked} />
         <div className="workspace">
           {!empty && <Sidebar />}
           <main className="stage">

@@ -130,3 +130,7 @@ The push → pull → conflict logic for two devices is also covered offline by 
 
 * Another engine (e.g. a dedicated MEGAcmd container) is a new `Transport` impl. The reconciliation and pipeline do not change.
 * Additional rclone backends (WebDAV/Nextcloud, S3, SFTP) need only a `Provider` variant and a linking flow.
+
+## OAuth response compatibility
+
+Drive authorization passes the restricted `drive.file` scope as an encoded options blob. rclone then returns an encoded configuration map whose `token` value is JSON; without options it returns raw token JSON. Kurogane accepts both formats, validates nonempty access/refresh tokens and keeps error messages free of token material. Regression tests cover both formats and malformed responses.

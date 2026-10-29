@@ -11,14 +11,19 @@ export function DeleteDialog({ kind, id, name, onDone }: { kind: EntityKind; id:
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
-    backend.deleteImpact(kind, id).then(setImpact).catch(() => setImpact(null));
+    let active = true;
+    setImpact(null);
+    setError(null);
+    backend.deleteImpact(kind, id).then((value) => { if (active) setImpact(value); }).catch((e) => { if (active) setError(errorText(e)); });
+    return () => { active = false; };
   }, [backend, kind, id]);
   const parts = impact
     ? ([
         ['machine', impact.hosts], ['network', impact.networks], ['service', impact.services], ['proxy', impact.proxies], ['route', impact.routes], ['account', impact.credentials],
-      ] as [string, number][]).filter(([, n]) => n > 0).map(([w, n]) => `${n} ${w}${n > 1 ? (w === 'proxy' ? 'ies' : 's') : ''}`.replace('proxys', 'proxies'))
+      ] as [string, number][]).filter(([, n]) => n > 0).map(([w, n]) => `${n} ${n === 1 ? w : w === 'proxy' ? 'proxies' : `${w}s`}`)
     : [];
   const go = async () => {
+    if (!impact || busy) return;
     setBusy(true);
     try {
       const t = await backend.deleteEntity(kind, id);
@@ -38,13 +43,14 @@ export function DeleteDialog({ kind, id, name, onDone }: { kind: EntityKind; id:
       title={`Delete ${NOUN[kind]} “${name}”?`}
       icon="trash"
       onClose={closeModal}
-      footer={<><Button onClick={closeModal}>Cancel</Button><Button kind="danger" onClick={go} busy={busy}>Delete</Button></>}
+      footer={<><Button onClick={closeModal}>Cancel</Button><Button kind="danger" onClick={go} busy={busy} disabled={!impact}>Delete</Button></>}
     >
-      {parts.length > 0 ? (
+      {!impact && !error && <p role="status">Checking what will be deleted…</p>}
+      {impact && (parts.length > 0 ? (
         <p>Everything that belongs to it goes too: <b>{parts.join(', ')}</b>.</p>
       ) : (
         <p>This cannot be undone (the previous version stays in the <code>.bak</code> file next to your vault until the next save).</p>
-      )}
+      ))}
       {kind === 'service' && <p className="muted small">Proxy routes pointing at this service are kept but lose their target link.</p>}
       <FormError error={error} />
     </Modal>

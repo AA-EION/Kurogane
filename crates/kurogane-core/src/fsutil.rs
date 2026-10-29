@@ -59,7 +59,9 @@ pub fn atomic_write(path: &Path, bytes: &[u8], keep_backup: bool) -> Result<()> 
         if keep_backup && path.exists() {
             let bak = backup_path(path);
             fs::copy(path, &bak)?;
-            File::open(&bak)?.sync_all()?;
+            // Windows FlushFileBuffers requires a handle with write access;
+            // a read-only File::open fails even though the copy succeeded.
+            OpenOptions::new().write(true).open(&bak)?.sync_all()?;
         }
         fs::rename(&tmp, path)?;
         sync_parent(path);
@@ -117,6 +119,9 @@ mod tests {
         atomic_write(&p, b"two", true).unwrap();
         assert_eq!(fs::read(&p).unwrap(), b"two");
         assert_eq!(fs::read(backup_path(&p)).unwrap(), b"one");
+        atomic_write(&p, b"three", true).unwrap();
+        assert_eq!(fs::read(&p).unwrap(), b"three");
+        assert_eq!(fs::read(backup_path(&p)).unwrap(), b"two");
         let leftovers: Vec<_> = fs::read_dir(dir.path())
             .unwrap()
             .filter_map(|e| e.ok())

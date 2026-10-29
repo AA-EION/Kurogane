@@ -7,9 +7,12 @@ export function Brand({ large }: { large?: boolean }) {
         <path d="M20 21 L36 12 L36 28 L20 37 Z" className="bm-right" />
         <path d="M20 21 L20 37 L4 28 L4 12 Z" className="bm-left" />
       </svg>
+      <div className="brand-signature">
       <div className="brand-text">
         <span className="brand-name">KUROGANE</span>
         <span className="brand-kanji">黒鉄</span>
+      </div>
+      <span className="brand-maker">Issen Software Group</span>
       </div>
     </div>
   );

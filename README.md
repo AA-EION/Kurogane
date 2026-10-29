@@ -4,9 +4,13 @@
 
 You enter companies, machines, services, reverse proxies and accounts in simple forms. Kurogane draws them as an isometric diagram grouped by company, traces each public domain through the proxy to the container behind it, and keeps every password in an encrypted vault. Click **Open** to launch a site, **SSH** to get a terminal, or **RDP** to start a remote desktop session.
 
+A product of [Issen Software Group](https://issen.kurokamicorp.com).
+
+**Open source under [AGPLv3-or-later](LICENSE).** Commercial use and paid distribution are permitted; covered derivatives must follow AGPL source-sharing requirements, including its network-use provision for modified versions. There is no warranty. See [licensing and compatibility](docs/LICENSING.md) and [contributing](CONTRIBUTING.md).
+
 Runs offline on Windows, macOS and Linux. The vault is a single encrypted file that you can sync through Google Drive, OneDrive, MEGA or any folder you already sync.
 
-![Map with the service drawer open](docs/img/map.png)
+![Light map with the service drawer open](docs/img/map-light.jpg)
 
 ## What it answers at a glance
 
@@ -18,12 +22,12 @@ Search everything with **Ctrl/⌘ + K**: names, IPs, ports, domains, usernames.
 
 ## Install
 
-Download the installer for your system from the [Releases](../../releases) page.
+For this UI preview, download the installer for your system from the latest successful [Build artifacts workflow](https://github.com/AA-EION/Kurogane/actions/workflows/release.yml). Sign in to GitHub to download its artifacts. This branch does not publish a release.
 
 | System | File | Notes |
 |---|---|---|
 | Windows 10/11 | `Kurogane_<version>_x64-setup.exe` | Installs for your user only, so no admin rights are needed. Until the installer is code-signed, SmartScreen asks first: choose *More info → Run anyway*. |
-| macOS 11+ (Apple silicon and Intel) | `Kurogane_<version>_universal.dmg` | Open it and drag **Kurogane** onto **Applications**. The app is ad-hoc signed but not notarized. On first launch, right-click → *Open*, or run `xattr -dr com.apple.quarantine /Applications/Kurogane.app`. |
+| macOS 13+ (Apple silicon and Intel) | `Kurogane_<version>_universal.dmg` | Open it and drag **Kurogane** onto **Applications**. The app is ad-hoc signed but not notarized. On first launch, right-click → *Open*, or run `xattr -dr com.apple.quarantine /Applications/Kurogane.app`. |
 | Linux (x86-64) | `Kurogane_<version>_amd64.AppImage` | `chmod +x` it and run it. Everything it needs is bundled. Works on Ubuntu 22.04, Debian 12, Fedora 36 or newer. |
 
 Double-clicking a `.kurogane` file opens it in Kurogane.
@@ -33,30 +37,22 @@ Double-clicking a `.kurogane` file opens it in Kurogane.
 1. **Create a vault.** Pick a master password. Two-factor (any authenticator app) is optional and can be turned on later under *Settings → Security*.
 2. **Add a company**, then its **machines**. Each machine has a list of network cards, each with a private IP and an optional public IP. VMs can point at the machine they run on.
 3. **Add services** on a machine. A service can be a Docker container, a VM service, an SMB share or a native daemon. Give it its internal port and the port it is published on. If it belongs to a different company than the machine (for example your own website on your employer's VPS), set *Owned by*.
-4. **Add the reverse proxy** (nginx, Traefik, Caddy, Nginx Proxy Manager, Cloudflare Tunnel…) and its routes: `www.example.com` → service. You can also do this from the service form under *Public domains*.
+4. **Add the reverse proxy** (nginx, Traefik, Caddy, Nginx Proxy Manager, Cloudflare Tunnel…) and its routes: `www.example.com` → service. On Windows/Linux, use *Public domains* in the service form; on macOS, use *Publish a domain* in the service inspector.
 5. **Add accounts** to a company, machine, service or proxy. Passwords, SSH keys, tokens and secure notes are encrypted inside the vault.
-
-| | |
-|---|---|
-| ![Service form](docs/img/service-form.png) Ports, owner company and public domains in one form | ![Accounts](docs/img/accounts.png) Every account, grouped by company. Copying a password clears the clipboard after 30 s |
 
 Click anything on the map or in the sidebar to open its drawer. From there you can open its website, connect by SSH or RDP, copy or reveal a password, edit it, or delete it. Before anything is deleted, Kurogane tells you what else goes with it.
 
 ### Import and export
 
-*Settings → Import & export* lets you **download an empty Excel template**. It has one sheet per kind of record, drop-down lists for every choice and a *Read me* sheet. Fill it in and import it. Kurogane checks every row first and shows what will be created or updated, and what is wrong (sheet and row). Nothing changes until you confirm.
+*Settings → Import & export* on Windows/Linux, or *Settings → Data* on macOS, lets you **download an empty Excel template**. It has one sheet per kind of record, drop-down lists for every choice and a *Read me* sheet. Fill it in and import it. Kurogane checks every row first and shows what will be created or updated, and what is wrong (sheet and row). Nothing changes until you confirm.
 
 You can also export the whole inventory to Excel or JSON, with or without passwords, save an encrypted backup of the vault, and export the map as PNG, SVG or a FossFLOW diagram. Map exports never contain passwords.
-
-![Import and export](docs/img/import-export.png)
 
 ### Sync between computers
 
 *Settings → Sync* links **Google Drive, OneDrive or MEGA** with a browser login (no API keys, nothing to register), or a **synced folder** (Dropbox, iCloud Drive, Syncthing, a NAS share…). Only the encrypted vault file leaves the machine. Sync runs automatically after changes, on unlock, every 5 minutes, and before locking or quitting. If two computers changed the vault at the same time, you choose which version to keep, and the other one is kept as a backup.
 
 On another computer: install Kurogane, choose *Get it from the cloud* on the first screen, and unlock with the same password. Your authenticator keeps working.
-
-![Sync settings](docs/img/sync.png)
 
 ### Security
 
@@ -68,7 +64,7 @@ On another computer: install Kurogane, choose *Get it from the cloud* on the fir
 
 ## Building from source
 
-Prerequisites: Rust ≥ 1.85, Node ≥ 20, Perl and `make` for the vendored OpenSSL behind SQLCipher (plus NASM on Windows). On Linux, also the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) (`libwebkit2gtk-4.1-dev` …).
+Prerequisites: Rust ≥ 1.85, Node ≥ 22.12, Perl and `make` for the vendored OpenSSL behind SQLCipher (plus NASM on Windows). On Linux, also the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) (`libwebkit2gtk-4.1-dev` …).
 
 ```bash
 cd ui && npm ci && cd ..
@@ -88,7 +84,11 @@ cd ui && npm test               # UI
 
 `cd ui && npm run dev` serves the interface in a browser at http://127.0.0.1:1420 against an in-memory backend, which is handy for UI work. That backend exists only in development builds.
 
-Pushing a tag such as `v0.2.0` runs [`.github/workflows/release.yml`](.github/workflows/release.yml). It builds all three installers and attaches them to a draft release.
+[`.github/workflows/release.yml`](.github/workflows/release.yml) builds Windows, universal macOS and Linux installers as GitHub Actions artifacts when manually dispatched. It has no release-creation step. CI verifies source changes separately.
+
+Appearance defaults to Light. Settings → General offers Light, Dark and System, saved on this computer. The material language follows Boundless and EION Studios, with readable text in both appearances. The [macOS interface](docs/MACOS.md) uses SwiftUI for navigation, forms, inspectors, vault screens and settings. Its graph pane retains the original isometric renderer, including hosted services, VM relationships and proxy-route traces. Native navigation uses Liquid Glass on macOS 26 and newer. Native sheets fit their parent window, scroll their fields and retain visible action rows. macOS source builds require Xcode 26+.
+
+![Native navigation and service inspector around the shared isometric graph](docs/img/macos-map.png)
 
 ### Headless CLI
 
@@ -121,7 +121,8 @@ crates/kurogane-core/    encryption, vault file, SQLCipher database, editing, Ex
 crates/kurogane-sync/    pinned rclone, sandbox, folder sync, lineage and conflict handling
 crates/kurogane-cli/     `kurogane` headless tool
 src-tauri/               desktop shell: commands, sync scheduler, import/export, installer config
-ui/src/                  React interface
+  macos/                 SwiftUI workspace, graph webview host and direct Rust command bridge
+ui/src/                  React interface and shared graph-only macOS entry
   canvas/                isometric layout, routing, map export
   components/            sidebar, drawer, settings, lock screen, first-run wizard, dialogs
   forms/                 company, network, machine, service, proxy, account forms

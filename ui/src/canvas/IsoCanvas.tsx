@@ -11,6 +11,7 @@ interface Props {
   onSelect: (id: string | null) => void;
   focus: { id: string; nonce: number } | null;
   dimmedTenants: Set<string>;
+  inspectorInset?: number;
 }
 
 interface View {
@@ -33,7 +34,7 @@ function shade(hex: string, amt: number): string {
   return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
 }
 
-const STEEL = '#2b3038';
+const canvasSteel = () => getComputedStyle(document.documentElement).getPropertyValue('--steel').trim() || '#b4b2ac';
 
 // ------------------------------------------------------------------- shapes
 
@@ -69,6 +70,7 @@ function Glyph({ name, x, y, size, color, opacity = 1 }: { name: string; x: numb
 }
 
 interface BlockProps {
+  steel: string;
   node: SceneNode;
   selected: boolean;
   hovered: boolean;
@@ -79,13 +81,13 @@ interface BlockProps {
 }
 
 /** A host slab, an appliance box, or a container standing on a slab. */
-const Block = memo(function Block({ node, selected, hovered, dim, onEnter, onLeave, onClick }: BlockProps) {
+const Block = memo(function Block({ node, selected, hovered, dim, onEnter, onLeave, onClick, steel }: BlockProps) {
   const isItem = node.kind === 'service' || node.kind === 'proxy';
   const inset = isItem ? 0.17 : node.slab ? 0.04 : 0.12;
-  const base = node.slab ? STEEL : isItem ? shade(node.accent, -0.62) : shade(node.accent, -0.7);
+  const base = node.slab ? steel : isItem ? shade(node.accent, -0.62) : shade(node.accent, -0.7);
   const f = blockFaces(node.tile, node.size, node.z, node.height, inset);
   const lift = hovered && !node.slab ? -3 : 0;
-  const topFill = node.slab ? shade(STEEL, 0.08) : shade(base, 0.25);
+  const topFill = node.slab ? shade(steel, 0.08) : shade(base, 0.25);
   const center = footprintCenter(f.t, f.s, node.z + node.height);
   const stripe = (pts: Coords[], frac: number) => {
     // Accent band along the top edge of a side face.
@@ -192,7 +194,7 @@ function Connector({ c, lit, dim }: { c: SceneConnector; lit: boolean; dim: bool
   const pts = connectorPoints(c);
   if (pts.length < 2) return null;
   const d = pathD(pts);
-  const color = c.kind === 'parent' ? '#868e96' : c.kind === 'ingress' ? '#dee2e6' : c.secure ? '#ff7a45' : '#ffd43b';
+  const color = c.kind === 'parent' ? 'var(--text-3)' : c.kind === 'ingress' ? 'var(--ingress)' : c.secure ? 'var(--route)' : 'var(--warn)';
   const baseOpacity = dim ? 0.05 : c.kind === 'ingress' ? 0.16 : c.kind === 'parent' ? 0.45 : 0.4;
   return (
     <g className={`connector ${c.kind} ${lit ? 'lit' : ''}`} pointerEvents="none">
@@ -207,7 +209,7 @@ function Connector({ c, lit, dim }: { c: SceneConnector; lit: boolean; dim: bool
         opacity={lit ? 1 : baseOpacity}
         strokeDasharray={c.kind === 'parent' ? '6 6' : c.tunnel || c.kind === 'ingress' ? '2 7' : undefined}
       />
-      {lit && <path d={d} className="flow" stroke={shade(color, 0.5)} strokeWidth={3} fill="none" strokeLinejoin="round" />}
+      {lit && <path d={d} className="flow" stroke={color} strokeWidth={3} fill="none" strokeLinejoin="round" />}
     </g>
   );
 }
@@ -389,7 +391,13 @@ const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 
 
 // ----------------------------------------------------------------- canvas
 
-export function IsoCanvas({ scene, selected, onSelect, focus, dimmedTenants }: Props) {
+export function IsoCanvas({ scene, selected, onSelect, focus, dimmedTenants, inspectorInset = 380 }: Props) {
+  const [steel, setSteel] = useState(canvasSteel);
+  useEffect(() => {
+    const update = () => setSteel(canvasSteel());
+    window.addEventListener('kurogane:appearance', update);
+    return () => window.removeEventListener('kurogane:appearance', update);
+  }, []);
   const svgRef = useRef<SVGSVGElement>(null);
   const [view, setView] = useState<View>({ x: 0, y: 0, k: 0.5 });
   const [hover, setHover] = useState<string | null>(null);
@@ -400,6 +408,7 @@ export function IsoCanvas({ scene, selected, onSelect, focus, dimmedTenants }: P
 
   const animateTo = useCallback((target: View, ms = 480) => {
     if (anim.current) cancelAnimationFrame(anim.current);
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setView(target); return; }
     const from = viewRef.current;
     const t0 = performance.now();
     const step = (now: number) => {
@@ -410,6 +419,8 @@ export function IsoCanvas({ scene, selected, onSelect, focus, dimmedTenants }: P
     };
     anim.current = requestAnimationFrame(step);
   }, []);
+
+  useEffect(() => () => { if (anim.current) cancelAnimationFrame(anim.current); }, []);
 
   const fit = useCallback(
     (animate: boolean) => {
@@ -426,6 +437,27 @@ export function IsoCanvas({ scene, selected, onSelect, focus, dimmedTenants }: P
   );
 
   useLayoutEffect(() => fit(false), [fit]);
+  useEffect(() => {
+    const element = svgRef.current;
+    if (!element) return;
+    let previous = element.getBoundingClientRect();
+    const observer = new ResizeObserver(() => {
+      const next = element.getBoundingClientRect();
+      if (!previous.width || !previous.height) fit(false);
+      else if (next.width !== previous.width || next.height !== previous.height) {
+        if (anim.current) cancelAnimationFrame(anim.current);
+        setView((value) => ({ ...value, x: value.x + (next.width - previous.width) / 2, y: value.y + (next.height - previous.height) / 2 }));
+      }
+      previous = next;
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [fit]);
+  useEffect(() => {
+    const onFit = () => fit(true);
+    window.addEventListener('kurogane:fit', onFit);
+    return () => window.removeEventListener('kurogane:fit', onFit);
+  }, [fit]);
 
   useEffect(() => {
     if (!focus) return;
@@ -435,9 +467,9 @@ export function IsoCanvas({ scene, selected, onSelect, focus, dimmedTenants }: P
     const { width, height } = el.getBoundingClientRect();
     const isZone = focus.id.startsWith('tenant:');
     const k = isZone ? Math.max(0.55, Math.min(viewRef.current.k, 0.8)) : Math.max(viewRef.current.k, 1.05);
-    // Keep the target clear of the drawer on the right.
-    animateTo({ k, x: (width - 380) / 2 - p.x * k, y: height / 2 - p.y * k });
-  }, [focus, scene, animateTo]);
+    // Web drawers overlay the scene; native inspectors occupy a separate pane.
+    animateTo({ k, x: (width - inspectorInset) / 2 - p.x * k, y: height / 2 - p.y * k });
+  }, [focus, scene, animateTo, inspectorInset]);
 
   const onWheel = useCallback((e: WheelEvent) => {
     e.preventDefault();
@@ -532,7 +564,7 @@ export function IsoCanvas({ scene, selected, onSelect, focus, dimmedTenants }: P
             <ZoneFloor key={z.id} zone={z} dim={dimmedTenants.has(z.refId)} selected={selected === z.id} onClick={onSelect} />
           ))}
           {slabs.map((n) => (
-            <Block key={n.id} node={n} selected={selected === n.id} hovered={hover === n.id} dim={isDim(n)} onEnter={onEnter} onLeave={onLeave} onClick={onSelect} />
+            <Block key={n.id} steel={steel} node={n} selected={selected === n.id} hovered={hover === n.id} dim={isDim(n)} onEnter={onEnter} onLeave={onLeave} onClick={onSelect} />
           ))}
           {scene.connectors
             .filter((c) => c.kind !== 'ingress')
@@ -540,7 +572,7 @@ export function IsoCanvas({ scene, selected, onSelect, focus, dimmedTenants }: P
               <Connector key={c.id} c={c} lit={lit.has(c.id)} dim={nodeDimById(c.to) && !lit.has(c.id)} />
             ))}
           {blocks.map((n) => (
-            <Block key={n.id} node={n} selected={selected === n.id} hovered={hover === n.id} dim={isDim(n)} onEnter={onEnter} onLeave={onLeave} onClick={onSelect} />
+            <Block key={n.id} steel={steel} node={n} selected={selected === n.id} hovered={hover === n.id} dim={isDim(n)} onEnter={onEnter} onLeave={onLeave} onClick={onSelect} />
           ))}
           {scene.connectors
             .filter((c) => c.kind === 'ingress')
@@ -579,7 +611,7 @@ export function IsoCanvas({ scene, selected, onSelect, focus, dimmedTenants }: P
         <span className="zoom-readout">{Math.round(view.k * 100)}%</span>
       </div>
       <div className="legend">
-        <span><i className="sw" style={{ background: '#ff7a45' }} />HTTPS route</span>
+        <span><i className="sw" style={{ background: 'var(--route)' }} />HTTPS route</span>
         <span><i className="sw dashed" />Tunnel / ingress</span>
         <span><i className="sw" style={{ background: '#868e96' }} />VM → hypervisor</span>
       </div>

@@ -97,7 +97,12 @@ pub fn mutate<T>(state: &State<'_, AppState>, f: impl FnOnce(&mut UnlockedVault)
             return Err(err(e));
         }
     };
-    v.save().map_err(err)?;
+    if let Err(e) = v.save() {
+        // A rejected save must not leave edits in the working DB, where the
+        // next successful save would silently commit them after a UI error.
+        let _ = v.reload();
+        return Err(err(e));
+    }
     let topo = v.topology().map_err(err)?;
     inner.request_sync(Duration::from_secs(15));
     Ok((out, topo))

@@ -8,6 +8,8 @@
 mod clipboard;
 mod commands;
 mod io;
+#[cfg(target_os = "macos")]
+mod native;
 mod state;
 mod sync;
 
@@ -74,6 +76,14 @@ fn main() {
                 cloud_transport: Mutex::new(None),
             });
             sync::spawn_scheduler(app.handle().clone());
+
+            #[cfg(target_os = "macos")]
+            if let Some(window) = app.get_webview_window("main") {
+                if let Ok(pointer) = window.ns_window() {
+                    let pointer = pointer as usize;
+                    native::install(app.handle(), pointer)?;
+                }
+            }
 
             // Session watchdog: inactivity timeout and suspend detection.
             let handle = app.handle().clone();

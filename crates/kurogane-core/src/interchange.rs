@@ -521,7 +521,7 @@ pub fn export_xlsx(db: &Database, field_key: Option<&Key256>) -> Result<Vec<u8>>
             h.name.clone(),
             label(CATEGORIES, &h.category),
             h.os_family.as_deref().map(|o| label(OS_FAMILIES, o)).unwrap_or_default(),
-            h.parent_host_id.as_deref().map(&host_name).unwrap_or_default(),
+            h.parent_host_id.as_deref().map(host_name).unwrap_or_default(),
             opt(&h.fqdn),
             num(h.ssh_port),
             num(h.rdp_port),
@@ -555,7 +555,7 @@ pub fn export_xlsx(db: &Database, field_key: Option<&Key256>) -> Result<Vec<u8>>
             opt(&s.image),
             label(SCHEMES, &s.scheme),
             opt(&s.description),
-            s.owner_tenant_id.as_deref().map(&tenant).filter(|o| o != &company).unwrap_or_default(),
+            s.owner_tenant_id.as_deref().map(tenant).filter(|o| o != &company).unwrap_or_default(),
         ]);
         for p in &s.ports {
             sheets.entry(S_PORTS).or_default().push(vec![

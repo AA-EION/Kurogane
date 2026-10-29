@@ -43,13 +43,13 @@ export function TopBar({ onSearch, remainingSecs, timeoutSecs, onLock, memoryLoc
       <Brand />
       <div className="vault-name" title={topo.vaultName}>{topo.vaultName}</div>
       {!memoryLocked && <span className="pill danger" title="The OS refused to lock key memory">memory not locked</span>}
-      <button className="search-trigger" onClick={onSearch}>
+      <button className="search-trigger" aria-label="Search inventory" title={`Search inventory (${mod}+K)`} onClick={onSearch}>
         <Icon name="search" size={15} />
         <span>Search hosts, IPs, ports, domains…</span>
         <kbd>{mod}</kbd><kbd>K</kbd>
       </button>
       <div className="add-menu" ref={menuRef}>
-        <button className="btn primary small" onClick={() => setMenu(!menu)}><Icon name="plus" size={14} /> New</button>
+        <button className="btn primary small" aria-expanded={menu} aria-haspopup="true" onClick={() => setMenu(!menu)} onKeyDown={(e) => { if (e.key === 'Escape') setMenu(false); }}><Icon name="plus" size={14} /> New</button>
         {menu && (
           <div className="menu">
             <button onClick={add(() => openModal({ type: 'tenant' }))}><Icon name="shield" size={14} /> Company</button>
@@ -67,6 +67,7 @@ export function TopBar({ onSearch, remainingSecs, timeoutSecs, onLock, memoryLoc
       {sync && sync.linked.length > 0 ? (
         <button
           className={`tb-btn sync ${sync.busy ? 'busy' : ''} ${sync.lastError ? 'err' : ''} ${sync.conflict ? 'warn' : ''}`}
+          disabled={sync.busy}
           onClick={() => run(async () => setSync(await backend.syncNow()))}
           title={`${sync.linked.map((l) => `${l.label}: ${l.remotePath}`).join('\n')}${sync.lastError ? `\n\n${sync.lastError}` : ''}\n\nClick to sync now`}
         >

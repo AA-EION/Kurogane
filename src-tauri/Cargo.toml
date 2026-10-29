@@ -5,6 +5,8 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
+license.workspace = true
+repository.workspace = true
 
 [[bin]]
 name = "kurogane-desktop"
@@ -32,3 +34,5 @@ data-encoding.workspace = true
 [features]
 # Tauri's dev server integration; `cargo tauri dev` enables it.
 custom-protocol = ["tauri/custom-protocol"]
+# Runner-only native integration checks; never enabled by installer builds.
+native-smoke = []

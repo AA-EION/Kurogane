@@ -26,7 +26,7 @@
         "height": 900,
         "minWidth": 960,
         "minHeight": 640,
-        "backgroundColor": "#0b0d10",
+        "backgroundColor": "#eeece7",
         "dragDropEnabled": false
       }
     ],
@@ -43,8 +43,20 @@
       "dmg",
       "appimage"
     ],
-    "publisher": "Kurogane",
-    "copyright": "Copyright © 2026 Kurogane contributors",
+    "publisher": "Issen Software Group",
+    "license": "AGPL-3.0-or-later",
+    "licenseFile": "../LICENSE",
+    "resources": {
+      "../LICENSE": "legal/LICENSE",
+      "../NOTICE": "legal/NOTICE",
+      "../THIRD_PARTY_NOTICES.md": "legal/THIRD_PARTY_NOTICES.md",
+      "../THIRD_PARTY_LICENSES.txt": "legal/THIRD_PARTY_LICENSES.txt",
+      "../docs/LICENSING.md": "legal/LICENSING.md",
+      "../docs/legal/rclone-COPYING": "legal/rclone-COPYING",
+      "../docs/legal/appimage-NOTICES.txt": "legal/appimage-NOTICES.txt",
+      "legal-platform/": "legal/platform/"
+    },
+    "copyright": "Copyright © 2026 Issen Software Group and Kurogane contributors",
     "category": "DeveloperTool",
     "shortDescription": "Map your infrastructure and keep its passwords in one encrypted vault",
     "longDescription": "Kurogane maps every company's machines, services, proxies and domains as an automatic isometric diagram, keeps the accounts for each of them in an encrypted vault, and opens websites, SSH and RDP sessions in one click.",
@@ -78,7 +90,7 @@
       }
     },
     "macOS": {
-      "minimumSystemVersion": "11.0",
+      "minimumSystemVersion": "13.0",
       "signingIdentity": "-",
       "hardenedRuntime": false,
       "dmg": {

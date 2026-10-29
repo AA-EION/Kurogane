@@ -2,12 +2,13 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'codex/**']
   pull_request:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Let expensive platform regression suites finish and populate their caches.
+  cancel-in-progress: false
 
 env:
   CARGO_TERM_COLOR: always
@@ -22,9 +23,20 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: Select Xcode with the Liquid Glass SDK
+        if: runner.os == 'macOS'
+        run: |
+          xcode=$(find /Applications -maxdepth 1 -name 'Xcode_26*.app' | sort -V | tail -1)
+          test -n "$xcode"
+          sudo xcode-select -s "$xcode/Contents/Developer"
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
+      - uses: ilammy/setup-nasm@v1
+        if: runner.os == 'Windows'
+      - name: Use Strawberry Perl
+        if: runner.os == 'Windows'
+        run: echo "OPENSSL_SRC_PERL=C:\Strawberry\perl\bin\perl.exe" >> $env:GITHUB_ENV
       - uses: Swatinem/rust-cache@v2
       # Vendored OpenSSL (for SQLCipher) needs Perl; Windows runners ship Strawberry Perl.
       - run: cargo fmt --all --check
@@ -40,6 +52,8 @@ jobs:
         working-directory: ui
     steps:
       - uses: actions/checkout@v4
+      - name: Verify dependency license inventory
+        run: node ../scripts/license-audit.mjs --check
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -52,7 +66,7 @@ jobs:
 
   desktop:
     name: Desktop shell (${{ matrix.os }})
-    needs: [core, ui]
+    needs: [ui]
     strategy:
       fail-fast: false
       matrix:
@@ -60,7 +74,18 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: Select Xcode with the Liquid Glass SDK
+        if: runner.os == 'macOS'
+        run: |
+          xcode=$(find /Applications -maxdepth 1 -name 'Xcode_26*.app' | sort -V | tail -1)
+          test -n "$xcode"
+          sudo xcode-select -s "$xcode/Contents/Developer"
       - uses: dtolnay/rust-toolchain@stable
+      - uses: ilammy/setup-nasm@v1
+        if: runner.os == 'Windows'
+      - name: Use Strawberry Perl
+        if: runner.os == 'Windows'
+        run: echo "OPENSSL_SRC_PERL=C:\Strawberry\perl\bin\perl.exe" >> $env:GITHUB_ENV
       - uses: Swatinem/rust-cache@v2
       - uses: actions/setup-node@v4
         with:
@@ -77,3 +102,19 @@ jobs:
       - run: npm run build
         working-directory: ui
       - run: cargo build -p kurogane-app --features custom-protocol --release
+        env:
+          MACOSX_DEPLOYMENT_TARGET: "13.0"
+      - name: Native SwiftUI integration smoke
+        if: runner.os == 'macOS'
+        timeout-minutes: 8
+        run: |
+          mkdir -p native-integration
+          KUROGANE_NATIVE_SMOKE_DIR="$PWD/native-integration" cargo run -p kurogane-app --features custom-protocol,native-smoke --release
+        env:
+          MACOSX_DEPLOYMENT_TARGET: "13.0"
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'macOS'
+        with:
+          name: native-bridge-review
+          path: native-integration/*.png
+          if-no-files-found: error

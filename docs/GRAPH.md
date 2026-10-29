@@ -14,6 +14,7 @@ All of it lives in `ui/src/graph/`.
 | `build.ts` | `buildGraph(topo, now)` → `GraphModel { nodes, edges, children, byId, refToNode, routeTrace }`. |
 | `layout.ts` | `layoutGraph(model)` → React Flow nodes with fixed sizes and positions, edge handles, edge-label placement. |
 | `trace.ts` | `litEdges` / `litNodes`: what lights up for a selection or hover. |
+| `filter.ts` | `focusCompany(model, tenantId)`: one company's slice of the graph. |
 | `TopologyView.tsx` | The `<ReactFlow>` wrapper. Props in (`model`, `selected`, `focus`, `inspectorInset`), `onSelect` out. |
 | `nodes/` | `CompanyNode`, `HostNode`, `WorkloadNode`, `InternetNode` (all memoised). |
 | `edges/TopologyEdge.tsx` | Smoothstep path with a semantic stroke, a flow animation and a label pill while lit. |
@@ -59,8 +60,9 @@ No layout engine dependency is used. `elkjs` is EPL-2.0 and would need a reviewe
 - **Focus.** Omnibox picks, sidebar clicks and focus-after-save call `fitView` on the node: companies fit their group, machines fit their card, and leaves zoom to 100 %. Padding includes `inspectorInset` (380 px on the web while the inspector is open, 0 on macOS, where the inspector is a separate pane).
 - **Fit.** The graph fits on first layout and whenever the topology changes, but not on resize. macOS triggers a fit through the `kurogane:fit` window event.
 - **Level of detail.** Node components read the zoom band through a React Flow store selector, so they re-render only when the band changes. Below 60 % only company and machine names show, scaled up so they stay readable, and workloads show only their glyph and a warn/danger dot. From 60 % names and alert badges show. From 95 % everything shows. TLS warnings are visible at every zoom level.
-- **Edge labels** are pills placed along the path at the first spot that covers no node, title band or other label.
-- **Controls.** Zoom in/out, fit, a zoom readout and a minimap toggle. The minimap is hidden by default and coloured by company; its state is remembered per viewer in `localStorage`. A legend explains the edge styles.
+- **Edge labels** appear when the trace comes from a single workload or appliance; selecting a whole company, machine or the Internet lights the edges without burying the map in pills. Each pill is placed along the path at the first spot that covers no node, title band or other label, and slides along the screen edge so it never ends up off screen or under the inspector.
+- **Controls.** Zoom in/out, fit, a zoom readout, a minimap toggle and a legend toggle. The minimap (coloured by company) and the legend (edge styles and the owner stripe) are hidden by default so they never cover nodes; both choices are remembered per viewer in `localStorage`.
+- **Company filter.** The picker at the top left of the map (or *Show only this company on the map* in a company's inspector) narrows the map and the inventory rail to one company: its machines with everything on them, including other companies' services hosted there. Another company appears only where the chosen company depends on it — the machine its service runs on and the proxy that publishes it — drawn with dashed outlines and a "Context · N of M machines" subtitle, and with none of that company's other workloads. The focused company is placed first. Search, the inspector and focus-after-save still see everything; jumping to a record outside the slice shows all companies again. The filter is per session and is not stored in the vault; an image export captures what the map shows.
 - **Accessibility.** Nodes are keyboard-focusable and carry `aria-label`s such as "Machine web-01, 10.0.0.5, Acme Corp". Focus rings are visible, and node text meets 4.5:1 contrast in both themes (`theme.test.ts`).
 - **Performance.** Node and edge types are registered at module scope, every node and edge component is memoised, unchanged node and edge objects keep their identity between renders, and `onlyRenderVisibleElements` is enabled above 300 nodes. Building and laying out 200 machines and 1,000 services is part of the test suite.
 
@@ -82,3 +84,7 @@ Every custom node root carries `data-node="<node id>"`, which the macOS layout h
 - Layout and edge handles are deterministic.
 - 200 machines and 1,000 services lay out quickly and correctly.
 - Omnibox ranking by IP, port, domain and company.
+
+`ui/src/graph/filter.test.ts`, using `__fixtures__/multi-company.json` (five companies, each running one service on the next company's machine): the focused company keeps everything on its machines; other companies appear only as context for the machines and proxies its services use; traces stay intact; the slice lays out inside its parents.
+
+In a development build, `?demo=1` opens the single-company demo vault and `?demo=multi` the multi-company one.

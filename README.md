@@ -40,7 +40,7 @@ Double-clicking a `.kurogane` file opens it in Kurogane.
 4. **Add the reverse proxy** (nginx, Traefik, Caddy, Nginx Proxy Manager, Cloudflare Tunnel…) and its routes: `www.example.com` → service. On Windows/Linux, use *Public domains* in the service form; on macOS, use *Publish a domain* in the service inspector.
 5. **Add accounts** to a company, machine, service or proxy. Passwords, SSH keys, tokens and secure notes are encrypted inside the vault.
 
-Click anything on the map or in the sidebar to open its drawer. From there you can open its website, connect by SSH or RDP, copy or reveal a password, edit it, or delete it. Before anything is deleted, Kurogane tells you what else goes with it.
+Click anything on the map or in the sidebar to open its drawer. The company picker above the map shows a single company: its machines and services, plus another company's machine only where one of its services runs there. From there you can open its website, connect by SSH or RDP, copy or reveal a password, edit it, or delete it. Before anything is deleted, Kurogane tells you what else goes with it.
 
 ### Import and export
 

@@ -208,5 +208,5 @@
 }
 
 /* The Internet keeps a readable label as the camera pulls back. */
-.g-internet-name { font-size: calc(15px * min(var(--lod-scale), 1.7)); white-space: nowrap; }
+.g-internet-name { font-size: calc(15px * min(var(--lod-scale), 1.5)); white-space: nowrap; }
 .g-internet .g-sub { font-size: calc(12px * min(var(--lod-scale), 1.3)); }

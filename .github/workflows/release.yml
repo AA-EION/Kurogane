@@ -1,15 +1,26 @@
-name: Build artifacts (no release)
+name: Build installers
 
 # Builds the installers for all three platforms:
 #   Windows  → Kurogane_<version>_x64-setup.exe   (NSIS, per-user install)
 #   macOS    → Kurogane_<version>_universal.dmg   (drag Kurogane.app to Applications; ad-hoc signed)
 #   Linux    → Kurogane_<version>_amd64.AppImage
 #
-# This workflow uploads installers as workflow artifacts only.
-# Release creation and publication are intentionally absent.
+# By default the installers are workflow artifacts only. With `prerelease`
+# checked, a final job publishes them as a GitHub *pre*-release for testing,
+# together with the exact project, dependency and platform source archives.
+# Stable releases are never created by this workflow.
 
 on:
   workflow_dispatch:
+    inputs:
+      prerelease:
+        description: Publish the installers as a GitHub pre-release for testing
+        type: boolean
+        default: false
+      tag:
+        description: Pre-release tag (default v<version>-pre.<run number>)
+        type: string
+        required: false
 
 concurrency:
   group: installers-${{ github.ref }}
@@ -177,3 +188,45 @@ jobs:
           name: kurogane-${{ runner.os }}
           path: ${{ matrix.artifacts }}
           if-no-files-found: error
+
+  prerelease:
+    name: Publish pre-release
+    if: inputs.prerelease
+    needs: [dependency-source, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Assemble release files
+        run: |
+          mkdir release
+          cp dist/kurogane-Windows/*.exe dist/kurogane-macOS/*.dmg dist/kurogane-Linux/*.AppImage release/
+          cp dist/kurogane-dependency-source/kurogane-dependency-source.tar.gz release/
+          cp dist/kurogane-source-Linux/kurogane-source.tar.gz release/kurogane-source.tar.gz
+          tar -czf release/kurogane-linux-platform-source.tar.gz -C dist/kurogane-source-Linux platform-license-manifest.json platform-source-packages.txt platform-source
+          (cd release && sha256sum * > SHA256SUMS.txt)
+          ls -la release
+      - name: Create the pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_INPUT: ${{ inputs.tag }}
+        run: |
+          version=$(node -p 'require("./src-tauri/tauri.conf.json").version')
+          tag="${TAG_INPUT:-v$version-pre.$GITHUB_RUN_NUMBER}"
+          cat > notes.md <<NOTES
+          Test build of Kurogane $version from \`${GITHUB_SHA::7}\`. **Pre-release: not for production vaults.**
+
+          | Platform | File |
+          |---|---|
+          | Windows 10/11 (x64) | \`Kurogane_${version}_x64-setup.exe\`. Unsigned: SmartScreen may ask you to choose *More info → Run anyway*. |
+          | macOS 13+ (Apple silicon and Intel) | \`Kurogane_${version}_universal.dmg\`. Ad-hoc signed: after dragging to Applications, right-click the app and choose *Open* the first time. |
+          | Linux (x86_64) | \`Kurogane_${version}_amd64.AppImage\`. Run \`chmod +x\` on it, then start it. |
+
+          Checksums are in \`SHA256SUMS.txt\`. The project, dependency and Linux platform source archives are the corresponding source for these binaries (AGPL-3.0-or-later; third-party licenses retained).
+          NOTES
+          gh release create "$tag" release/* --prerelease --target "$GITHUB_SHA" --title "Kurogane $version (pre-release ${tag#v})" --notes-file notes.md
+

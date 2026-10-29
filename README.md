@@ -84,7 +84,7 @@ cd ui && npm test               # UI
 
 `cd ui && npm run dev` serves the interface in a browser at http://127.0.0.1:1420 against an in-memory backend, which is handy for UI work. That backend exists only in development builds.
 
-[`.github/workflows/release.yml`](.github/workflows/release.yml) builds Windows, universal macOS and Linux installers as GitHub Actions artifacts when manually dispatched. It has no release-creation step. CI verifies source changes separately.
+[`.github/workflows/release.yml`](.github/workflows/release.yml) builds Windows, universal macOS and Linux installers as GitHub Actions artifacts when manually dispatched. Checking *prerelease* when you start it also publishes them as a GitHub pre-release for testing, with the matching source archives. It never creates a stable release. CI verifies source changes separately.
 
 Appearance defaults to Light. Settings → General offers Light, Dark and System, saved on this computer. The material language follows Boundless and EION Studios, with readable text in both appearances. The [macOS interface](docs/MACOS.md) uses SwiftUI for navigation, forms, inspectors, vault screens and settings. Its graph pane embeds the same React Flow topology view, including hosted services, VM relationships and proxy-route traces. Native navigation uses Liquid Glass on macOS 26 and newer. Native sheets fit their parent window, scroll their fields and retain visible action rows. macOS source builds require Xcode 26+.
 

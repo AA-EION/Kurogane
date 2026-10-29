@@ -96,7 +96,9 @@ not a waiver of the distributor's duty to ensure source remains available.
 Before distribution, retain exact binary/source matching, include upstream notices,
 resolve unmapped platform files and asset-rights questions, and provide the source
 using an AGPL section 6 method. If distributing a modified network service, implement
-the source offer required by section 13. No release is published by this workflow.
+the source offer required by section 13. The workflow publishes nothing by default; its
+opt-in `prerelease` input creates a GitHub pre-release that carries the installers next
+to the exact project, dependency and Linux platform source archives they were built from.
 Earlier UI-preview artifacts predate this license/notice packaging and should be
 replaced by the new artifacts for distribution.
 

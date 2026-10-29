@@ -5,8 +5,9 @@ name: Platform parity
 #    Chromium and in the engine behind each platform's desktop webview
 #    (WebKit for WKWebView/WebKitGTK, Microsoft Edge for WebView2).
 #  - desktop: the real app (Rust core, encrypted demo vault, platform webview)
-#    unlocked and driven through one scenario with tauri-driver on Linux
-#    (WebKitWebDriver, WebKitGTK) and Windows (Edge WebDriver, WebView2).
+#    unlocked and driven through one WebDriver scenario on Linux (tauri-driver
+#    and WebKitWebDriver, WebKitGTK) and Windows (Edge WebDriver attached to
+#    a test build's WebView2 DevTools port).
 #  - macos-native: the SwiftUI shell around the same graph in WKWebView.
 #  - gallery: every capture side by side in one artifact.
 
@@ -105,6 +106,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev libxdo-dev webkit2gtk-driver xvfb
+          cargo install tauri-driver --locked
       - name: Edge WebDriver matching the WebView2 runtime
         if: runner.os == 'Windows'
         shell: pwsh
@@ -120,13 +122,17 @@ jobs:
           if (-not $ok) { throw "No Edge WebDriver for $ver" }
           Expand-Archive edgedriver.zip -DestinationPath edgedriver
           echo "KG_NATIVE_DRIVER=$pwd\edgedriver\msedgedriver.exe" >> $env:GITHUB_ENV
-      - run: cargo install tauri-driver --locked
       - run: npm ci
         working-directory: ui
       - run: npm run build
         working-directory: ui
       - name: Build the desktop app and the demo-vault tool
         run: |
+          if [ "$RUNNER_OS" = Windows ]; then
+            # Test build only: WebView2 listens on a DevTools port so Edge WebDriver can attach.
+            # Same window config plus this flag; the installer workflow never sets it.
+            export TAURI_CONFIG=$(node -e 'const c = require("./src-tauri/tauri.conf.json"); console.log(JSON.stringify({ app: { windows: c.app.windows.map((w) => ({ ...w, additionalBrowserArgs: "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --remote-debugging-port=9222" })) } }))')
+          fi
           cargo build -p kurogane-app --features custom-protocol --release
           cargo build -p kurogane-cli --features demo-seed --release
       - name: Create the encrypted demo vault
@@ -157,7 +163,7 @@ jobs:
         run: |
           cmd=(node ui/e2e/desktop.mjs --app "target/release/${{ matrix.bin }}" --vault "$RUNNER_TEMP/demo.kurogane" \
                --password-env KG_PARITY_PASSWORD --topology "$RUNNER_TEMP/topology.json" --out desktop-screenshots/${{ matrix.label }})
-          if [ -n "${KG_NATIVE_DRIVER:-}" ]; then cmd+=(--native-driver "$KG_NATIVE_DRIVER"); fi
+          if [ "$RUNNER_OS" = Windows ]; then cmd+=(--native-driver "$KG_NATIVE_DRIVER" --attach 9222); fi
           if [ "$RUNNER_OS" = Linux ]; then xvfb-run -a -s "-screen 0 1600x1000x24" "${cmd[@]}"; else "${cmd[@]}"; fi
       - uses: actions/upload-artifact@v4
         if: always()

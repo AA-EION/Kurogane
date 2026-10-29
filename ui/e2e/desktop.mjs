@@ -2,10 +2,13 @@
 // through the same scenario on Linux and Windows, and saves screenshots.
 //
 //   node e2e/desktop.mjs --app <binary> --vault <file> --password-env <VAR>
-//                        --topology <unlock --json output> --out <dir> [--native-driver <path>]
+//                        --topology <unlock --json output> --out <dir>
+//                        [--native-driver <msedgedriver> --attach <devtools port>]
 //
-// Both platforms use tauri-driver: WebKitWebDriver on Linux (WebKitGTK) and
-// Microsoft Edge WebDriver on Windows (WebView2, pass --native-driver).
+// Linux: tauri-driver launches the app under WebKitWebDriver (WebKitGTK).
+// Windows: the script launches a test build whose WebView2 listens on a
+// DevTools port (set at compile time through TAURI_CONFIG, never in
+// installers) and attaches Microsoft Edge WebDriver to it.
 // macOS runs the equivalent scenario in the SwiftUI harness (src-tauri/tests/NativePreview.swift).
 
 import { spawn } from 'node:child_process';
@@ -26,8 +29,13 @@ const children = [];
 // ------------------------------------------------------------------ drivers
 
 async function webdriver() {
-  const driver = spawn('tauri-driver', args['native-driver'] ? ['--native-driver', path.resolve(args['native-driver'])] : [], { stdio: 'inherit' });
-  children.push(driver);
+  const attach = args.attach;
+  if (attach) {
+    children.push(spawn(path.resolve(args.app), [path.resolve(args.vault)], { stdio: 'inherit' }));
+    children.push(spawn(path.resolve(args['native-driver']), ['--port=4444'], { stdio: 'inherit' }));
+  } else {
+    children.push(spawn('tauri-driver', [], { stdio: 'inherit' }));
+  }
   const base = 'http://127.0.0.1:4444';
   const call = async (method, url, body) => {
     const res = await fetch(base + url, { method, headers: { 'content-type': 'application/json' }, body: body && JSON.stringify(body) });
@@ -38,9 +46,14 @@ async function webdriver() {
   for (let i = 0; ; i++) {
     try { await call('GET', '/status'); break; } catch (e) { if (i > 60) throw e; await sleep(500); }
   }
-  const session = await call('POST', '/session', {
-    capabilities: { alwaysMatch: { browserName: 'wry', 'tauri:options': { application: path.resolve(args.app), args: [path.resolve(args.vault)] } } },
-  });
+  const capabilities = attach
+    ? { browserName: 'webview2', 'ms:edgeOptions': { debuggerAddress: `127.0.0.1:${attach}` } }
+    : { browserName: 'wry', 'tauri:options': { application: path.resolve(args.app), args: [path.resolve(args.vault)] } };
+  let session;
+  for (let i = 0; ; i++) {
+    // An attached app needs a moment to open its DevTools port.
+    try { session = await call('POST', '/session', { capabilities: { alwaysMatch: capabilities } }); break; } catch (e) { if (!attach || i > 30) throw e; await sleep(1000); }
+  }
   const id = session.sessionId;
   await call('POST', `/session/${id}/window/rect`, { width: 1440, height: 900 }).catch((e) => log('window resize skipped:', e.message));
   return {

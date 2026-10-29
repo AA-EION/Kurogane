@@ -21,7 +21,8 @@ permissions:
 
 concurrency:
   group: parity-${{ github.ref }}
-  cancel-in-progress: true
+  # Like ci.yml: let the expensive desktop builds finish and populate their caches.
+  cancel-in-progress: false
 
 env:
   CARGO_TERM_COLOR: always

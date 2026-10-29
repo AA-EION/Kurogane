@@ -5,7 +5,7 @@ Kurogane ships the same React interface on three platforms, each inside a differ
 | Job | Runners | What runs | Artifact |
 |---|---|---|---|
 | `browser` | ubuntu-24.04, macos-latest, windows-latest | `ui/e2e/topology.spec.ts` (Playwright) against the development backend, in Chromium and in each platform's webview engine: WebKit on Linux and macOS, Microsoft Edge on Windows | `e2e-<os>` (screenshots, HTML report, failure traces) |
-| `desktop` | ubuntu-22.04, windows-latest | The release desktop app opens a real encrypted demo vault (`kurogane demo-vault`), is unlocked with its master password and is driven by `ui/e2e/desktop.mjs`: tauri-driver and WebKitWebDriver on Linux, WebView2's DevTools port on Windows | `desktop-<os>` (screenshots, `results.json`) |
+| `desktop` | ubuntu-22.04, windows-latest | The release desktop app opens a real encrypted demo vault (`kurogane demo-vault`), is unlocked with its master password and is driven by `ui/e2e/desktop.mjs` through tauri-driver: WebKitWebDriver on Linux, Microsoft Edge WebDriver (matched to the WebView2 runtime) on Windows | `desktop-<os>` (screenshots, `results.json`) |
 | `macos-native` | macos-latest | [`native.yml`](../.github/workflows/native.yml): the SwiftUI shell with the shared graph in WKWebView, for both the single- and multi-company fixtures, light, dark and compact, plus native editors and sheets | `native-ui-review` |
 | `gallery` | ubuntu-latest | `scripts/parity-gallery.mjs` puts every capture side by side: one row per scenario, one column per platform and engine | `parity-gallery` (open `index.html`) |
 
@@ -54,7 +54,7 @@ cargo build -p kurogane-cli --features demo-seed --release
 export KUROGANE_HOME=/tmp/kg KUROGANE_PASSWORD=parity-demo-password KG_PARITY_PASSWORD=parity-demo-password
 target/release/kurogane demo-vault /tmp/demo.kurogane
 target/release/kurogane unlock /tmp/demo.kurogane --json > /tmp/topology.json
-xvfb-run -a node ui/e2e/desktop.mjs --driver webdriver --app target/release/kurogane-desktop --vault /tmp/demo.kurogane \
+xvfb-run -a node ui/e2e/desktop.mjs --app target/release/kurogane-desktop --vault /tmp/demo.kurogane \
   --password-env KG_PARITY_PASSWORD --topology /tmp/topology.json --out desktop-screenshots/linux
 ```
 

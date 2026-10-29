@@ -5,8 +5,8 @@ name: Platform parity
 #    Chromium and in the engine behind each platform's desktop webview
 #    (WebKit for WKWebView/WebKitGTK, Microsoft Edge for WebView2).
 #  - desktop: the real app (Rust core, encrypted demo vault, platform webview)
-#    unlocked and driven through one scenario on Linux (WebKitGTK via
-#    tauri-driver) and Windows (WebView2 via its DevTools port).
+#    unlocked and driven through one scenario with tauri-driver on Linux
+#    (WebKitWebDriver, WebKitGTK) and Windows (Edge WebDriver, WebView2).
 #  - macos-native: the SwiftUI shell around the same graph in WKWebView.
 #  - gallery: every capture side by side in one artifact.
 
@@ -77,8 +77,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-22.04, label: linux, driver: webdriver, bin: kurogane-desktop }
-          - { os: windows-latest, label: windows, driver: cdp, bin: kurogane-desktop.exe }
+          - { os: ubuntu-22.04, label: linux, bin: kurogane-desktop }
+          - { os: windows-latest, label: windows, bin: kurogane-desktop.exe }
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -105,7 +105,22 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev libxdo-dev webkit2gtk-driver xvfb
-          cargo install tauri-driver --locked
+      - name: Edge WebDriver matching the WebView2 runtime
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $keys = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{56EB18F8-B008-4CBD-B6D2-8C97FE7E9062}'
+          $ver = ($keys | ForEach-Object { (Get-ItemProperty $_ -ErrorAction SilentlyContinue).pv } | Where-Object { $_ } | Select-Object -First 1)
+          if (-not $ver) { throw 'No WebView2 runtime version found' }
+          Write-Host "WebView2 runtime $ver"
+          $ok = $false
+          foreach ($u in "https://msedgedriver.microsoft.com/$ver/edgedriver_win64.zip", "https://msedgedriver.azureedge.net/$ver/edgedriver_win64.zip") {
+            try { Invoke-WebRequest $u -OutFile edgedriver.zip; $ok = $true; break } catch { Write-Host "Could not download $u" }
+          }
+          if (-not $ok) { throw "No Edge WebDriver for $ver" }
+          Expand-Archive edgedriver.zip -DestinationPath edgedriver
+          echo "KG_NATIVE_DRIVER=$pwd\edgedriver\msedgedriver.exe" >> $env:GITHUB_ENV
+      - run: cargo install tauri-driver --locked
       - run: npm ci
         working-directory: ui
       - run: npm run build
@@ -123,8 +138,9 @@ jobs:
           target/release/kurogane unlock "$RUNNER_TEMP/demo.kurogane" --json > "$RUNNER_TEMP/topology.json"
       - name: Drive the real app
         run: |
-          cmd=(node ui/e2e/desktop.mjs --driver ${{ matrix.driver }} --app "target/release/${{ matrix.bin }}" --vault "$RUNNER_TEMP/demo.kurogane" \
+          cmd=(node ui/e2e/desktop.mjs --app "target/release/${{ matrix.bin }}" --vault "$RUNNER_TEMP/demo.kurogane" \
                --password-env KG_PARITY_PASSWORD --topology "$RUNNER_TEMP/topology.json" --out desktop-screenshots/${{ matrix.label }})
+          if [ -n "${KG_NATIVE_DRIVER:-}" ]; then cmd+=(--native-driver "$KG_NATIVE_DRIVER"); fi
           if [ "$RUNNER_OS" = Linux ]; then xvfb-run -a -s "-screen 0 1600x1000x24" "${cmd[@]}"; else "${cmd[@]}"; fi
       - uses: actions/upload-artifact@v4
         if: always()

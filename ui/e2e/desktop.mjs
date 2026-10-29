@@ -1,11 +1,11 @@
 // Drives the real desktop app (Rust core, encrypted vault, platform webview)
 // through the same scenario on Linux and Windows, and saves screenshots.
 //
-//   node e2e/desktop.mjs --driver webdriver|cdp --app <binary> --vault <file>
-//                        --password-env <VAR> --topology <unlock --json output> --out <dir>
+//   node e2e/desktop.mjs --app <binary> --vault <file> --password-env <VAR>
+//                        --topology <unlock --json output> --out <dir> [--native-driver <path>]
 //
-// webdriver: tauri-driver + WebKitWebDriver (Linux, WebKitGTK).
-// cdp:       WebView2's DevTools port, driven by Playwright (Windows).
+// Both platforms use tauri-driver: WebKitWebDriver on Linux (WebKitGTK) and
+// Microsoft Edge WebDriver on Windows (WebView2, pass --native-driver).
 // macOS runs the equivalent scenario in the SwiftUI harness (src-tauri/tests/NativePreview.swift).
 
 import { spawn } from 'node:child_process';
@@ -13,7 +13,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 const args = Object.fromEntries(process.argv.slice(2).reduce((pairs, v, i, all) => (v.startsWith('--') ? [...pairs, [v.slice(2), all[i + 1]]] : pairs), []));
-for (const key of ['driver', 'app', 'vault', 'password-env', 'topology', 'out']) if (!args[key]) throw new Error(`missing --${key}`);
+for (const key of ['app', 'vault', 'password-env', 'topology', 'out']) if (!args[key]) throw new Error(`missing --${key}`);
 const password = process.env[args['password-env']];
 if (!password) throw new Error(`${args['password-env']} is not set`);
 const topo = JSON.parse(readFileSync(args.topology, 'utf8'));
@@ -26,7 +26,7 @@ const children = [];
 // ------------------------------------------------------------------ drivers
 
 async function webdriver() {
-  const driver = spawn('tauri-driver', [], { stdio: 'inherit' });
+  const driver = spawn('tauri-driver', args['native-driver'] ? ['--native-driver', path.resolve(args['native-driver'])] : [], { stdio: 'inherit' });
   children.push(driver);
   const base = 'http://127.0.0.1:4444';
   const call = async (method, url, body) => {
@@ -47,30 +47,6 @@ async function webdriver() {
     exec: (fn, ...a) => call('POST', `/session/${id}/execute/sync`, { script: `return (${fn})(...arguments)`, args: a }),
     screenshot: async (file) => writeFileSync(file, Buffer.from(await call('GET', `/session/${id}/screenshot`), 'base64')),
     close: () => call('DELETE', `/session/${id}`).catch(() => undefined),
-  };
-}
-
-async function cdp() {
-  const { chromium } = await import('playwright');
-  const app = spawn(path.resolve(args.app), [path.resolve(args.vault)], {
-    stdio: 'inherit',
-    env: { ...process.env, WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: '--remote-debugging-port=9222' },
-  });
-  children.push(app);
-  let browser;
-  for (let i = 0; ; i++) {
-    try { browser = await chromium.connectOverCDP('http://127.0.0.1:9222'); break; } catch (e) { if (i > 90) throw e; await sleep(1000); }
-  }
-  let page;
-  for (let i = 0; !page; i++) {
-    page = browser.contexts().flatMap((c) => c.pages()).find((p) => !p.url().startsWith('devtools'));
-    if (!page) { if (i > 60) throw new Error('no webview page'); await sleep(500); }
-  }
-  await page.setViewportSize({ width: 1440, height: 900 });
-  return {
-    exec: (fn, ...a) => page.evaluate(({ src, a }) => (0, eval)(`(${src})`)(...a), { src: String(fn), a }),
-    screenshot: (file) => page.screenshot({ path: file }),
-    close: () => browser.close().catch(() => undefined),
   };
 }
 
@@ -116,7 +92,7 @@ async function shot(d, name) {
   await d.screenshot(path.join(args.out, `${name}.png`));
 }
 
-const d = args.driver === 'webdriver' ? await webdriver() : await cdp();
+const d = await webdriver();
 try {
   await step('opens the vault at the lock screen', () => until(d, 'lock screen', () => !!document.querySelector('input[type=password]')));
   await d.screenshot(path.join(args.out, '00-lock-screen.png')).catch(() => undefined);

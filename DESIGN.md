@@ -21,11 +21,11 @@ colors:
   surface-bottom: "#e8e5de"
   sheen: "rgba(255,255,255,.9)"
   shadow-ink: "rgba(38,35,28,.15)"
-  map-outline: "#eeece7"
-  map-grid: "rgba(60,59,52,.09)"
-  steel: "#b4b2ac"
-  slab-text: "#20211f"
-  slab-muted: "#3c3d38"
+  node-group: "#f3f1ec"
+  node-host: "#fdfcf9"
+  node-chip: "#f6f4f0"
+  graph-dot: "rgba(60,59,52,.2)"
+  graph-mask: "rgba(238,236,231,.6)"
   route: "#8e5b32"
   ingress: "#767b79"
   primary-top: "#4c5456"
@@ -50,11 +50,11 @@ colors:
   dark-surface-bottom: "#222224"
   dark-sheen: "rgba(255,255,255,.09)"
   dark-shadow-ink: "rgba(0,0,0,.5)"
-  dark-map-outline: "#101011"
-  dark-map-grid: "rgba(255,255,255,.05)"
-  dark-steel: "#414143"
-  dark-slab-text: "#eeede9"
-  dark-slab-muted: "#d0cec7"
+  dark-node-group: "#19191a"
+  dark-node-host: "#2a2a2c"
+  dark-node-chip: "#202022"
+  dark-graph-dot: "rgba(255,255,255,.1)"
+  dark-graph-mask: "rgba(16,16,17,.6)"
   dark-route: "#d5a376"
   dark-ingress: "#a5aaa7"
   dark-primary-top: "#e9e7e1"
@@ -165,7 +165,7 @@ Kurogane uses natural, semi-real skeuomorphism: pale warm surfaces, legible ink,
 
 Light is the initial appearance. Dark uses charcoal plates and pale ink while preserving the same physical hierarchy. Typography remains compact and familiar; monochrome chrome gives topology and status room to carry meaning. The existing application logos remain intact, and the visible material treatment is built with CSS, SVG and native drawing rather than new raster textures.
 
-The macOS workspace is hosted by `NSHostingView`: SwiftUI owns navigation, inventory, inspectors, forms, settings and vault workflows. Its graph pane embeds the original React/SVG `IsoCanvas` in the existing `WKWebView`, preserving meaningful company grounds, machine slabs, hosted services and route traces. Native system surfaces, grouped forms, SF Symbols and platform controls express the warm, tactile direction. Each native field retains a separate label and control row; sheets keep their action footers visible. Navigation uses Liquid Glass on macOS 26 and newer and ultra-thin material on macOS 13–25. Windows and Linux use the complete React workspace.
+The macOS workspace is hosted by `NSHostingView`: SwiftUI owns navigation, inventory, inspectors, forms, settings and vault workflows. Its graph pane embeds the shared React Flow `TopologyView` in the existing `WKWebView`: company panels, machine cards, hosted service chips and route traces. Native system surfaces, grouped forms, SF Symbols and platform controls express the warm, tactile direction. Each native field retains a separate label and control row; sheets keep their action footers visible. Navigation uses Liquid Glass on macOS 26 and newer and ultra-thin material on macOS 13–25. Windows and Linux use the complete React workspace.
 
 **Key Characteristics:**
 
@@ -198,11 +198,11 @@ Warm mineral neutrals dominate the chrome; cool ink actions, green health, amber
 - **Mineral edge** (`line`, `line-2`): separators and fine control contours.
 - **Warm black ink** (`text`, `text-2`, `text-3`): primary content, secondary content and quiet metadata. Quiet text still needs the correct theme token; avoid low-opacity text over the map.
 - **Satin face** (`surface-top`, `surface-bottom`, `sheen`, `shadow-ink`): the illuminated top edge and structural shade of the material.
-- **Map support** (`steel`, `map-grid`, `map-outline`): physical slabs, low-contrast ground grid and readable SVG label halos.
+- **Graph surfaces** (`node-group`, `node-host`, `node-chip`, `graph-dot`, `graph-mask`): the company panel base (tinted 7% with the company color), raised machine cards, recessed workload chips, the dotted background and the minimap mask.
 
-Native views use `windowBackgroundColor` and `controlBackgroundColor` for platform surfaces, system accent selection, and explicit `NativePalette` roles for readable text, secondary text, metadata, health, caution, danger, links and primary actions. Primary fill maps to `ember` and its dark counterpart; primary ink maps to `primary-ink`. Shared graph labels use semantic `text`, `slab-text` and `slab-muted` rather than faded ink or company color. Machine steel and its text colors switch together in both appearances.
+Native views use `windowBackgroundColor` and `controlBackgroundColor` for platform surfaces, system accent selection, and explicit `NativePalette` roles for readable text, secondary text, metadata, health, caution, danger, links and primary actions. Primary fill maps to `ember` and its dark counterpart; primary ink maps to `primary-ink`. Shared graph labels use semantic `text`, `text-2` and `text-3` rather than faded ink or company color. Graph surfaces and their text colors switch together in both appearances.
 
-The shared palette contrast tests require at least (4.5:1) for body, secondary, quiet and semantic status text on ground, plate and satin surfaces, for primary-action ink against both gradient endpoints, and for machine labels on their rendered steel slab. Keep these pairings intact; native readability also requires visual inspection of inactive-window controls.
+The shared palette contrast tests require at least (4.5:1) for body, secondary, quiet and semantic status text on ground, plate and satin surfaces, for primary-action ink against both gradient endpoints, and for graph text and status colors on machine cards, workload chips and company panels tinted with every palette company color. Keep these pairings intact; native readability also requires visual inspection of inactive-window controls.
 
 **The Semantic Color Rule.** Use color to identify topology, status or focus; keep ordinary application surfaces in the warm neutral material family.
 
@@ -214,9 +214,9 @@ The shared palette contrast tests require at least (4.5:1) for body, secondary, 
 
 **Label/mono font:** the platform monospace stack for addresses, ports, commands, secrets and numerical readouts.
 
-Native macOS views use SwiftUI system font roles such as headline, title2, body, caption and caption2, with monospaced technical values and monospaced digits for timing. The embedded graph uses the shared SVG label hierarchy. Native settings and editors retain system form typography rather than applying the web body scale verbatim.
+Native macOS views use SwiftUI system font roles such as headline, title2, body, caption and caption2, with monospaced technical values and monospaced digits for timing. The embedded graph uses the shared web label hierarchy. Native settings and editors retain system form typography rather than applying the web body scale verbatim.
 
-The hierarchy relies on weight and spacing within a compact UI scale. Inspector record titles use the title token; dialogs use a slightly smaller heading (17px), cards use (14px), and form labels use the label token. Body uses the frontmatter's size and line-height. Map company labels are deliberately larger SVG world-space labels (58px), with machine labels (18px) and node labels (13–14px); these values scale with the map camera and are not a general display-text scale.
+The hierarchy relies on weight and spacing within a compact UI scale. Inspector record titles use the title token; dialogs use a slightly smaller heading (17px), cards use (14px), and form labels use the label token. Body uses the frontmatter's size and line-height. Graph company names (17px), machine names (14px) and workload names (13px) live in graph space and scale with the camera; below 60% zoom, company and machine names grow (up to 2.6×) so the overview stays readable. No graph text is smaller than 11px at 100%. These are not a general display-text scale.
 
 Metadata ranges from (10–12.5px), while most entity names stay in the body scale. Section headings in the inspector are sentence case (12px). Navigation counts use tabular numerals. The brand retains its compact bold, tracked wordmark; do not apply wordmark tracking to content.
 
@@ -232,15 +232,15 @@ At (1180px), the toolbar tightens and hides maker text and the sync label. At (1
 
 The native macOS window has a minimum content size (960px by 600px), a top navigation row and an `HSplitView` below. Its root fills the actual available content rectangle without imposing another fixed minimum frame. Its inventory rail ranges from (185–240px), with an ideal width (220px); the selected inspector ranges from (240–320px), ideally (285px). The center map/inventory pane has a minimum width (360px), with view and export controls above and operational status below. The native inspector is a split-pane column rather than a floating web drawer.
 
-The shared isometric graph fits the populated scene on initial layout, supports pointer pan and zoom, and moves its camera to selected records. The macOS graph has no web drawer overlay, so camera targeting uses the full graph pane. Hosts, VMs, hosted services and proxy routes retain the original topology layout rather than a generic card arrangement. Native sheets bound their requested width and height to the parent content rectangle, keeping margins (48px horizontally, 64px vertically). Their forms scroll while action rows remain outside the scroll content. Create-vault and cloud views use explicit labels and the same bounded-sheet treatment. Settings retains General, Security, Sync, Data and About navigation. Review real attached sheets in a compact window (960px by 640px), including footer controls and the populated graph.
+The shared graph fits the populated topology on initial layout, supports pointer pan and zoom, and moves its camera to selected records; on the web it keeps the selection clear of the 380px inspector. The macOS graph has no web drawer overlay, so camera targeting uses the full graph pane. The layout is derived from the database (companies → machines → workloads) rather than arranged by hand. Native sheets bound their requested width and height to the parent content rectangle, keeping margins (48px horizontally, 64px vertically). Their forms scroll while action rows remain outside the scroll content. Create-vault and cloud views use explicit labels and the same bounded-sheet treatment. Settings retains General, Security, Sync, Data and About navigation. Review real attached sheets in a compact window (960px by 640px), including footer controls and the populated graph.
 
 Native editor fields explicitly wrap each field in its own vertical row, with horizontal label/control alignment where appropriate. This prevents grouped forms from flattening mixed pickers and text controls into merged labels. Picker labels remain visually distinct and keep accessible labels even when their automatic platform label is hidden.
 
 ## Elevation & Depth
 
-Depth is structural: top-lit vertical gradients and fine borders define plates; a white inner rim and a small offset shadow lift actions; inset shadows recess fields and selected rows. Floating inspectors, menus, legends, dialogs and toasts use the common ambient shadow. The map's isometric surfaces provide physical scale, while its background uses a restrained radial gradient. The React inspector is opaque and has no backdrop blur. Dialog scrims blur the covered workspace (2px).
+Depth is structural: top-lit vertical gradients and fine borders define plates; a white inner rim and a small offset shadow lift actions; inset shadows recess fields and selected rows. Floating inspectors, menus, legends, dialogs and toasts use the common ambient shadow. The graph's raised machine cards and recessed workload chips provide physical scale over a quiet dotted background. The React inspector is opaque and has no backdrop blur. Dialog scrims blur the covered workspace (2px).
 
-The graph uses the same isometric material drawing on macOS, Windows and Linux: theme-aware machine steel, physical block faces and readable label ink. Native gate panels use a control-background plate, white rim and soft offset shadow. Liquid Glass belongs to the native navigation group, while sheets and detailed content remain system surfaces. Native primary actions use explicit contrasting fill and ink so inactive-window appearance does not wash out their text.
+The graph uses the same material drawing on macOS, Windows and Linux: tinted company panels, raised machine cards, recessed workload chips and readable label ink. Native gate panels use a control-background plate, white rim and soft offset shadow. Liquid Glass belongs to the native navigation group, while sheets and detailed content remain system surfaces. Native primary actions use explicit contrasting fill and ink so inactive-window appearance does not wash out their text.
 
 ### Shadow Vocabulary
 
@@ -255,7 +255,7 @@ Native controls retain system pressed and focused states; do not reproduce the w
 
 ## Shapes
 
-Corners are gently curved rather than pill-shaped by default. Fields, tree rows, buttons, cards, inspectors and dialogs use the respective radii in the frontmatter. Full pills are reserved for compact badges, chips and the lock control. One-pixel contours establish material boundaries; pressed states do not depend on a heavier border. Company markers are small rotated squares, and machine and service bodies retain isometric slab or block geometry.
+Corners are gently curved rather than pill-shaped by default. Fields, tree rows, buttons, cards, inspectors and dialogs use the respective radii in the frontmatter. Full pills are reserved for compact badges, chips and the lock control. One-pixel contours establish material boundaries; pressed states do not depend on a heavier border. Company markers are small rotated squares. Company panels use the dialog radius (16px), machine cards the card radius (12px), workload chips the control radius (10px), and the Internet is a pill.
 
 ## Components
 
@@ -291,19 +291,19 @@ Toggles use a compact pill track (34px by 20px) and white thumb (16px). Checked 
 
 ### Physical map and inspector
 
-In the web map, companies form colored grounds; machines are slabs and services occupy their hosts as physical blocks. SVG label halos follow the current map ground color to keep technical text readable. Hover brightens blocks, dimmed results reduce opacity, and route, ingress and parent connections carry distinct semantic treatments. Selection updates the familiar record inspector and camera; launch and credential actions continue through existing Rust-backed workflows.
+In the graph, companies are softly tinted panels with a company-color header strip; machines are raised cards and services are compact chips with a glyph and accent stripe inside them. Selecting or hovering lights the full Internet → proxy → service trace, animates it and labels its routes, while everything else dims. Route, ingress and parent connections carry distinct semantic treatments. Selection updates the familiar record inspector and camera; launch and credential actions continue through existing Rust-backed workflows.
 
-On macOS, `NativeGraphView` hosts the existing `WKWebView` and mounts `NativeGraph`, which reuses `IsoCanvas`, layout, SVG/PNG export and FossFLOW export. The controller sends only secret-free topology with credentials excluded, appearance, selection and Fit state. Graph selections return to SwiftUI and are validated against the current native inventory before updating the inspector. The graph does not own forms, settings, credentials or vault commands. Inventory also remains available as a native list, including networks and accounts.
+On macOS, `NativeGraphView` hosts the existing `WKWebView` and mounts `NativeGraph`, which reuses `TopologyView`, the graph model and layout, and the PNG/SVG export. The controller sends only secret-free topology with credentials excluded, appearance, selection and Fit state. Graph selections return to SwiftUI and are validated against the current native inventory before updating the inspector. The graph does not own forms, settings, credentials or vault commands. Inventory also remains available as a native list, including networks and accounts.
 
 Drawers enter with a short slide (220ms, `cubic-bezier(.2,.9,.3,1)`); flow lines, spinners and small state transitions provide operational feedback. `prefers-reduced-motion` shortens CSS animation and transition duration and the map camera respects reduced motion. Do not carry EION's animated theme-token crossing into this system without implementing and verifying it.
 
 ### Native macOS workspace and workflows
 
-SwiftUI supplies the surrounding macOS interface: startup and locked-vault screens, vault creation and authenticator enrollment, navigation and inventory, record inspectors, entity editors, dependency-aware deletion, settings, security, cloud linking, sync, import and export. The topology pane retains the original React/SVG renderer. The top navigation row provides title/maker, Search, Fit, New, Sync, Settings, Lock, remaining session time and a memory-lock warning when needed. Its control group uses native Liquid Glass on macOS 26 and newer, with ultra-thin material on macOS 13–25. System fonts, SF Symbols, native help text and disabled states follow the platform.
+SwiftUI supplies the surrounding macOS interface: startup and locked-vault screens, vault creation and authenticator enrollment, navigation and inventory, record inspectors, entity editors, dependency-aware deletion, settings, security, cloud linking, sync, import and export. The topology pane embeds the shared React Flow view. The top navigation row provides title/maker, Search, Fit, New, Sync, Settings, Lock, remaining session time and a memory-lock warning when needed. Its control group uses native Liquid Glass on macOS 26 and newer, with ultra-thin material on macOS 13–25. System fonts, SF Symbols, native help text and disabled states follow the platform.
 
-Native editors cover companies, machines, services, reverse proxies, networks and accounts, including their nested technical fields. Secret editors expose Keep, Replace and Remove choices; account inspectors provide explicit reveal/hide and timed clipboard actions. Security includes password changes, key derivation and authenticator setup or removal. Sync exposes destination management, automatic sync, progress and conflict-resolution confirmation. Import previews validation results before Apply; export selects Excel or JSON, with master-password confirmation when readable secrets are included. Native map export offers PNG, SVG and FossFLOW JSON.
+Native editors cover companies, machines, services, reverse proxies, networks and accounts, including their nested technical fields. Secret editors expose Keep, Replace and Remove choices; account inspectors provide explicit reveal/hide and timed clipboard actions. Security includes password changes, key derivation and authenticator setup or removal. Sync exposes destination management, automatic sync, progress and conflict-resolution confirmation. Import previews validation results before Apply; export selects Excel or JSON, with master-password confirmation when readable secrets are included. Native map export offers PNG and SVG.
 
-The application window content is an `NSHostingView` containing `NativeRoot`, with the original `WKWebView` attached only inside the graph pane. React mounts `NativeGraph` there rather than the full application. Swift sends asynchronous requests through a C ABI bridge to the same Rust command handlers used by the web application. Map exports return generated PNG, SVG or FossFLOW data to native save handling, and remain disabled until the graph is ready. Native busy states prevent repeated operations and interactive sheet dismissal during active work; errors use explicit alerts, and vault-lock events clear workspace, graph and sheet state. This visual system does not create a separate vault implementation.
+The application window content is an `NSHostingView` containing `NativeRoot`, with the existing `WKWebView` attached only inside the graph pane. React mounts `NativeGraph` there rather than the full application. Swift sends asynchronous requests through a C ABI bridge to the same Rust command handlers used by the web application. Map exports return generated PNG or SVG data to native save handling, and remain disabled until the graph is ready. Native busy states prevent repeated operations and interactive sheet dismissal during active work; errors use explicit alerts, and vault-lock events clear workspace, graph and sheet state. This visual system does not create a separate vault implementation.
 
 Verification must use the current source revision, a populated topology fixture and actual attached sheets. `.impeccable/review/native-hybrid-final` contains the populated shared-graph capture set from native run `37485856187`: fourteen machines, fifteen services, light/dark and compact workspaces, and real attached sheets. It establishes that revision's presentation rather than certifying later field-layout changes. The native layout harness exercises a compact parent window (960px by 640px) and checks sheet bounds; its rich fixture must contain machines and services before graph captures are accepted. Earlier empty-fixture and replaced-renderer captures are not evidence for the current design. Presentation review, contrast assertions and native-to-Rust bridge execution are separate checks; a prior bridge pass does not certify later layout or contrast changes.
 

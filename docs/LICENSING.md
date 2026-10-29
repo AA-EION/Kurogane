@@ -29,13 +29,13 @@ build workflows, runtime rclone provisioning, and both complete lockfiles.
 | Area | Evidence and handling |
 | --- | --- |
 | 582 registry crates | Exact Cargo archive SHA-256 checked before manifest/notice extraction, all platforms and build/development packages included. |
-| 86 npm packages | Exact lockfile SRI checked before extraction, including optional architecture binaries. |
+| 107 npm packages | Exact lockfile SRI checked before extraction, including optional architecture binaries. |
 | 35 upstream license expressions | Reviewed in `docs/legal/license-decisions.json`; preserve AND obligations and select a permitted OR alternative. Upstream legacy slash notation is retained as evidence. |
 | MIT/BSD/ISC/Zlib/Boost/Unicode/Apache | Preserve copyright/license and applicable notice/patent terms. Apache 2 is GPLv3 compatible; see [Apache's explanation](https://www.apache.org/licenses/GPL-compatibility). |
 | MPL-2.0 | Preserve file-level terms and provide source. No Exhibit B secondary-license exclusion was detected in audited source headers. No MPL files were relicensed or modified by this task. See [Mozilla's compatibility guidance](https://www.mozilla.org/en-US/MPL/2.0/FAQ/). |
 | Certificate-root data | `webpki-roots` is CDLA-Permissive-2.0; preserve its agreement with data. See [the agreement](https://cdla.dev/permissive-2-0/). |
 | SQLCipher/OpenSSL/ring | Original nested license texts collected, not just the outer Rust crate license. SQLCipher community code is BSD-3-Clause; vendored OpenSSL 3 is Apache-2.0; ring includes Apache/ISC and embedded notices. |
-| Isoflow/FossFLOW | Preserve the original MIT attribution in adapted canvas code and the full grant in `THIRD_PARTY_NOTICES.md`. The export schema is interoperability, not a bundled FossFLOW dependency. |
+| React Flow, html-to-image | MIT npm dependencies of the graph view and map export; their notices are part of the generated bundle. No layout engine is bundled (`elkjs` is EPL-2.0 and was deliberately not added). |
 | rclone 1.75.1 | Official unmodified checksum-pinned runtime download. Its exact MIT `COPYING` is now retained beside the engine, including previously installed engines. It is a subprocess, not linked into Kurogane. |
 | Design references/fonts | Boundless/EION are references; no reference font files or source packages are bundled. Web typography uses installed system fonts. |
 | Images/icons | Repository-supplied project assets fall under the owner's license grant; no external raster/icon pack dependency is present. Historical screenshots and the original application-icon provenance have not been independently established. Their original creators' rights cannot be established by a package scan. See `docs/img/PROVENANCE.md`. |

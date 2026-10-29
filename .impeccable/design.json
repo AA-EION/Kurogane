@@ -270,74 +270,74 @@
           "oklch(95.00% 0.01342 87.57 / 0.15)"
         ]
       },
-      "map-outline": {
+      "node-group": {
         "role": "neutral",
-        "displayName": "Map label halo",
+        "displayName": "Company panel base",
         "tonalRamp": [
-          "oklch(15.00% 0.00702 88.64)",
-          "oklch(26.43% 0.00702 88.64)",
-          "oklch(37.86% 0.00702 88.64)",
-          "oklch(49.29% 0.00702 88.64)",
-          "oklch(60.71% 0.00702 88.64)",
-          "oklch(72.14% 0.00702 88.64)",
-          "oklch(83.57% 0.00702 88.64)",
-          "oklch(95.00% 0.00702 88.64)"
+          "oklch(15.00% 0.00699 88.64)",
+          "oklch(26.43% 0.00699 88.64)",
+          "oklch(37.86% 0.00699 88.64)",
+          "oklch(49.29% 0.00699 88.64)",
+          "oklch(60.71% 0.00699 88.64)",
+          "oklch(72.14% 0.00699 88.64)",
+          "oklch(83.57% 0.00699 88.64)",
+          "oklch(95.00% 0.00699 88.64)"
         ]
       },
-      "map-grid": {
+      "node-host": {
         "role": "neutral",
-        "displayName": "Ground grid",
+        "displayName": "Machine card",
         "tonalRamp": [
-          "oklch(15.00% 0.01189 100.33 / 0.09)",
-          "oklch(26.43% 0.01189 100.33 / 0.09)",
-          "oklch(37.86% 0.01189 100.33 / 0.09)",
-          "oklch(49.29% 0.01189 100.33 / 0.09)",
-          "oklch(60.71% 0.01189 100.33 / 0.09)",
-          "oklch(72.14% 0.01189 100.33 / 0.09)",
-          "oklch(83.57% 0.01189 100.33 / 0.09)",
-          "oklch(95.00% 0.01189 100.33 / 0.09)"
+          "oklch(15.00% 0.00410 91.45)",
+          "oklch(26.43% 0.00410 91.45)",
+          "oklch(37.86% 0.00410 91.45)",
+          "oklch(49.29% 0.00410 91.45)",
+          "oklch(60.71% 0.00410 91.45)",
+          "oklch(72.14% 0.00410 91.45)",
+          "oklch(83.57% 0.00410 91.45)",
+          "oklch(95.00% 0.00410 91.45)"
         ]
       },
-      "steel": {
+      "node-chip": {
         "role": "neutral",
-        "displayName": "Machine steel",
+        "displayName": "Workload chip",
         "tonalRamp": [
-          "oklch(15.00% 0.00873 91.51)",
-          "oklch(26.43% 0.00873 91.51)",
-          "oklch(37.86% 0.00873 91.51)",
-          "oklch(49.29% 0.00873 91.51)",
-          "oklch(60.71% 0.00873 91.51)",
-          "oklch(72.14% 0.00873 91.51)",
-          "oklch(83.57% 0.00873 91.51)",
-          "oklch(95.00% 0.00873 91.51)"
+          "oklch(15.00% 0.00573 84.57)",
+          "oklch(26.43% 0.00573 84.57)",
+          "oklch(37.86% 0.00573 84.57)",
+          "oklch(49.29% 0.00573 84.57)",
+          "oklch(60.71% 0.00573 84.57)",
+          "oklch(72.14% 0.00573 84.57)",
+          "oklch(83.57% 0.00573 84.57)",
+          "oklch(95.00% 0.00573 84.57)"
         ]
       },
-      "slab-text": {
+      "graph-dot": {
         "role": "neutral",
-        "displayName": "Machine label ink",
+        "displayName": "Graph background dots",
         "tonalRamp": [
-          "oklch(15.00% 0.00400 128.64)",
-          "oklch(26.43% 0.00400 128.64)",
-          "oklch(37.86% 0.00400 128.64)",
-          "oklch(49.29% 0.00400 128.64)",
-          "oklch(60.71% 0.00400 128.64)",
-          "oklch(72.14% 0.00400 128.64)",
-          "oklch(83.57% 0.00400 128.64)",
-          "oklch(95.00% 0.00400 128.64)"
+          "oklch(15.00% 0.01189 100.33 / 0.2)",
+          "oklch(26.43% 0.01189 100.33 / 0.2)",
+          "oklch(37.86% 0.01189 100.33 / 0.2)",
+          "oklch(49.29% 0.01189 100.33 / 0.2)",
+          "oklch(60.71% 0.01189 100.33 / 0.2)",
+          "oklch(72.14% 0.01189 100.33 / 0.2)",
+          "oklch(83.57% 0.01189 100.33 / 0.2)",
+          "oklch(95.00% 0.01189 100.33 / 0.2)"
         ]
       },
-      "slab-muted": {
+      "graph-mask": {
         "role": "neutral",
-        "displayName": "Machine technical ink",
+        "displayName": "Minimap mask",
         "tonalRamp": [
-          "oklch(15.00% 0.00855 116.02)",
-          "oklch(26.43% 0.00855 116.02)",
-          "oklch(37.86% 0.00855 116.02)",
-          "oklch(49.29% 0.00855 116.02)",
-          "oklch(60.71% 0.00855 116.02)",
-          "oklch(72.14% 0.00855 116.02)",
-          "oklch(83.57% 0.00855 116.02)",
-          "oklch(95.00% 0.00855 116.02)"
+          "oklch(15.00% 0.00702 88.64 / 0.6)",
+          "oklch(26.43% 0.00702 88.64 / 0.6)",
+          "oklch(37.86% 0.00702 88.64 / 0.6)",
+          "oklch(49.29% 0.00702 88.64 / 0.6)",
+          "oklch(60.71% 0.00702 88.64 / 0.6)",
+          "oklch(72.14% 0.00702 88.64 / 0.6)",
+          "oklch(83.57% 0.00702 88.64 / 0.6)",
+          "oklch(95.00% 0.00702 88.64 / 0.6)"
         ]
       },
       "route": {
@@ -676,74 +676,74 @@
           "oklch(95.00% 0.00000 0.00 / 0.5)"
         ]
       },
-      "dark-map-outline": {
+      "dark-node-group": {
         "role": "neutral",
-        "displayName": "Charcoal appearance: Map label halo",
+        "displayName": "Charcoal appearance: Company panel base",
         "tonalRamp": [
-          "oklch(15.00% 0.00204 286.18)",
-          "oklch(26.43% 0.00204 286.18)",
-          "oklch(37.86% 0.00204 286.18)",
-          "oklch(49.29% 0.00204 286.18)",
-          "oklch(60.71% 0.00204 286.18)",
-          "oklch(72.14% 0.00204 286.18)",
-          "oklch(83.57% 0.00204 286.18)",
-          "oklch(95.00% 0.00204 286.18)"
+          "oklch(15.00% 0.00194 286.23)",
+          "oklch(26.43% 0.00194 286.23)",
+          "oklch(37.86% 0.00194 286.23)",
+          "oklch(49.29% 0.00194 286.23)",
+          "oklch(60.71% 0.00194 286.23)",
+          "oklch(72.14% 0.00194 286.23)",
+          "oklch(83.57% 0.00194 286.23)",
+          "oklch(95.00% 0.00194 286.23)"
         ]
       },
-      "dark-map-grid": {
+      "dark-node-host": {
         "role": "neutral",
-        "displayName": "Charcoal appearance: Ground grid",
+        "displayName": "Charcoal appearance: Machine card",
         "tonalRamp": [
-          "oklch(15.00% 0.00000 0.00 / 0.05)",
-          "oklch(26.43% 0.00000 0.00 / 0.05)",
-          "oklch(37.86% 0.00000 0.00 / 0.05)",
-          "oklch(49.29% 0.00000 0.00 / 0.05)",
-          "oklch(60.71% 0.00000 0.00 / 0.05)",
-          "oklch(72.14% 0.00000 0.00 / 0.05)",
-          "oklch(83.57% 0.00000 0.00 / 0.05)",
-          "oklch(95.00% 0.00000 0.00 / 0.05)"
+          "oklch(15.00% 0.00361 286.17)",
+          "oklch(26.43% 0.00361 286.17)",
+          "oklch(37.86% 0.00361 286.17)",
+          "oklch(49.29% 0.00361 286.17)",
+          "oklch(60.71% 0.00361 286.17)",
+          "oklch(72.14% 0.00361 286.17)",
+          "oklch(83.57% 0.00361 286.17)",
+          "oklch(95.00% 0.00361 286.17)"
         ]
       },
-      "dark-steel": {
+      "dark-node-chip": {
         "role": "neutral",
-        "displayName": "Charcoal appearance: Machine steel",
+        "displayName": "Charcoal appearance: Workload chip",
         "tonalRamp": [
-          "oklch(15.00% 0.00337 286.24)",
-          "oklch(26.43% 0.00337 286.24)",
-          "oklch(37.86% 0.00337 286.24)",
-          "oklch(49.29% 0.00337 286.24)",
-          "oklch(60.71% 0.00337 286.24)",
-          "oklch(72.14% 0.00337 286.24)",
-          "oklch(83.57% 0.00337 286.24)",
-          "oklch(95.00% 0.00337 286.24)"
+          "oklch(15.00% 0.00375 286.12)",
+          "oklch(26.43% 0.00375 286.12)",
+          "oklch(37.86% 0.00375 286.12)",
+          "oklch(49.29% 0.00375 286.12)",
+          "oklch(60.71% 0.00375 286.12)",
+          "oklch(72.14% 0.00375 286.12)",
+          "oklch(83.57% 0.00375 286.12)",
+          "oklch(95.00% 0.00375 286.12)"
         ]
       },
-      "dark-slab-text": {
+      "dark-graph-dot": {
         "role": "neutral",
-        "displayName": "Charcoal appearance: Machine label ink",
+        "displayName": "Charcoal appearance: Graph background dots",
         "tonalRamp": [
-          "oklch(15.00% 0.00544 95.10)",
-          "oklch(26.43% 0.00544 95.10)",
-          "oklch(37.86% 0.00544 95.10)",
-          "oklch(49.29% 0.00544 95.10)",
-          "oklch(60.71% 0.00544 95.10)",
-          "oklch(72.14% 0.00544 95.10)",
-          "oklch(83.57% 0.00544 95.10)",
-          "oklch(95.00% 0.00544 95.10)"
+          "oklch(15.00% 0.00000 0.00 / 0.1)",
+          "oklch(26.43% 0.00000 0.00 / 0.1)",
+          "oklch(37.86% 0.00000 0.00 / 0.1)",
+          "oklch(49.29% 0.00000 0.00 / 0.1)",
+          "oklch(60.71% 0.00000 0.00 / 0.1)",
+          "oklch(72.14% 0.00000 0.00 / 0.1)",
+          "oklch(83.57% 0.00000 0.00 / 0.1)",
+          "oklch(95.00% 0.00000 0.00 / 0.1)"
         ]
       },
-      "dark-slab-muted": {
+      "dark-graph-mask": {
         "role": "neutral",
-        "displayName": "Charcoal appearance: Machine technical ink",
+        "displayName": "Charcoal appearance: Minimap mask",
         "tonalRamp": [
-          "oklch(15.00% 0.00982 93.59)",
-          "oklch(26.43% 0.00982 93.59)",
-          "oklch(37.86% 0.00982 93.59)",
-          "oklch(49.29% 0.00982 93.59)",
-          "oklch(60.71% 0.00982 93.59)",
-          "oklch(72.14% 0.00982 93.59)",
-          "oklch(83.57% 0.00982 93.59)",
-          "oklch(95.00% 0.00982 93.59)"
+          "oklch(15.00% 0.00204 286.18 / 0.6)",
+          "oklch(26.43% 0.00204 286.18 / 0.6)",
+          "oklch(37.86% 0.00204 286.18 / 0.6)",
+          "oklch(49.29% 0.00204 286.18 / 0.6)",
+          "oklch(60.71% 0.00204 286.18 / 0.6)",
+          "oklch(72.14% 0.00204 286.18 / 0.6)",
+          "oklch(83.57% 0.00204 286.18 / 0.6)",
+          "oklch(95.00% 0.00204 286.18 / 0.6)"
         ]
       },
       "dark-route": {
@@ -991,7 +991,7 @@
   ],
   "narrative": {
     "northStar": "Satin ivory and ink",
-    "overview": "Kurogane uses natural, semi-real skeuomorphism: pale warm surfaces, legible ink, fine beveled edges and controls that feel pressed into or raised above their support. Boundless's instrument plates, inset glass and physical button states are the primary reference. EION Studios contributes the warm monochrome character. This is an adaptation of those materials to an infrastructure workspace; the reference applications' font assets and theme transition system are not bundled here.\n\nLight is the initial appearance. Dark uses charcoal plates and pale ink while preserving the same physical hierarchy. Typography remains compact and familiar; monochrome chrome gives topology and status room to carry meaning. The existing application logos remain intact, and the visible material treatment is built with CSS, SVG and native drawing rather than new raster textures.\n\nThe macOS workspace is hosted by `NSHostingView`: SwiftUI owns navigation, inventory, inspectors, forms, settings and vault workflows. Its graph pane embeds the original React/SVG `IsoCanvas` in the existing `WKWebView`, preserving meaningful company grounds, machine slabs, hosted services and route traces. Native system surfaces, grouped forms, SF Symbols and platform controls express the warm, tactile direction. Each native field retains a separate label and control row; sheets keep their action footers visible. Navigation uses Liquid Glass on macOS 26 and newer and ultra-thin material on macOS 13–25. Windows and Linux use the complete React workspace.",
+    "overview": "Kurogane uses natural, semi-real skeuomorphism: pale warm surfaces, legible ink, fine beveled edges and controls that feel pressed into or raised above their support. Boundless's instrument plates, inset glass and physical button states are the primary reference. EION Studios contributes the warm monochrome character. This is an adaptation of those materials to an infrastructure workspace; the reference applications' font assets and theme transition system are not bundled here.\n\nLight is the initial appearance. Dark uses charcoal plates and pale ink while preserving the same physical hierarchy. Typography remains compact and familiar; monochrome chrome gives topology and status room to carry meaning. The existing application logos remain intact, and the visible material treatment is built with CSS, SVG and native drawing rather than new raster textures.\n\nThe macOS workspace is hosted by `NSHostingView`: SwiftUI owns navigation, inventory, inspectors, forms, settings and vault workflows. Its graph pane embeds the shared React Flow `TopologyView` in the existing `WKWebView`: company panels, machine cards, hosted service chips and route traces. Native system surfaces, grouped forms, SF Symbols and platform controls express the warm, tactile direction. Each native field retains a separate label and control row; sheets keep their action footers visible. Navigation uses Liquid Glass on macOS 26 and newer and ultra-thin material on macOS 13–25. Windows and Linux use the complete React workspace.",
     "keyCharacteristics": [
       "Warm white surfaces and charcoal alternatives.",
       "Raised satin actions and recessed fields.",

@@ -23,10 +23,9 @@ works; section 13 additionally applies to modified versions supporting remote
 network interaction. Private use does not by itself require publication.
 
 Third-party code and assets retain their respective licenses and copyright
-notices. See THIRD_PARTY_NOTICES.md and THIRD_PARTY_LICENSES.txt. In particular,
-the original Isoflow/FossFLOW portions of ui/src/canvas/ retain MIT permissions;
-Kurogane's modifications and the combined application are AGPL-3.0-or-later.
-This notice does not claim ownership of third-party work or relicense it.
+notices. See THIRD_PARTY_NOTICES.md and THIRD_PARTY_LICENSES.txt. The combined
+application is AGPL-3.0-or-later. This notice does not claim ownership of
+third-party work or relicense it.
 
 Source, exact locked dependency versions and build instructions:
 https://github.com/AA-EION/Kurogane

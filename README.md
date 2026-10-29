@@ -2,7 +2,7 @@
 
 **A map of every machine, service and password you look after, drawn for you.**
 
-You enter companies, machines, services, reverse proxies and accounts in simple forms. Kurogane draws them as an isometric diagram grouped by company, traces each public domain through the proxy to the container behind it, and keeps every password in an encrypted vault. Click **Open** to launch a site, **SSH** to get a terminal, or **RDP** to start a remote desktop session.
+You enter companies, machines, services, reverse proxies and accounts in simple forms. Kurogane draws them as a topology diagram grouped by company, traces each public domain through the proxy to the container behind it, and keeps every password in an encrypted vault. Click **Open** to launch a site, **SSH** to get a terminal, or **RDP** to start a remote desktop session.
 
 A product of [Issen Software Group](https://issen.kurokamicorp.com).
 
@@ -46,7 +46,7 @@ Click anything on the map or in the sidebar to open its drawer. From there you c
 
 *Settings → Import & export* on Windows/Linux, or *Settings → Data* on macOS, lets you **download an empty Excel template**. It has one sheet per kind of record, drop-down lists for every choice and a *Read me* sheet. Fill it in and import it. Kurogane checks every row first and shows what will be created or updated, and what is wrong (sheet and row). Nothing changes until you confirm.
 
-You can also export the whole inventory to Excel or JSON, with or without passwords, save an encrypted backup of the vault, and export the map as PNG, SVG or a FossFLOW diagram. Map exports never contain passwords.
+You can also export the whole inventory to Excel or JSON, with or without passwords, save an encrypted backup of the vault, and export the whole map as a PNG or SVG image. Map exports never contain passwords.
 
 ### Sync between computers
 
@@ -86,9 +86,7 @@ cd ui && npm test               # UI
 
 [`.github/workflows/release.yml`](.github/workflows/release.yml) builds Windows, universal macOS and Linux installers as GitHub Actions artifacts when manually dispatched. It has no release-creation step. CI verifies source changes separately.
 
-Appearance defaults to Light. Settings → General offers Light, Dark and System, saved on this computer. The material language follows Boundless and EION Studios, with readable text in both appearances. The [macOS interface](docs/MACOS.md) uses SwiftUI for navigation, forms, inspectors, vault screens and settings. Its graph pane retains the original isometric renderer, including hosted services, VM relationships and proxy-route traces. Native navigation uses Liquid Glass on macOS 26 and newer. Native sheets fit their parent window, scroll their fields and retain visible action rows. macOS source builds require Xcode 26+.
-
-![Native navigation and service inspector around the shared isometric graph](docs/img/macos-map.png)
+Appearance defaults to Light. Settings → General offers Light, Dark and System, saved on this computer. The material language follows Boundless and EION Studios, with readable text in both appearances. The [macOS interface](docs/MACOS.md) uses SwiftUI for navigation, forms, inspectors, vault screens and settings. Its graph pane embeds the same React Flow topology view, including hosted services, VM relationships and proxy-route traces. Native navigation uses Liquid Glass on macOS 26 and newer. Native sheets fit their parent window, scroll their fields and retain visible action rows. macOS source builds require Xcode 26+.
 
 ### Headless CLI
 
@@ -112,7 +110,7 @@ kurogane sync ~/infra.kurogane
 | Encryption, file format, two-factor | [docs/CRYPTO.md](docs/CRYPTO.md) |
 | Sync engine | [docs/SYNC.md](docs/SYNC.md) |
 | Database schema | [docs/SCHEMA.md](docs/SCHEMA.md) |
-| How the map is drawn | [docs/CANVAS.md](docs/CANVAS.md) |
+| How the map is drawn | [docs/GRAPH.md](docs/GRAPH.md) |
 
 ## Repository layout
 
@@ -123,7 +121,7 @@ crates/kurogane-cli/     `kurogane` headless tool
 src-tauri/               desktop shell: commands, sync scheduler, import/export, installer config
   macos/                 SwiftUI workspace, graph webview host and direct Rust command bridge
 ui/src/                  React interface and shared graph-only macOS entry
-  canvas/                isometric layout, routing, map export
+  graph/                 topology model, layout, React Flow view, map export
   components/            sidebar, drawer, settings, lock screen, first-run wizard, dialogs
   forms/                 company, network, machine, service, proxy, account forms
 ```
@@ -137,4 +135,4 @@ ui/src/                  React interface and shared graph-only macOS entry
 
 ## Third-party
 
-See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The map projection and connector routing are adapted from Isoflow / FossFLOW (MIT).
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The map is built with React Flow (MIT).

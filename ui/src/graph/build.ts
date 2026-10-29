@@ -40,6 +40,8 @@ export interface GraphNode {
   ownerColor?: string;
   /** Owning company when it differs from the machine's company. */
   ownerTenantId?: string;
+  /** Drawn only as context for another company's filtered view. */
+  context?: boolean;
   /** Machine with no workloads (switch, AP, NVR…): drawn as a compact leaf. */
   appliance?: boolean;
   /** Direct children: machines in a company, workloads on a machine. */

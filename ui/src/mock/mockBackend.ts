@@ -5,6 +5,7 @@ import type {
 } from '../api/types';
 import { verifyTotp } from './totp';
 import demo from '../graph/__fixtures__/demo-topology.json';
+import multiCompany from '../graph/__fixtures__/multi-company.json';
 
 /**
  * In-memory stand-in for the native core, used only by `npm run dev` in a
@@ -30,10 +31,12 @@ export function createMockBackend(): Backend {
   let sync: SyncStatus = { linked: [], autoSync: true, busy: false, transport: null, lastOutcome: null, lastError: null, lastSyncedAtMs: null, conflict: null };
   let pendingImport: Topology | null = null;
   // Explicit, development-only visual fixture. Never enabled in installers.
-  if (import.meta.env.DEV && new URLSearchParams(window.location.search).get('demo') === '1') {
+  // `?demo=1` loads the single-company demo, `?demo=multi` the multi-company one.
+  const preview = import.meta.env.DEV ? new URLSearchParams(window.location.search).get('demo') : null;
+  if (preview === '1' || preview === 'multi') {
     stage = 'unlocked';
     vaultPath = 'Synthetic preview.kurogane';
-    topo = structuredClone(demo.topology) as Topology;
+    topo = structuredClone(preview === 'multi' ? multiCompany.topology : demo.topology) as Topology;
     settings.displayName = topo.vaultName;
   }
 

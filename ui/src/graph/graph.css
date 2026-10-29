@@ -79,8 +79,8 @@
   border-left: 3px solid var(--tc);
 }
 .g-host-name { font: 700 14px/1.25 var(--sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
-.g-host-head .g-titles { min-width: 92px; }
-.g-host-badges { flex: 0 1 auto; justify-content: flex-end; max-width: 60%; }
+.g-host-head .g-titles { min-width: 0; }
+.g-host-badges { flex: 0 0 auto; margin-left: auto; max-width: 50%; }
 .g-host.lod-overview .g-host-name { font-size: calc(14px * var(--lod-scale)); }
 .g-host.is-appliance { border-style: solid; }
 .g-host.is-appliance .g-host-head { height: 100%; }
@@ -142,7 +142,7 @@
 .g-edge-flow.tone-parent { stroke: var(--text-3); }
 @keyframes g-flow { to { stroke-dashoffset: -17; } }
 .g-edge-label {
-  position: absolute; pointer-events: none; z-index: 10;
+  position: absolute; pointer-events: none; z-index: 10; transform-origin: 0 0;
   font: 600 11px/1 var(--mono); color: var(--text); white-space: nowrap;
   background: var(--panel); border: 1px solid var(--line-2); border-radius: 6px; padding: 5px 8px;
   box-shadow: var(--shadow);
@@ -170,9 +170,34 @@
 .graph-wrap .react-flow__minimap .mm-company { opacity: .22; }
 .graph-wrap .react-flow__minimap .mm-host { opacity: .55; }
 
+/* context: another company's machine drawn only because the filtered company depends on it */
+.g-company.is-context { background: color-mix(in srgb, var(--tc) 3%, var(--bg-2)); border-style: dashed; }
+.g-company.is-context::before { opacity: .45; }
+.g-company.is-context .g-company-sub { color: var(--text-3); font-style: italic; }
+.g-host.is-context { border-style: dashed; box-shadow: none; }
+
+/* company filter */
+.g-filter { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 16px !important; max-width: calc(100% - 32px); }
+.g-filter-pick {
+  display: inline-flex; align-items: center; gap: 6px; padding: 0 4px 0 10px; height: 34px; border-radius: 10px;
+  background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); color: var(--text-2);
+}
+.g-filter-pick.on { border-color: var(--info); color: var(--text); }
+.g-filter-pick svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; flex: none; }
+.g-filter-pick select { font: 600 12.5px var(--sans); color: inherit; background: transparent; border: 0; height: 32px; padding: 0 4px; max-width: 240px; cursor: pointer; }
+.g-filter-pick select:focus-visible { outline: none; }
+.g-filter-pick:focus-within { outline: 2px solid var(--info); outline-offset: 2px; }
+.g-filter-note { font-size: 12px; color: var(--text-2); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; box-shadow: var(--shadow); }
+.g-filter-clear { height: 34px; padding: 0 12px; border-radius: 10px; font: 600 12px var(--sans); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.g-legend .sw-owner { width: 20px; height: 10px; border-radius: 3px; display: inline-block; background: var(--node-chip); border: 1px solid var(--line-2); border-right: 4px solid var(--info); }
+
 /* export capture: no chrome, no motion */
 .graph-wrap.is-capturing .g-edge-flow { display: none; }
 
+@media (max-width: 1100px) {
+  .g-filter-note { display: none; }
+}
 @media (max-width: 700px) {
   .g-legend { display: none; }
   .g-panel { margin: 12px !important; }

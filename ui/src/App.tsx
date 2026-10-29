@@ -4,6 +4,7 @@ import { getBackend } from './api/backend';
 import type { AppStatus, SyncStatus, Topology } from './api/types';
 import { ReactFlowProvider } from '@xyflow/react';
 import { buildGraph } from './graph/build';
+import { focusCompany } from './graph/filter';
 import { TopologyView } from './graph/TopologyView';
 import { ConflictBanner } from './components/ConflictBanner';
 import { DeleteDialog } from './components/DeleteDialog';
@@ -62,6 +63,7 @@ export function App() {
   const [selected, setSelected] = useState<string | null>(null);
   const [focusReq, setFocusReq] = useState<{ id: string; nonce: number } | null>(null);
   const [pendingFocusRef, setPendingFocusRef] = useState<string | null>(null);
+  const [companyFilter, setCompanyFilter] = useState<string | null>(null);
   const [omni, setOmni] = useState(false);
   const [modal, setModal] = useState<ModalSpec | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -93,6 +95,7 @@ export function App() {
     const offLock = backend.onLocked((reason) => {
       setTopo(null);
       setSelected(null);
+      setCompanyFilter(null);
       setOmni(false);
       setModal(null);
       setStatus((s) => (s ? { ...s, stage: 'locked', lastLockReason: reason } : s));
@@ -141,7 +144,15 @@ export function App() {
   const lookup = useMemo(() => (topo ? buildLookup(topo) : null), [topo]);
   const index = useMemo(() => (topo && graph ? buildIndex(topo, graph) : []), [topo, graph]);
 
+  // The filter only narrows the map and the inventory rail; search, the inspector and focus-after-save use the whole graph.
+  const activeFilter = companyFilter && topo?.tenants.some((t) => t.id === companyFilter) ? companyFilter : null;
+  const view = useMemo(() => (graph && activeFilter ? focusCompany(graph, activeFilter) : graph), [graph, activeFilter]);
+  const viewRef = useRef(view);
+  viewRef.current = view;
+
   const focus = useCallback((id: string) => {
+    // Jumping to something outside the filtered slice shows everything again.
+    if (viewRef.current && !viewRef.current.byId.has(id)) setCompanyFilter(null);
     setSelected(id);
     setFocusReq({ id, nonce: Date.now() });
   }, []);
@@ -200,7 +211,7 @@ export function App() {
     );
 
   if (topologyError) return <div className="boot error-screen"><div><p>{topologyError}</p><button className="btn" onClick={() => { setTopologyError(null); backend.topology().then(setTopo).catch((e) => setTopologyError(String(e))); }}>Try again</button></div></div>;
-  if (!topo || !graph || !lookup) return <div className="boot" role="status" aria-label="Loading inventory"><span className="spinner" /></div>;
+  if (!topo || !graph || !view || !lookup) return <div className="boot" role="status" aria-label="Loading inventory"><span className="spinner" /></div>;
 
   const store: Store = {
     backend,
@@ -220,6 +231,8 @@ export function App() {
       const id = graph.refToNode.get(ref);
       if (id) focus(id);
     },
+    companyFilter: activeFilter,
+    setCompanyFilter,
     toast,
     openModal: setModal,
     closeModal: () => setModal(null),
@@ -234,7 +247,7 @@ export function App() {
           {!empty && <Sidebar />}
           <main className="stage">
             <ConflictBanner />
-            {empty ? <EmptyState /> : <ReactFlowProvider><TopologyView model={graph} selected={selected} onSelect={setSelected} focus={focusReq} /></ReactFlowProvider>}
+            {empty ? <EmptyState /> : <ReactFlowProvider><TopologyView model={view} selected={selected} onSelect={setSelected} focus={focusReq} companies={topo.tenants} companyFilter={activeFilter} onCompanyFilter={setCompanyFilter} /></ReactFlowProvider>}
             {!empty && selected && <Drawer key={selected} />}
           </main>
         </div>

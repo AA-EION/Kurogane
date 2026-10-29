@@ -1,0 +1,1411 @@
+{
+ "_comment": "Synthetic multi-company inventory: five companies, each running one service on the next company's app machine. No real hosts, domains or credentials.",
+ "topology": {
+  "vaultName": "Multi-business demo",
+  "tenants": [
+   {
+    "id": "f676f017-2bcd-5dba-81f7-221c9a7abb17",
+    "name": "Northwind Logistics",
+    "environment": "client",
+    "environmentLabel": null,
+    "color": "#4c8dff",
+    "slaNotes": null,
+    "adminNotes": null
+   },
+   {
+    "id": "3a15c8c5-4ac2-5fc2-a3e6-1c5fa5987a81",
+    "name": "Bluefin Dental",
+    "environment": "client",
+    "environmentLabel": null,
+    "color": "#2fbf71",
+    "slaNotes": null,
+    "adminNotes": null
+   },
+   {
+    "id": "169f0993-8d71-5635-8f04-ce4e5387367a",
+    "name": "Kestrel Legal",
+    "environment": "client",
+    "environmentLabel": null,
+    "color": "#b197fc",
+    "slaNotes": null,
+    "adminNotes": null
+   },
+   {
+    "id": "276999e7-4c12-5aca-a868-15ec9035a833",
+    "name": "Orchard Bakery",
+    "environment": "client",
+    "environmentLabel": null,
+    "color": "#ffc247",
+    "slaNotes": null,
+    "adminNotes": null
+   },
+   {
+    "id": "48e6f172-e327-53f3-8110-4ac00937951d",
+    "name": "Atlas Engineering",
+    "environment": "corporate",
+    "environmentLabel": null,
+    "color": "#ff6b9a",
+    "slaNotes": null,
+    "adminNotes": null
+   }
+  ],
+  "networks": [],
+  "hosts": [
+   {
+    "id": "9dc8c931-54ee-57ba-92a2-a3df1c48e128",
+    "tenantId": "f676f017-2bcd-5dba-81f7-221c9a7abb17",
+    "parentHostId": null,
+    "name": "northwind-edge",
+    "category": "vps",
+    "osFamily": "linux",
+    "fqdn": null,
+    "sshPort": 22,
+    "rdpPort": null,
+    "winrmPort": null,
+    "webAdminUrl": null,
+    "provider": null,
+    "location": null,
+    "icon": null,
+    "notes": null,
+    "interfaces": [
+     {
+      "id": "ae68ca9c-7cc1-552d-ad4c-08f33b8bbd86",
+      "hostId": "9dc8c931-54ee-57ba-92a2-a3df1c48e128",
+      "networkId": null,
+      "name": "eth0",
+      "mac": null,
+      "internalIp": "10.20.0.10",
+      "gateway": null,
+      "publicIp": "203.0.113.10",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "779a83e8-e6ab-57dc-b41c-c8c958500580",
+    "tenantId": "f676f017-2bcd-5dba-81f7-221c9a7abb17",
+    "parentHostId": null,
+    "name": "northwind-app",
+    "category": "vps",
+    "osFamily": "linux",
+    "fqdn": null,
+    "sshPort": 22,
+    "rdpPort": null,
+    "winrmPort": null,
+    "webAdminUrl": null,
+    "provider": null,
+    "location": null,
+    "icon": null,
+    "notes": null,
+    "interfaces": [
+     {
+      "id": "8258feac-03b2-5f27-919d-1f9be85ef1bc",
+      "hostId": "779a83e8-e6ab-57dc-b41c-c8c958500580",
+      "networkId": null,
+      "name": "eth0",
+      "mac": null,
+      "internalIp": "10.20.0.21",
+      "gateway": null,
+      "publicIp": null,
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "b79bdacd-2cb6-5f8c-901e-6cb407f05d4f",
+    "tenantId": "f676f017-2bcd-5dba-81f7-221c9a7abb17",
+    "parentHostId": null,
+    "name": "northwind-fw",
+    "category": "firewall",
+    "osFamily": "bsd",
+    "fqdn": null,
+    "sshPort": 22,
+    "rdpPort": null,
+    "winrmPort": null,
+    "webAdminUrl": null,
+    "provider": null,
+    "location": null,
+    "icon": null,
+    "notes": null,
+    "interfaces": [
+     {
+      "id": "561b0110-be71-5c07-86c2-879efe072f1a",
+      "hostId": "b79bdacd-2cb6-5f8c-901e-6cb407f05d4f",
+      "networkId": null,
+      "name": "eth0",
+      "mac": null,
+      "internalIp": "10.20.0.1",
+      "gateway": null,
+      "publicIp": null,
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "11a13763-9299-5ee7-a579-5f983f0909be",
+    "tenantId": "f676f017-2bcd-5dba-81f7-221c9a7abb17",
+    "parentHostId": null,
+    "name": "northwind-sw",
+    "category": "switch",
+    "osFamily": "embedded",
+    "fqdn": null,
+    "sshPort": 22,
+    "rdpPort": null,
+    "winrmPort": null,
+    "webAdminUrl": null,
+    "provider": null,
+    "location": null,
+    "icon": null,
+    "notes": null,
+    "interfaces": [
+     {
+      "id": "5002d59c-ccdc-5900-a8d6-5a3a3e2ccb87",
+      "hostId": "11a13763-9299-5ee7-a579-5f983f0909be",
+      "networkId": null,
+      "name": "eth0",
+      "mac": null,
+      "internalIp": "10.20.0.2",
+      "gateway": null,
+      "publicIp": null,
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "e48fd9be-e009-5d6f-b8c6-80f6ff70ea37",
+    "tenantId": "3a15c8c5-4ac2-5fc2-a3e6-1c5fa5987a81",
+    "parentHostId": null,
+    "name": "bluefin-edge",
+    "category": "local_server",
+    "osFamily": "linux",
+    "fqdn": null,
+    "sshPort": 22,
+    "rdpPort": null,
+    "winrmPort": null,
+    "webAdminUrl": null,
+    "provider": null,
+    "location": null,
+    "icon": null,
+    "notes": null,
+    "interfaces": [
+     {
+      "id": "b08f7785-516a-5798-88d6-2882f4a9a1a5",
+      "hostId": "e48fd9be-e009-5d6f-b8c6-80f6ff70ea37",
+      "networkId": null,
+      "name": "eth0",
+      "mac": null,
+      "internalIp": "10.21.0.10",
+      "gateway": null,
+      "publicIp": "203.0.113.11",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "3efdfd67-ddfe-5a8f-aeb2-f7bf715df722",
+    "tenantId": "3a15c8c5-4ac2-5fc2-a3e6-1c5fa5987a81",
+    "parentHostId": null,
+    "name": "bluefin-app",
+    "category": "vm",
+    "osFamily": "linux",
+    "fqdn": null,
+    "sshPort": 22,
+    "rdpPort": null,
+    "winrmPort": null,
+    "webAdminUrl": null,
+    "provider": null,
+    "location": null,
+    "icon": null,
+    "notes": null,
+    "interfaces": [
+     {
+      "id": "e4f7d887-a723-5090-8d57-a8d7f19731d5",
+      "hostId": "3efdfd67-ddfe-5a8f-aeb2-f7bf715df722",
+      "networkId": null,
+      "name": "eth0",
+      "mac": null,
+      "internalIp": "10.21.0.21",
+      "gateway": null,
+      "publicIp": null,
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "dbd0995d-d7ef-5833-9a88-01ad0e47e156",
+    "tenantId": "3a15c8c5-4ac2-5fc2-a3e6-1c5fa5987a81",
+    "parentHostId": null,
+    "name": "bluefin-fw",
+    "category": "firewall",
+    "osFamily": "bsd",
+    "fqdn": null,
+    "sshPort": 22,
+    "rdpPort": null,
+    "winrmPort": null,
+    "webAdminUrl": null,
+    "provider": null,
+    "location": null,
+    "icon": null,
+    "notes": null,
+    "interfaces": [
+     {
+      "id": "7c6d499a-f39d-542d-b431-5bfd44283aa9",
+      "hostId": "dbd0995d-d7ef-5833-9a88-01ad0e47e156",
+      "networkId": null,
+      "name": "eth0",
+      "mac": null,
+      "internalIp": "10.21.0.1",
+      "gateway": null,
+      "publicIp": null,
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "7916278d-22ad-5f08-98d6-5c1cffc011c3",
+    "tenantId": "3a15c8c5-4ac2-5fc2-a3e6-1c5fa5987a81",
+    "parentHostId": null,
+    "name": "bluefin-sw",
+    "category": "switch",
+    "osFamily": "embedded",
+    "fqdn": null,
+    "sshPort": 22,
+    "rdpPort": null,
+    "winrmPort": null,
+    "webAdminUrl": null,
+    "provider": null,
+    "location": null,
+    "icon": null,
+    "notes": null,
+    "interfaces": [
+     {
+      "id": "30a9b5f7-0bc7-5190-9e4d-3f52d902c41b",
+      "hostId": "7916278d-22ad-5f08-98d6-5c1cffc011c3",
+      "networkId": null,
+      "name": "eth0",
+      "mac": null,
+      "internalIp": "10.21.0.2",
+      "gateway": null,
+      "publicIp": null,
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "cc46424c-72e0-5609-8fd4-ac87ef5ecf70",
+    "tenantId": "169f0993-8d71-5635-8f04-ce4e5387367a",
+    "parentHostId": null,
+    "name": "kestrel-edge",
+    "category": "vps",
+    "osFamily": "linux",
+    "fqdn": null,
+    "sshPort": 22,
+    "rdpPort": null,
+    "winrmPort": null,
+    "webAdminUrl": null,
+    "provider": null,
+    "location": null,
+    "icon": null,
+    "notes": null,
+    "interfaces": [
+     {
+      "id": "e4f1b829-7482-5698-8c7e-497e8b8e69dd",
+      "hostId": "cc46424c-72e0-5609-8fd4-ac87ef5ecf70",
+      "networkId": null,
+      "name": "eth0",
+      "mac": null,
+      "internalIp": "10.22.0.10",
+      "gateway": null,
+      "publicIp": "203.0.113.12",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "d0c88073-da61-5d1a-84c5-e12efe3d684c",
+    "tenantId": "169f0993-8d71-5635-8f04-ce4e5387367a",
+    "parentHostId": null,
+    "name": "kestrel-app",
+    "category": "vps",
+    "osFamily": "linux",
+    "fqdn": null,
+    "sshPort": 22,
+    "rdpPort": null,
+    "winrmPort": null,
+    "webAdminUrl": null,
+    "provider": null,
+    "location": null,
+    "icon": null,
+    "notes": null,
+    "interfaces": [
+     {
+      "id": "cd81881d-1cc5-5d8e-8ba7-2677d536bd95",
+      "hostId": "d0c88073-da61-5d1a-84c5-e12efe3d684c",
+      "networkId": null,
+      "name": "eth0",
+      "mac": null,
+      "internalIp": "10.22.0.21",
+      "gateway": null,
+      "publicIp": null,
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "06d2fd80-42a4-595b-a9e5-adff191f144f",
+    "tenantId": "169f0993-8d71-5635-8f04-ce4e5387367a",
+    "parentHostId": null,
+    "name": "kestrel-fw",
+    "category": "firewall",
+    "osFamily": "bsd",
+    "fqdn": null,
+    "sshPort": 22,
+    "rdpPort": null,
+    "winrmPort": null,
+    "webAdminUrl": null,
+    "provider": null,
+    "location": null,
+    "icon": null,
+    "notes": null,
+    "interfaces": [
+     {
+      "id": "3cfa5fb4-30b9-5872-8eed-933756981ebf",
+      "hostId": "06d2fd80-42a4-595b-a9e5-adff191f144f",
+      "networkId": null,
+      "name": "eth0",
+      "mac": null,
+      "internalIp": "10.22.0.1",
+      "gateway": null,
+      "publicIp": null,
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "9d942622-1311-5dc3-840f-e2dd1a3eeaab",
+    "tenantId": "169f0993-8d71-5635-8f04-ce4e5387367a",
+    "parentHostId": null,
+    "name": "kestrel-sw",
+    "category": "switch",
+    "osFamily": "embedded",
+    "fqdn": null,
+    "sshPort": 22,
+    "rdpPort": null,
+    "winrmPort": null,
+    "webAdminUrl": null,
+    "provider": null,
+    "location": null,
+    "icon": null,
+    "notes": null,
+    "interfaces": [
+     {
+      "id": "a0b5c436-e841-50eb-813d-3d7167424764",
+      "hostId": "9d942622-1311-5dc3-840f-e2dd1a3eeaab",
+      "networkId": null,
+      "name": "eth0",
+      "mac": null,
+      "internalIp": "10.22.0.2",
+      "gateway": null,
+      "publicIp": null,
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "da3e2fea-9f51-5529-a21a-60ff9651e164",
+    "tenantId": "276999e7-4c12-5aca-a868-15ec9035a833",
+    "parentHostId": null,
+    "name": "orchard-edge",
+    "category": "local_server",
+    "osFamily": "linux",
+    "fqdn": null,
+    "sshPort": 22,
+    "rdpPort": null,
+    "winrmPort": null,
+    "webAdminUrl": null,
+    "provider": null,
+    "location": null,
+    "icon": null,
+    "notes": null,
+    "interfaces": [
+     {
+      "id": "2aad0d75-0e78-5cf9-a89a-01dd6900e15a",
+      "hostId": "da3e2fea-9f51-5529-a21a-60ff9651e164",
+      "networkId": null,
+      "name": "eth0",
+      "mac": null,
+      "internalIp": "10.23.0.10",
+      "gateway": null,
+      "publicIp": "203.0.113.13",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "8749fbf8-e770-54d1-85df-957b9d1fe3e5",
+    "tenantId": "276999e7-4c12-5aca-a868-15ec9035a833",
+    "parentHostId": null,
+    "name": "orchard-app",
+    "category": "vm",
+    "osFamily": "linux",
+    "fqdn": null,
+    "sshPort": 22,
+    "rdpPort": null,
+    "winrmPort": null,
+    "webAdminUrl": null,
+    "provider": null,
+    "location": null,
+    "icon": null,
+    "notes": null,
+    "interfaces": [
+     {
+      "id": "8ada4aca-80f2-5b39-b8bc-1680d267ce90",
+      "hostId": "8749fbf8-e770-54d1-85df-957b9d1fe3e5",
+      "networkId": null,
+      "name": "eth0",
+      "mac": null,
+      "internalIp": "10.23.0.21",
+      "gateway": null,
+      "publicIp": null,
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "6bf88683-0f7d-5b03-a258-c4f278122da4",
+    "tenantId": "276999e7-4c12-5aca-a868-15ec9035a833",
+    "parentHostId": null,
+    "name": "orchard-fw",
+    "category": "firewall",
+    "osFamily": "bsd",
+    "fqdn": null,
+    "sshPort": 22,
+    "rdpPort": null,
+    "winrmPort": null,
+    "webAdminUrl": null,
+    "provider": null,
+    "location": null,
+    "icon": null,
+    "notes": null,
+    "interfaces": [
+     {
+      "id": "7f574f73-663e-50f2-915f-ac47ba21370a",
+      "hostId": "6bf88683-0f7d-5b03-a258-c4f278122da4",
+      "networkId": null,
+      "name": "eth0",
+      "mac": null,
+      "internalIp": "10.23.0.1",
+      "gateway": null,
+      "publicIp": null,
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "90455493-b2ee-5182-8729-94835ad76c29",
+    "tenantId": "276999e7-4c12-5aca-a868-15ec9035a833",
+    "parentHostId": null,
+    "name": "orchard-sw",
+    "category": "switch",
+    "osFamily": "embedded",
+    "fqdn": null,
+    "sshPort": 22,
+    "rdpPort": null,
+    "winrmPort": null,
+    "webAdminUrl": null,
+    "provider": null,
+    "location": null,
+    "icon": null,
+    "notes": null,
+    "interfaces": [
+     {
+      "id": "862e200d-a7ed-5a90-9074-79f0b17da2bd",
+      "hostId": "90455493-b2ee-5182-8729-94835ad76c29",
+      "networkId": null,
+      "name": "eth0",
+      "mac": null,
+      "internalIp": "10.23.0.2",
+      "gateway": null,
+      "publicIp": null,
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "5523d083-51a5-5d1c-9ba3-3433c6d59107",
+    "tenantId": "48e6f172-e327-53f3-8110-4ac00937951d",
+    "parentHostId": null,
+    "name": "atlas-edge",
+    "category": "vps",
+    "osFamily": "linux",
+    "fqdn": null,
+    "sshPort": 22,
+    "rdpPort": null,
+    "winrmPort": null,
+    "webAdminUrl": null,
+    "provider": null,
+    "location": null,
+    "icon": null,
+    "notes": null,
+    "interfaces": [
+     {
+      "id": "f03794d0-c059-5953-857f-ab07366c3d28",
+      "hostId": "5523d083-51a5-5d1c-9ba3-3433c6d59107",
+      "networkId": null,
+      "name": "eth0",
+      "mac": null,
+      "internalIp": "10.24.0.10",
+      "gateway": null,
+      "publicIp": "203.0.113.14",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "c14b4b41-7fb6-57ed-8cb7-f2a7e011e014",
+    "tenantId": "48e6f172-e327-53f3-8110-4ac00937951d",
+    "parentHostId": null,
+    "name": "atlas-app",
+    "category": "vps",
+    "osFamily": "linux",
+    "fqdn": null,
+    "sshPort": 22,
+    "rdpPort": null,
+    "winrmPort": null,
+    "webAdminUrl": null,
+    "provider": null,
+    "location": null,
+    "icon": null,
+    "notes": null,
+    "interfaces": [
+     {
+      "id": "b8c66c9a-9033-5578-bc8c-72523ea6f546",
+      "hostId": "c14b4b41-7fb6-57ed-8cb7-f2a7e011e014",
+      "networkId": null,
+      "name": "eth0",
+      "mac": null,
+      "internalIp": "10.24.0.21",
+      "gateway": null,
+      "publicIp": null,
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "fdd77dfb-b5db-531b-a70a-5d0cfd8190b3",
+    "tenantId": "48e6f172-e327-53f3-8110-4ac00937951d",
+    "parentHostId": null,
+    "name": "atlas-fw",
+    "category": "firewall",
+    "osFamily": "bsd",
+    "fqdn": null,
+    "sshPort": 22,
+    "rdpPort": null,
+    "winrmPort": null,
+    "webAdminUrl": null,
+    "provider": null,
+    "location": null,
+    "icon": null,
+    "notes": null,
+    "interfaces": [
+     {
+      "id": "be8c8324-7fd7-5563-b590-d9e3de4b970c",
+      "hostId": "fdd77dfb-b5db-531b-a70a-5d0cfd8190b3",
+      "networkId": null,
+      "name": "eth0",
+      "mac": null,
+      "internalIp": "10.24.0.1",
+      "gateway": null,
+      "publicIp": null,
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "3728e992-2ce7-5f98-ba8d-047ace3b9863",
+    "tenantId": "48e6f172-e327-53f3-8110-4ac00937951d",
+    "parentHostId": null,
+    "name": "atlas-sw",
+    "category": "switch",
+    "osFamily": "embedded",
+    "fqdn": null,
+    "sshPort": 22,
+    "rdpPort": null,
+    "winrmPort": null,
+    "webAdminUrl": null,
+    "provider": null,
+    "location": null,
+    "icon": null,
+    "notes": null,
+    "interfaces": [
+     {
+      "id": "ecd36117-b295-5185-a860-5066bdc773d9",
+      "hostId": "3728e992-2ce7-5f98-ba8d-047ace3b9863",
+      "networkId": null,
+      "name": "eth0",
+      "mac": null,
+      "internalIp": "10.24.0.2",
+      "gateway": null,
+      "publicIp": null,
+      "isPrimary": true
+     }
+    ]
+   }
+  ],
+  "services": [
+   {
+    "id": "4c051e92-9a0b-514c-bd66-f270e76400f1",
+    "hostId": "779a83e8-e6ab-57dc-b41c-c8c958500580",
+    "name": "erp",
+    "runtime": "docker",
+    "image": "erp:latest",
+    "scheme": "http",
+    "healthPath": null,
+    "description": null,
+    "icon": null,
+    "ownerTenantId": null,
+    "ports": [
+     {
+      "id": "5145a3e3-d477-5a23-ab73-b467bf724999",
+      "serviceId": "4c051e92-9a0b-514c-bd66-f270e76400f1",
+      "containerPort": 80,
+      "hostPort": 8000,
+      "bindAddress": "0.0.0.0",
+      "protocol": "tcp",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "88da2a51-ee21-57b7-84e7-8a54eb815823",
+    "hostId": "779a83e8-e6ab-57dc-b41c-c8c958500580",
+    "name": "portal",
+    "runtime": "docker",
+    "image": "portal:latest",
+    "scheme": "http",
+    "healthPath": null,
+    "description": null,
+    "icon": null,
+    "ownerTenantId": null,
+    "ports": [
+     {
+      "id": "510f6258-5245-5620-b46d-7b9a88a522a4",
+      "serviceId": "88da2a51-ee21-57b7-84e7-8a54eb815823",
+      "containerPort": 80,
+      "hostPort": 8001,
+      "bindAddress": "0.0.0.0",
+      "protocol": "tcp",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "fa91b06d-ac72-5f1e-9fd6-571ab42eec85",
+    "hostId": "779a83e8-e6ab-57dc-b41c-c8c958500580",
+    "name": "postgres",
+    "runtime": "docker",
+    "image": "postgres:latest",
+    "scheme": "http",
+    "healthPath": null,
+    "description": null,
+    "icon": null,
+    "ownerTenantId": null,
+    "ports": [
+     {
+      "id": "e0253265-efcd-597c-9829-bb3ce2891a74",
+      "serviceId": "fa91b06d-ac72-5f1e-9fd6-571ab42eec85",
+      "containerPort": 5432,
+      "hostPort": 8002,
+      "bindAddress": "0.0.0.0",
+      "protocol": "tcp",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "b83dc974-f175-51fa-a47b-92d44427406f",
+    "hostId": "3efdfd67-ddfe-5a8f-aeb2-f7bf715df722",
+    "name": "pms",
+    "runtime": "docker",
+    "image": "pms:latest",
+    "scheme": "http",
+    "healthPath": null,
+    "description": null,
+    "icon": null,
+    "ownerTenantId": null,
+    "ports": [
+     {
+      "id": "090902c3-5913-5f81-969b-053918cf00d8",
+      "serviceId": "b83dc974-f175-51fa-a47b-92d44427406f",
+      "containerPort": 80,
+      "hostPort": 8003,
+      "bindAddress": "0.0.0.0",
+      "protocol": "tcp",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "d7f334ad-e30a-59cd-b921-638ca7f6c7ba",
+    "hostId": "3efdfd67-ddfe-5a8f-aeb2-f7bf715df722",
+    "name": "imaging",
+    "runtime": "docker",
+    "image": "imaging:latest",
+    "scheme": "http",
+    "healthPath": null,
+    "description": null,
+    "icon": null,
+    "ownerTenantId": null,
+    "ports": [
+     {
+      "id": "6e5ce681-35db-5861-9c15-a7f1efe80348",
+      "serviceId": "d7f334ad-e30a-59cd-b921-638ca7f6c7ba",
+      "containerPort": 80,
+      "hostPort": 8004,
+      "bindAddress": "0.0.0.0",
+      "protocol": "tcp",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "9b4818e9-78ed-578a-a0c3-d3e80ac30c4d",
+    "hostId": "3efdfd67-ddfe-5a8f-aeb2-f7bf715df722",
+    "name": "mariadb",
+    "runtime": "docker",
+    "image": "mariadb:latest",
+    "scheme": "http",
+    "healthPath": null,
+    "description": null,
+    "icon": null,
+    "ownerTenantId": null,
+    "ports": [
+     {
+      "id": "3fd44b4d-9625-511c-a18b-9c5962438db0",
+      "serviceId": "9b4818e9-78ed-578a-a0c3-d3e80ac30c4d",
+      "containerPort": 3306,
+      "hostPort": 8005,
+      "bindAddress": "0.0.0.0",
+      "protocol": "tcp",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "500a776f-7960-5731-a9a4-a18f28e9cefd",
+    "hostId": "d0c88073-da61-5d1a-84c5-e12efe3d684c",
+    "name": "docs",
+    "runtime": "docker",
+    "image": "docs:latest",
+    "scheme": "http",
+    "healthPath": null,
+    "description": null,
+    "icon": null,
+    "ownerTenantId": null,
+    "ports": [
+     {
+      "id": "a6fd6a5d-0078-5038-a7bd-7a0bfd6e41ad",
+      "serviceId": "500a776f-7960-5731-a9a4-a18f28e9cefd",
+      "containerPort": 80,
+      "hostPort": 8006,
+      "bindAddress": "0.0.0.0",
+      "protocol": "tcp",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "a02ba965-2bbd-50a4-95b6-7b8cfb6d3153",
+    "hostId": "d0c88073-da61-5d1a-84c5-e12efe3d684c",
+    "name": "nextcloud",
+    "runtime": "docker",
+    "image": "nextcloud:latest",
+    "scheme": "http",
+    "healthPath": null,
+    "description": null,
+    "icon": null,
+    "ownerTenantId": null,
+    "ports": [
+     {
+      "id": "b5372eed-db26-5f1c-954f-252f493c4f97",
+      "serviceId": "a02ba965-2bbd-50a4-95b6-7b8cfb6d3153",
+      "containerPort": 80,
+      "hostPort": 8007,
+      "bindAddress": "0.0.0.0",
+      "protocol": "tcp",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "859ed827-9400-5e68-9bc4-c8862e84948b",
+    "hostId": "d0c88073-da61-5d1a-84c5-e12efe3d684c",
+    "name": "redis",
+    "runtime": "docker",
+    "image": "redis:latest",
+    "scheme": "http",
+    "healthPath": null,
+    "description": null,
+    "icon": null,
+    "ownerTenantId": null,
+    "ports": [
+     {
+      "id": "f008ff9e-e0eb-5e5c-b38f-001bc5b300c4",
+      "serviceId": "859ed827-9400-5e68-9bc4-c8862e84948b",
+      "containerPort": 6379,
+      "hostPort": 8008,
+      "bindAddress": "0.0.0.0",
+      "protocol": "tcp",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "3076a3b3-3e64-520b-bbd2-6e03765b2dc6",
+    "hostId": "8749fbf8-e770-54d1-85df-957b9d1fe3e5",
+    "name": "shop",
+    "runtime": "docker",
+    "image": "shop:latest",
+    "scheme": "http",
+    "healthPath": null,
+    "description": null,
+    "icon": null,
+    "ownerTenantId": null,
+    "ports": [
+     {
+      "id": "c5f251e8-2146-5b83-a211-2c1e73c40553",
+      "serviceId": "3076a3b3-3e64-520b-bbd2-6e03765b2dc6",
+      "containerPort": 80,
+      "hostPort": 8009,
+      "bindAddress": "0.0.0.0",
+      "protocol": "tcp",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "a378bb76-e133-5cba-b591-8c61fa7dbf29",
+    "hostId": "8749fbf8-e770-54d1-85df-957b9d1fe3e5",
+    "name": "pos-sync",
+    "runtime": "docker",
+    "image": "pos-sync:latest",
+    "scheme": "http",
+    "healthPath": null,
+    "description": null,
+    "icon": null,
+    "ownerTenantId": null,
+    "ports": [
+     {
+      "id": "d107b886-e21c-525b-8d85-c01168e9247a",
+      "serviceId": "a378bb76-e133-5cba-b591-8c61fa7dbf29",
+      "containerPort": 80,
+      "hostPort": 8010,
+      "bindAddress": "0.0.0.0",
+      "protocol": "tcp",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "bea9f86c-c763-59b5-a9bf-ecaa742c3bd7",
+    "hostId": "c14b4b41-7fb6-57ed-8cb7-f2a7e011e014",
+    "name": "git",
+    "runtime": "docker",
+    "image": "git:latest",
+    "scheme": "http",
+    "healthPath": null,
+    "description": null,
+    "icon": null,
+    "ownerTenantId": null,
+    "ports": [
+     {
+      "id": "7fade34c-04ad-519a-8814-970dbe0696a4",
+      "serviceId": "bea9f86c-c763-59b5-a9bf-ecaa742c3bd7",
+      "containerPort": 80,
+      "hostPort": 8011,
+      "bindAddress": "0.0.0.0",
+      "protocol": "tcp",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "9bc31a24-6716-559b-ac3b-9c60448795ac",
+    "hostId": "c14b4b41-7fb6-57ed-8cb7-f2a7e011e014",
+    "name": "ci-runner",
+    "runtime": "docker",
+    "image": "ci-runner:latest",
+    "scheme": "http",
+    "healthPath": null,
+    "description": null,
+    "icon": null,
+    "ownerTenantId": null,
+    "ports": [
+     {
+      "id": "0cd2b51f-91a3-5f8d-a885-cd1dd37aa9c8",
+      "serviceId": "9bc31a24-6716-559b-ac3b-9c60448795ac",
+      "containerPort": 80,
+      "hostPort": 8012,
+      "bindAddress": "0.0.0.0",
+      "protocol": "tcp",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "bea1457a-893c-5181-8a9e-88254e2e7f1c",
+    "hostId": "c14b4b41-7fb6-57ed-8cb7-f2a7e011e014",
+    "name": "grafana",
+    "runtime": "docker",
+    "image": "grafana:latest",
+    "scheme": "http",
+    "healthPath": null,
+    "description": null,
+    "icon": null,
+    "ownerTenantId": null,
+    "ports": [
+     {
+      "id": "9747e417-24c3-5fef-b52e-7640f3486d68",
+      "serviceId": "bea1457a-893c-5181-8a9e-88254e2e7f1c",
+      "containerPort": 80,
+      "hostPort": 8013,
+      "bindAddress": "0.0.0.0",
+      "protocol": "tcp",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "aa55d8e2-6e58-5d3a-92f2-bbc687b76472",
+    "hostId": "c14b4b41-7fb6-57ed-8cb7-f2a7e011e014",
+    "name": "postgres",
+    "runtime": "docker",
+    "image": "postgres:latest",
+    "scheme": "http",
+    "healthPath": null,
+    "description": null,
+    "icon": null,
+    "ownerTenantId": null,
+    "ports": [
+     {
+      "id": "f7021454-0db3-572f-9e67-105c1fce8b26",
+      "serviceId": "aa55d8e2-6e58-5d3a-92f2-bbc687b76472",
+      "containerPort": 5432,
+      "hostPort": 8014,
+      "bindAddress": "0.0.0.0",
+      "protocol": "tcp",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "e9cd2c8d-b582-5ebf-8140-869c5576c825",
+    "hostId": "3efdfd67-ddfe-5a8f-aeb2-f7bf715df722",
+    "name": "tracking-api",
+    "runtime": "docker",
+    "image": "tracking-api:latest",
+    "scheme": "http",
+    "healthPath": null,
+    "description": null,
+    "icon": null,
+    "ownerTenantId": "f676f017-2bcd-5dba-81f7-221c9a7abb17",
+    "ports": [
+     {
+      "id": "9dead531-cb36-5596-8255-5d79b9ea2e5f",
+      "serviceId": "e9cd2c8d-b582-5ebf-8140-869c5576c825",
+      "containerPort": 3000,
+      "hostPort": 8015,
+      "bindAddress": "0.0.0.0",
+      "protocol": "tcp",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "b7a4656b-28c6-53a4-81a4-dca26b263fb7",
+    "hostId": "d0c88073-da61-5d1a-84c5-e12efe3d684c",
+    "name": "patient-forms",
+    "runtime": "docker",
+    "image": "patient-forms:latest",
+    "scheme": "http",
+    "healthPath": null,
+    "description": null,
+    "icon": null,
+    "ownerTenantId": "3a15c8c5-4ac2-5fc2-a3e6-1c5fa5987a81",
+    "ports": [
+     {
+      "id": "ff895bcb-ae2f-58aa-bae2-459a8b43fd77",
+      "serviceId": "b7a4656b-28c6-53a4-81a4-dca26b263fb7",
+      "containerPort": 3000,
+      "hostPort": 8016,
+      "bindAddress": "0.0.0.0",
+      "protocol": "tcp",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "555338ea-cc90-5348-94a7-5bce280c9f7d",
+    "hostId": "8749fbf8-e770-54d1-85df-957b9d1fe3e5",
+    "name": "e-sign",
+    "runtime": "docker",
+    "image": "e-sign:latest",
+    "scheme": "http",
+    "healthPath": null,
+    "description": null,
+    "icon": null,
+    "ownerTenantId": "169f0993-8d71-5635-8f04-ce4e5387367a",
+    "ports": [
+     {
+      "id": "16edf9c6-d212-5132-81b5-89e2fa24f6e5",
+      "serviceId": "555338ea-cc90-5348-94a7-5bce280c9f7d",
+      "containerPort": 3000,
+      "hostPort": 8017,
+      "bindAddress": "0.0.0.0",
+      "protocol": "tcp",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "ff138d21-a200-5c01-bd9a-b6deb7531639",
+    "hostId": "c14b4b41-7fb6-57ed-8cb7-f2a7e011e014",
+    "name": "menu-board",
+    "runtime": "docker",
+    "image": "menu-board:latest",
+    "scheme": "http",
+    "healthPath": null,
+    "description": null,
+    "icon": null,
+    "ownerTenantId": "276999e7-4c12-5aca-a868-15ec9035a833",
+    "ports": [
+     {
+      "id": "f5cb8fc8-fbf9-53a8-b315-a99e7782bb83",
+      "serviceId": "ff138d21-a200-5c01-bd9a-b6deb7531639",
+      "containerPort": 3000,
+      "hostPort": 8018,
+      "bindAddress": "0.0.0.0",
+      "protocol": "tcp",
+      "isPrimary": true
+     }
+    ]
+   },
+   {
+    "id": "725dfb1c-a667-59f5-a587-649c1399f6c2",
+    "hostId": "779a83e8-e6ab-57dc-b41c-c8c958500580",
+    "name": "license-server",
+    "runtime": "docker",
+    "image": "license-server:latest",
+    "scheme": "http",
+    "healthPath": null,
+    "description": null,
+    "icon": null,
+    "ownerTenantId": "48e6f172-e327-53f3-8110-4ac00937951d",
+    "ports": [
+     {
+      "id": "de2fd343-a024-5d3b-99da-081319673c94",
+      "serviceId": "725dfb1c-a667-59f5-a587-649c1399f6c2",
+      "containerPort": 3000,
+      "hostPort": 8019,
+      "bindAddress": "0.0.0.0",
+      "protocol": "tcp",
+      "isPrimary": true
+     }
+    ]
+   }
+  ],
+  "proxies": [
+   {
+    "id": "d955e767-5340-55de-82de-2c130a26816f",
+    "hostId": "9dc8c931-54ee-57ba-92a2-a3df1c48e128",
+    "serviceId": null,
+    "name": "caddy-northwind",
+    "kind": "caddy",
+    "adminUrl": null,
+    "routes": [
+     {
+      "id": "3da8e1e5-6c75-5b02-af21-9510350e3c18",
+      "proxyId": "d955e767-5340-55de-82de-2c130a26816f",
+      "domain": "erp.northwind.example",
+      "pathPrefix": "/",
+      "inboundPort": 443,
+      "inboundProtocol": "https",
+      "tlsMode": "letsencrypt",
+      "tlsExpiresAt": "2027-03-01T00:00:00Z",
+      "targetHostId": "779a83e8-e6ab-57dc-b41c-c8c958500580",
+      "targetIp": "10.20.0.21",
+      "targetPort": 8000,
+      "targetScheme": "http",
+      "serviceId": "4c051e92-9a0b-514c-bd66-f270e76400f1",
+      "enabled": true
+     },
+     {
+      "id": "e00581c4-3fed-5dc0-8e2c-2b52ef547941",
+      "proxyId": "d955e767-5340-55de-82de-2c130a26816f",
+      "domain": "portal.northwind.example",
+      "pathPrefix": "/",
+      "inboundPort": 443,
+      "inboundProtocol": "https",
+      "tlsMode": "letsencrypt",
+      "tlsExpiresAt": "2027-03-01T00:00:00Z",
+      "targetHostId": "779a83e8-e6ab-57dc-b41c-c8c958500580",
+      "targetIp": "10.20.0.21",
+      "targetPort": 8001,
+      "targetScheme": "http",
+      "serviceId": "88da2a51-ee21-57b7-84e7-8a54eb815823",
+      "enabled": true
+     },
+     {
+      "id": "e40495d7-22b0-542e-835f-308601056061",
+      "proxyId": "d955e767-5340-55de-82de-2c130a26816f",
+      "domain": "license-server.atlas.example",
+      "pathPrefix": "/",
+      "inboundPort": 443,
+      "inboundProtocol": "https",
+      "tlsMode": "letsencrypt",
+      "tlsExpiresAt": "2027-03-01T00:00:00Z",
+      "targetHostId": "779a83e8-e6ab-57dc-b41c-c8c958500580",
+      "targetIp": "10.20.0.21",
+      "targetPort": 8019,
+      "targetScheme": "http",
+      "serviceId": "725dfb1c-a667-59f5-a587-649c1399f6c2",
+      "enabled": true
+     }
+    ]
+   },
+   {
+    "id": "b1e3df9b-8cb7-5835-ad7d-8cbf81b46480",
+    "hostId": "e48fd9be-e009-5d6f-b8c6-80f6ff70ea37",
+    "serviceId": null,
+    "name": "caddy-bluefin",
+    "kind": "caddy",
+    "adminUrl": null,
+    "routes": [
+     {
+      "id": "89ffaf61-3476-5b76-9ffe-7adcdcc4cf93",
+      "proxyId": "b1e3df9b-8cb7-5835-ad7d-8cbf81b46480",
+      "domain": "pms.bluefin.example",
+      "pathPrefix": "/",
+      "inboundPort": 443,
+      "inboundProtocol": "https",
+      "tlsMode": "letsencrypt",
+      "tlsExpiresAt": "2026-11-03T00:00:00Z",
+      "targetHostId": "3efdfd67-ddfe-5a8f-aeb2-f7bf715df722",
+      "targetIp": "10.21.0.21",
+      "targetPort": 8003,
+      "targetScheme": "http",
+      "serviceId": "b83dc974-f175-51fa-a47b-92d44427406f",
+      "enabled": true
+     },
+     {
+      "id": "16e956a3-a7c7-5793-9347-ab1dc9fe9041",
+      "proxyId": "b1e3df9b-8cb7-5835-ad7d-8cbf81b46480",
+      "domain": "imaging.bluefin.example",
+      "pathPrefix": "/",
+      "inboundPort": 443,
+      "inboundProtocol": "https",
+      "tlsMode": "letsencrypt",
+      "tlsExpiresAt": "2027-03-01T00:00:00Z",
+      "targetHostId": "3efdfd67-ddfe-5a8f-aeb2-f7bf715df722",
+      "targetIp": "10.21.0.21",
+      "targetPort": 8004,
+      "targetScheme": "http",
+      "serviceId": "d7f334ad-e30a-59cd-b921-638ca7f6c7ba",
+      "enabled": true
+     },
+     {
+      "id": "e31cce26-e780-5950-956c-92f95e849926",
+      "proxyId": "b1e3df9b-8cb7-5835-ad7d-8cbf81b46480",
+      "domain": "tracking-api.northwind.example",
+      "pathPrefix": "/",
+      "inboundPort": 443,
+      "inboundProtocol": "https",
+      "tlsMode": "letsencrypt",
+      "tlsExpiresAt": "2027-03-01T00:00:00Z",
+      "targetHostId": "3efdfd67-ddfe-5a8f-aeb2-f7bf715df722",
+      "targetIp": "10.21.0.21",
+      "targetPort": 8015,
+      "targetScheme": "http",
+      "serviceId": "e9cd2c8d-b582-5ebf-8140-869c5576c825",
+      "enabled": true
+     }
+    ]
+   },
+   {
+    "id": "18cb1149-bce6-53cd-abb2-aaedbae03314",
+    "hostId": "cc46424c-72e0-5609-8fd4-ac87ef5ecf70",
+    "serviceId": null,
+    "name": "caddy-kestrel",
+    "kind": "caddy",
+    "adminUrl": null,
+    "routes": [
+     {
+      "id": "56bbc7b1-4a29-5548-9c69-ae7979bc7bec",
+      "proxyId": "18cb1149-bce6-53cd-abb2-aaedbae03314",
+      "domain": "docs.kestrel.example",
+      "pathPrefix": "/",
+      "inboundPort": 443,
+      "inboundProtocol": "https",
+      "tlsMode": "letsencrypt",
+      "tlsExpiresAt": "2027-03-01T00:00:00Z",
+      "targetHostId": "d0c88073-da61-5d1a-84c5-e12efe3d684c",
+      "targetIp": "10.22.0.21",
+      "targetPort": 8006,
+      "targetScheme": "http",
+      "serviceId": "500a776f-7960-5731-a9a4-a18f28e9cefd",
+      "enabled": true
+     },
+     {
+      "id": "2e018bc0-afa9-5a41-ac85-a2ec34449bef",
+      "proxyId": "18cb1149-bce6-53cd-abb2-aaedbae03314",
+      "domain": "nextcloud.kestrel.example",
+      "pathPrefix": "/",
+      "inboundPort": 443,
+      "inboundProtocol": "https",
+      "tlsMode": "letsencrypt",
+      "tlsExpiresAt": "2027-03-01T00:00:00Z",
+      "targetHostId": "d0c88073-da61-5d1a-84c5-e12efe3d684c",
+      "targetIp": "10.22.0.21",
+      "targetPort": 8007,
+      "targetScheme": "http",
+      "serviceId": "a02ba965-2bbd-50a4-95b6-7b8cfb6d3153",
+      "enabled": true
+     },
+     {
+      "id": "b6fff371-8c84-5517-8240-60ba77eb27d0",
+      "proxyId": "18cb1149-bce6-53cd-abb2-aaedbae03314",
+      "domain": "patient-forms.bluefin.example",
+      "pathPrefix": "/",
+      "inboundPort": 443,
+      "inboundProtocol": "https",
+      "tlsMode": "letsencrypt",
+      "tlsExpiresAt": "2027-03-01T00:00:00Z",
+      "targetHostId": "d0c88073-da61-5d1a-84c5-e12efe3d684c",
+      "targetIp": "10.22.0.21",
+      "targetPort": 8016,
+      "targetScheme": "http",
+      "serviceId": "b7a4656b-28c6-53a4-81a4-dca26b263fb7",
+      "enabled": true
+     }
+    ]
+   },
+   {
+    "id": "e69a4d88-0e59-50cd-bed5-958bd515344d",
+    "hostId": "da3e2fea-9f51-5529-a21a-60ff9651e164",
+    "serviceId": null,
+    "name": "caddy-orchard",
+    "kind": "caddy",
+    "adminUrl": null,
+    "routes": [
+     {
+      "id": "f6200220-8d15-5f58-a5d5-bb2c891d9639",
+      "proxyId": "e69a4d88-0e59-50cd-bed5-958bd515344d",
+      "domain": "shop.orchard.example",
+      "pathPrefix": "/",
+      "inboundPort": 443,
+      "inboundProtocol": "https",
+      "tlsMode": "letsencrypt",
+      "tlsExpiresAt": "2027-03-01T00:00:00Z",
+      "targetHostId": "8749fbf8-e770-54d1-85df-957b9d1fe3e5",
+      "targetIp": "10.23.0.21",
+      "targetPort": 8009,
+      "targetScheme": "http",
+      "serviceId": "3076a3b3-3e64-520b-bbd2-6e03765b2dc6",
+      "enabled": true
+     },
+     {
+      "id": "78b9c589-6f64-5b8f-ba7e-33e4cd1e84d9",
+      "proxyId": "e69a4d88-0e59-50cd-bed5-958bd515344d",
+      "domain": "pos-sync.orchard.example",
+      "pathPrefix": "/",
+      "inboundPort": 443,
+      "inboundProtocol": "https",
+      "tlsMode": "letsencrypt",
+      "tlsExpiresAt": "2027-03-01T00:00:00Z",
+      "targetHostId": "8749fbf8-e770-54d1-85df-957b9d1fe3e5",
+      "targetIp": "10.23.0.21",
+      "targetPort": 8010,
+      "targetScheme": "http",
+      "serviceId": "a378bb76-e133-5cba-b591-8c61fa7dbf29",
+      "enabled": true
+     },
+     {
+      "id": "3f5f90d0-91f6-5d2b-96bf-eba474afb75d",
+      "proxyId": "e69a4d88-0e59-50cd-bed5-958bd515344d",
+      "domain": "e-sign.kestrel.example",
+      "pathPrefix": "/",
+      "inboundPort": 443,
+      "inboundProtocol": "https",
+      "tlsMode": "letsencrypt",
+      "tlsExpiresAt": "2027-03-01T00:00:00Z",
+      "targetHostId": "8749fbf8-e770-54d1-85df-957b9d1fe3e5",
+      "targetIp": "10.23.0.21",
+      "targetPort": 8017,
+      "targetScheme": "http",
+      "serviceId": "555338ea-cc90-5348-94a7-5bce280c9f7d",
+      "enabled": true
+     }
+    ]
+   },
+   {
+    "id": "e694457b-2901-550a-9ddc-25ec3f749047",
+    "hostId": "5523d083-51a5-5d1c-9ba3-3433c6d59107",
+    "serviceId": null,
+    "name": "caddy-atlas",
+    "kind": "caddy",
+    "adminUrl": null,
+    "routes": [
+     {
+      "id": "06f8fcef-d27b-5dd1-8733-a8d74d7e5872",
+      "proxyId": "e694457b-2901-550a-9ddc-25ec3f749047",
+      "domain": "git.atlas.example",
+      "pathPrefix": "/",
+      "inboundPort": 443,
+      "inboundProtocol": "https",
+      "tlsMode": "letsencrypt",
+      "tlsExpiresAt": "2027-03-01T00:00:00Z",
+      "targetHostId": "c14b4b41-7fb6-57ed-8cb7-f2a7e011e014",
+      "targetIp": "10.24.0.21",
+      "targetPort": 8011,
+      "targetScheme": "http",
+      "serviceId": "bea9f86c-c763-59b5-a9bf-ecaa742c3bd7",
+      "enabled": true
+     },
+     {
+      "id": "7945d523-c5cb-51e6-bb96-7ee9b18f7eb3",
+      "proxyId": "e694457b-2901-550a-9ddc-25ec3f749047",
+      "domain": "grafana.atlas.example",
+      "pathPrefix": "/",
+      "inboundPort": 443,
+      "inboundProtocol": "https",
+      "tlsMode": "letsencrypt",
+      "tlsExpiresAt": "2027-03-01T00:00:00Z",
+      "targetHostId": "c14b4b41-7fb6-57ed-8cb7-f2a7e011e014",
+      "targetIp": "10.24.0.21",
+      "targetPort": 8013,
+      "targetScheme": "http",
+      "serviceId": "bea1457a-893c-5181-8a9e-88254e2e7f1c",
+      "enabled": true
+     },
+     {
+      "id": "b716a115-1ad5-5589-a3c6-1d5feb9677c5",
+      "proxyId": "e694457b-2901-550a-9ddc-25ec3f749047",
+      "domain": "menu-board.orchard.example",
+      "pathPrefix": "/",
+      "inboundPort": 443,
+      "inboundProtocol": "https",
+      "tlsMode": "letsencrypt",
+      "tlsExpiresAt": "2027-03-01T00:00:00Z",
+      "targetHostId": "c14b4b41-7fb6-57ed-8cb7-f2a7e011e014",
+      "targetIp": "10.24.0.21",
+      "targetPort": 8018,
+      "targetScheme": "http",
+      "serviceId": "ff138d21-a200-5c01-bd9a-b6deb7531639",
+      "enabled": true
+     }
+    ]
+   }
+  ],
+  "credentials": []
+ }
+}

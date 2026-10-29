@@ -11,7 +11,7 @@ export const WorkloadNode = memo(function WorkloadNode({ data, selected }: NodeP
   const alert = n.badges.find((b) => b.tone === 'danger') ?? n.badges.find(isAlert);
   return (
     <div
-      className={`g-chip kind-${n.kind} lod-${lod} ${n.ownerColor ? 'is-owned' : ''} ${selected ? 'is-selected' : ''}`}
+      className={`g-chip kind-${n.kind} lod-${lod} ${n.ownerColor ? 'is-owned' : ''} ${n.context ? 'is-context' : ''} ${selected ? 'is-selected' : ''}`}
       data-node={n.id}
       style={{ ['--accent' as string]: n.accent, ['--oc' as string]: n.ownerColor }}
     >
@@ -21,7 +21,7 @@ export const WorkloadNode = memo(function WorkloadNode({ data, selected }: NodeP
         alert && <span className={`g-alert-dot tone-${alert.tone}`} title={alert.label} />
       ) : (
         <div className="g-chip-body">
-          <div className="g-chip-name">{n.label}</div>
+          <div className="g-chip-name" title={n.label}>{n.label}</div>
           {lod === 'detail' && n.sublabel && <div className="g-sub mono">{n.sublabel}</div>}
           <Badges badges={n.badges} lod={lod} ownerColor={n.ownerColor} />
         </div>

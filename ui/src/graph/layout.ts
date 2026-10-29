@@ -17,7 +17,7 @@ import type { GraphEdge, GraphModel, GraphNode } from './build';
 
 export const WORKLOAD = { w: 244, h: 72 };
 export const APPLIANCE = { w: 252, h: 60 };
-export const HOST = { pad: 14, header: 58, gap: 12, minW: 272 };
+export const HOST = { pad: 14, header: 58, gap: 12, minW: 300 };
 export const COMPANY = { pad: 24, header: 68, hostGap: 28, applianceGap: 16, minW: 360, emptyH: 96 };
 export const INTERNET = { w: 312, h: 76, gap: 140 };
 export const COMPANY_GAP = 112;

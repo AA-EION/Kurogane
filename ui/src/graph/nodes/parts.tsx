@@ -11,8 +11,14 @@ export const DETAIL_FROM = 0.95;
 
 export const lodFor = (zoom: number): Lod => (zoom < OVERVIEW_BELOW ? 'overview' : zoom < DETAIL_FROM ? 'normal' : 'detail');
 
+/** How much overview labels grow as the camera pulls back. */
+export const lodScale = (zoom: number) => Math.min(2.6, Math.max(1, 0.9 / zoom));
+
 /** True while an image export is being captured: render every detail, no dimming. */
 export const CaptureContext = createContext(false);
+
+/** Screen space covered by the inspector (right) and the company picker (top), so edge labels stay in view. */
+export const InsetContext = createContext({ right: 0, top: 0 });
 
 /** Re-renders only when the zoom crosses a band boundary. */
 export function useLod(): Lod {

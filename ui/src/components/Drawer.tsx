@@ -164,7 +164,7 @@ function TlsChip({ route }: { route: ProxyRoute }) {
 }
 
 export function Drawer() {
-  const { backend, graph, lookup, selected, select, focus, focusRef, openModal, toast } = useStore();
+  const { backend, graph, lookup, selected, select, focus, focusRef, openModal, toast, companyFilter, setCompanyFilter } = useStore();
   const run = useRun();
   if (!selected) return null;
   const node = graph.byId.get(selected);
@@ -207,6 +207,10 @@ export function Drawer() {
     );
     body = (
       <>
+        <button className={`scope-btn ${companyFilter === t.id ? 'on' : ''}`} aria-pressed={companyFilter === t.id} onClick={() => setCompanyFilter(companyFilter === t.id ? null : t.id)}>
+          <Icon name="filter" size={14} />
+          {companyFilter === t.id ? 'Showing only this company · Show all' : 'Show only this company on the map'}
+        </button>
         <div className="quick-add">
           <AddChip label="Machine" onClick={() => openModal({ type: 'host', tenantId: t.id })} />
           <AddChip label="Network" onClick={() => openModal({ type: 'network', tenantId: t.id })} />

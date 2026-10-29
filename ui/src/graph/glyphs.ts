@@ -36,6 +36,8 @@ export const GLYPHS: Record<string, string> = {
   plus: 'M12 5v14M5 12h14',
   minus: 'M5 12h14',
   fit: 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',
+  filter: 'M4 5h16l-6 7.5V19l-4-2v-4.5z',
+  info: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM12 11v6M12 7.5h.01',
   folder: 'M3 6h6l2 2h10v11H3z',
   shield: 'M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z',
   download: 'M12 4v11M7 10l5 5 5-5M4 20h16',

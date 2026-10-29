@@ -31,6 +31,9 @@ export interface Store {
   /** Pan the map to a graph node id and select it. */
   focus: (nodeId: string) => void;
   focusRef: (recordId: string) => void;
+  /** Company whose slice of the map and inventory is shown, or null for everything. */
+  companyFilter: string | null;
+  setCompanyFilter: (tenantId: string | null) => void;
   toast: (msg: string, tone?: 'ok' | 'warn' | 'error') => void;
   openModal: (m: ModalSpec) => void;
   closeModal: () => void;

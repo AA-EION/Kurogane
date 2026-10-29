@@ -3,6 +3,7 @@ import { ReactFlowProvider } from '@xyflow/react';
 import type { Topology } from './api/types';
 import { type NodeKind, buildGraph } from './graph/build';
 import { exportGraphImage } from './graph/exportImage';
+import { focusCompany } from './graph/filter';
 import { TopologyView } from './graph/TopologyView';
 import { setAppearance, type Appearance } from './theme';
 
@@ -29,8 +30,13 @@ export function NativeGraph() {
   const [state, setState] = useState<GraphState | null>(null);
   const current = useRef(state);
   current.current = state;
+  const [companyFilter, setCompanyFilter] = useState<string | null>(null);
   const graph = useMemo(() => (state?.topology ? buildGraph(state.topology) : null), [state?.topology]);
+  const activeFilter = companyFilter && graph?.byId.has(`tenant:${companyFilter}`) ? companyFilter : null;
+  const view = useMemo(() => (graph && activeFilter ? focusCompany(graph, activeFilter) : graph), [graph, activeFilter]);
   const selectedNode = graph?.refToNode.get(state?.selected?.id ?? '') ?? null;
+  // A native selection outside the filtered slice shows everything again.
+  useEffect(() => { if (selectedNode && view && !view.byId.has(selectedNode)) setCompanyFilter(null); }, [selectedNode, view]);
   const focus = useMemo(() => (selectedNode ? { id: selectedNode, nonce: Date.now() } : null), [selectedNode]);
   useEffect(() => {
     window.kuroganeGraph = {
@@ -57,10 +63,10 @@ export function NativeGraph() {
     return () => { delete window.kuroganeGraph; };
   }, []);
   useEffect(() => { if (state?.fit) window.dispatchEvent(new Event('kurogane:fit')); }, [state?.fit]);
-  if (!graph) return <main className="native-graph-stage"><span className="native-graph-empty">Unlock your vault to view its topology.</span></main>;
+  if (!graph || !view) return <main className="native-graph-stage"><span className="native-graph-empty">Unlock your vault to view its topology.</span></main>;
   return <main className="native-graph-stage" aria-label="Infrastructure topology">
     <ReactFlowProvider>
-      <TopologyView model={graph} selected={selectedNode} focus={focus} inspectorInset={0} onSelect={(nodeId) => {
+      <TopologyView model={view} selected={selectedNode} focus={focus} inspectorInset={0} companies={state?.topology?.tenants} companyFilter={activeFilter} onCompanyFilter={setCompanyFilter} onSelect={(nodeId) => {
         const node = nodeId ? graph.byId.get(nodeId) : undefined;
         const kind = node && RECORD_KIND[node.kind];
         post({ type: 'select', item: node && kind ? { kind, id: node.refId } : null });

@@ -612,6 +612,13 @@ table.counts th { color: var(--text-3); font-weight: 600; }
 .side-tabs button { padding: 8px 5px; font-size: 12px; }
 .side-tabs button.on { background: linear-gradient(var(--surface-top), var(--surface-bottom)); box-shadow: var(--raised); }
 .side-filter { margin: 14px 4px 12px; padding: 9px 10px; background: var(--panel); box-shadow: var(--inset); }
+.scope-btn { display: flex; align-items: center; gap: 8px; width: 100%; margin: 4px 0 12px; padding: 9px 12px; border-radius: 9px; font-size: 12.5px; color: var(--text-2); }
+.scope-btn:hover { color: var(--text); border-color: var(--ember); }
+.scope-btn.on { color: var(--text); border-color: var(--accent); box-shadow: var(--inset); }
+.side-scope { display: flex; align-items: center; gap: 8px; margin: -4px 4px 12px; padding: 8px 10px; border-radius: 8px; font-size: 12px; color: var(--text-2); background: color-mix(in srgb, var(--tc) 9%, var(--panel)); border: 1px solid color-mix(in srgb, var(--tc) 40%, var(--line)); }
+.side-scope .dot { width: 8px; height: 8px; border-radius: 2px; transform: rotate(45deg); background: var(--tc); flex: none; }
+.side-scope b { color: var(--text); }
+.side-scope .link-btn { margin-left: auto; flex: none; font-size: 12px; }
 .tree-group { margin-bottom: 14px; }
 .tree-row { min-height: 32px; }
 .tree-row:hover, .acc-row:hover, .kv.clickable:hover { background: var(--panel-2); }
@@ -620,7 +627,7 @@ table.counts th { color: var(--text-3); font-weight: 600; }
 .tree-add:focus-visible, .tree-row:focus-within .tree-add { opacity: 1; }
 .search-trigger, .f-input, .field input { background: var(--panel); box-shadow: var(--inset); }
 .search-trigger { padding: 9px 12px; }
-.btn, button.ghost, .hud-btn, .tree-actions button, .lock-pill {
+.btn, button.ghost, .hud-btn, .tree-actions button, .lock-pill, .scope-btn, .g-filter-clear {
   background: linear-gradient(180deg, var(--surface-top), var(--surface-bottom));
   box-shadow: var(--raised); border: 1px solid var(--line-2);
 }

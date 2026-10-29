@@ -21,13 +21,28 @@ export function Sidebar() {
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tab === 'inventory' ? 'Filter…' : 'Find an account…'} spellCheck={false} />
         {q && <button className="icon-btn tiny" onClick={() => setQ('')}><Icon name="close" size={12} /></button>}
       </div>
+      <FilterBanner />
       {tab === 'inventory' ? <Inventory q={q.trim().toLowerCase()} /> : <Accounts q={q.trim().toLowerCase()} />}
     </aside>
   );
 }
 
+/** Shown while the map and rail are narrowed to one company. */
+function FilterBanner() {
+  const { lookup, companyFilter, setCompanyFilter } = useStore();
+  const t = companyFilter ? lookup.tenant.get(companyFilter) : undefined;
+  if (!t) return null;
+  return (
+    <div className="side-scope" style={{ ['--tc' as string]: t.color ?? '#868e96' }}>
+      <i className="dot" />
+      <span className="ellipsis">Only <b>{t.name}</b></span>
+      <button className="link-btn" onClick={() => setCompanyFilter(null)}>Show all</button>
+    </div>
+  );
+}
+
 function Inventory({ q }: { q: string }) {
-  const { topo, graph, selected, focus, openModal } = useStore();
+  const { topo, graph, selected, focus, openModal, companyFilter } = useStore();
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const toggle = (id: string) => setCollapsed((c) => {
     const n = new Set(c);
@@ -45,7 +60,7 @@ function Inventory({ q }: { q: string }) {
 
   return (
     <div className="tree">
-      {topo.tenants.map((t) => {
+      {topo.tenants.filter((t) => !companyFilter || t.id === companyFilter).map((t) => {
         const hosts = topo.hosts.filter((h) => h.tenantId === t.id && hostMatches(h));
         if (q && !match(t.name) && hosts.length === 0) return null;
         const open = !collapsed.has(t.id) || !!q;
@@ -119,36 +134,38 @@ function Inventory({ q }: { q: string }) {
   );
 }
 
-function ownerPath(c: CredentialMeta, l: ReturnType<typeof useStore>['lookup']): { tenant: string; path: string; nodeRef: string } {
+function ownerPath(c: CredentialMeta, l: ReturnType<typeof useStore>['lookup']): { tenantId: string; tenant: string; path: string; nodeRef: string } {
+  const at = (tenantId: string | null | undefined, path: string) => ({ tenantId: tenantId ?? '', tenant: l.tenant.get(tenantId ?? '')?.name ?? '', path, nodeRef: c.owner.id });
   switch (c.owner.kind) {
     case 'tenant':
-      return { tenant: l.tenant.get(c.owner.id)?.name ?? '', path: 'company', nodeRef: c.owner.id };
+      return at(c.owner.id, 'company');
     case 'host': {
       const h = l.host.get(c.owner.id);
-      return { tenant: l.tenant.get(h?.tenantId ?? '')?.name ?? '', path: h?.name ?? '', nodeRef: c.owner.id };
+      return at(h?.tenantId, h?.name ?? '');
     }
     case 'service': {
       const s = l.service.get(c.owner.id);
       const h = l.host.get(s?.hostId ?? '');
-      return { tenant: l.tenant.get(s?.ownerTenantId ?? h?.tenantId ?? '')?.name ?? '', path: `${h?.name} / ${s?.name}`, nodeRef: c.owner.id };
+      return at(s?.ownerTenantId ?? h?.tenantId, `${h?.name} / ${s?.name}`);
     }
     case 'proxy': {
       const p = l.proxy.get(c.owner.id);
       const h = l.host.get(p?.hostId ?? '');
-      return { tenant: l.tenant.get(h?.tenantId ?? '')?.name ?? '', path: `${h?.name} / ${p?.name}`, nodeRef: c.owner.id };
+      return at(h?.tenantId, `${h?.name} / ${p?.name}`);
     }
   }
 }
 
 function Accounts({ q }: { q: string }) {
-  const { topo, lookup, openModal } = useStore();
+  const { topo, lookup, openModal, companyFilter } = useStore();
   const rows = useMemo(
     () =>
       topo.credentials
         .map((c) => ({ c, ...ownerPath(c, lookup) }))
+        .filter(({ tenantId }) => !companyFilter || tenantId === companyFilter)
         .filter(({ c, tenant, path }) => !q || [c.label, c.username, c.url, tenant, path, labelOf(CREDENTIAL_KINDS, c.kind)].some((x) => x?.toLowerCase().includes(q)))
         .sort((a, b) => a.tenant.localeCompare(b.tenant) || a.path.localeCompare(b.path) || a.c.label.localeCompare(b.c.label)),
-    [topo, lookup, q],
+    [topo, lookup, q, companyFilter],
   );
   let lastTenant = '';
   return (

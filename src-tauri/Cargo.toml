@@ -31,6 +31,10 @@ which.workspace = true
 uuid.workspace = true
 data-encoding.workspace = true
 
+[target.'cfg(target_os = "macos")'.dependencies]
+# File dialogs attach to the frontmost SwiftUI sheet (see native::DialogParent).
+raw-window-handle = "0.6"
+
 [features]
 # Tauri's dev server integration; `cargo tauri dev` enables it.
 custom-protocol = ["tauri/custom-protocol"]

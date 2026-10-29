@@ -2389,6 +2389,7 @@ dependencies = [
  "data-encoding",
  "kurogane-core",
  "kurogane-sync",
+ "raw-window-handle",
  "serde",
  "serde_json",
  "sha2",

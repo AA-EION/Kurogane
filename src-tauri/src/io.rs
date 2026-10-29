@@ -7,7 +7,7 @@ use kurogane_core::db::models::Topology;
 use kurogane_core::interchange::{self, ImportReport};
 use serde::Serialize;
 use tauri::{AppHandle, State};
-use tauri_plugin_dialog::DialogExt;
+use tauri_plugin_dialog::{DialogExt, FileDialogBuilder};
 use zeroize::Zeroizing;
 
 use crate::commands::{err, mutate, with_vault, CmdResult};
@@ -27,8 +27,19 @@ fn safe_name(s: &str) -> String {
     }
 }
 
+/// Every file dialog starts here so that on macOS it attaches to the frontmost
+/// window (see `native::DialogParent`).
+pub(crate) fn file_dialog(app: &AppHandle) -> FileDialogBuilder<tauri::Wry> {
+    let builder = app.dialog().file();
+    #[cfg(target_os = "macos")]
+    if let Some(parent) = crate::native::dialog_parent() {
+        return builder.set_parent(&parent);
+    }
+    builder
+}
+
 fn save_dialog(app: &AppHandle, title: &str, name: &str, filter: &str, ext: &[&str]) -> CmdResult<Option<PathBuf>> {
-    match app.dialog().file().set_title(title).set_file_name(name).add_filter(filter, ext).blocking_save_file() {
+    match file_dialog(app).set_title(title).set_file_name(name).add_filter(filter, ext).blocking_save_file() {
         Some(p) => Ok(Some(p.into_path().map_err(err)?)),
         None => Ok(None),
     }
@@ -109,8 +120,7 @@ pub struct ImportPreview {
 /// Pick an .xlsx / .json file and dry-run it. Nothing is written yet.
 #[tauri::command]
 pub async fn import_preview(app: AppHandle, state: State<'_, AppState>) -> CmdResult<Option<ImportPreview>> {
-    let Some(picked) =
-        app.dialog().file().set_title("Import inventory").add_filter("Excel or JSON", &["xlsx", "json"]).blocking_pick_file()
+    let Some(picked) = file_dialog(&app).set_title("Import inventory").add_filter("Excel or JSON", &["xlsx", "json"]).blocking_pick_file()
     else {
         return Ok(None);
     };

@@ -1,6 +1,12 @@
 //! Native macOS command boundary. Swift owns presentation; Rust owns the vault.
-use std::ffi::{c_char, CStr};
+use std::ffi::{c_char, c_void, CStr};
+use std::ptr::NonNull;
 use std::sync::OnceLock;
+
+use raw_window_handle::{
+    AppKitDisplayHandle, AppKitWindowHandle, DisplayHandle, HandleError, HasDisplayHandle, HasWindowHandle, RawDisplayHandle,
+    RawWindowHandle, WindowHandle,
+};
 
 use serde::de::DeserializeOwned;
 use serde_json::{json, Value};
@@ -14,6 +20,30 @@ static APP: OnceLock<AppHandle> = OnceLock::new();
 extern "C" {
     fn kurogane_native_receive_json(message: *const c_char);
     fn kurogane_install_swift_shell(window: *mut std::ffi::c_void);
+    fn kurogane_dialog_parent_view() -> *mut c_void;
+}
+
+/// The frontmost window (an open SwiftUI sheet, otherwise the main window) as a
+/// file-dialog parent. Without it rfd attaches its panel to the main window,
+/// where AppKit queues it behind the open sheet and the request never returns.
+pub struct DialogParent(NonNull<c_void>);
+
+pub fn dialog_parent() -> Option<DialogParent> {
+    // Swift reads the key window on the main thread; callers run off it.
+    NonNull::new(unsafe { kurogane_dialog_parent_view() }).map(DialogParent)
+}
+
+impl HasWindowHandle for DialogParent {
+    fn window_handle(&self) -> Result<WindowHandle<'_>, HandleError> {
+        // The view belongs to a window that stays open while its dialog runs.
+        Ok(unsafe { WindowHandle::borrow_raw(RawWindowHandle::AppKit(AppKitWindowHandle::new(self.0))) })
+    }
+}
+
+impl HasDisplayHandle for DialogParent {
+    fn display_handle(&self) -> Result<DisplayHandle<'_>, HandleError> {
+        Ok(unsafe { DisplayHandle::borrow_raw(RawDisplayHandle::AppKit(AppKitDisplayHandle::new())) })
+    }
 }
 
 fn deliver(value: Value) {

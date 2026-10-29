@@ -52,6 +52,14 @@ import SwiftUI
                 var v6Host = NativeFixture.host; v6Host["interfaces"] = [["internalIp":"fd00::1","isPrimary":true]]
                 privateOnly["hosts"] = [v6Host]
                 precondition(nativeServiceEndpoints(NativeFixture.service,privateOnly).first?.url == "http://[fd00::1]:3000/")
+                // File dialogs opened from a sheet must attach to that sheet, not queue behind it.
+                model.sheet = NativeSheet(kind:"create")
+                try await Task.sleep(nanoseconds:700_000_000)
+                precondition(window.attachedSheet != nil, "Create-vault sheet did not open")
+                let parent = dialogParentView().map { Unmanaged<NSView>.fromOpaque($0).takeUnretainedValue() }
+                precondition(parent?.window === window.attachedSheet, "File dialogs would attach behind the open sheet")
+                model.sheet = nil
+                try await Task.sleep(nanoseconds:500_000_000)
                 let folder = CommandLine.arguments[1]
                 if CommandLine.arguments.count > 2 {
                     let data = try Data(contentsOf:URL(fileURLWithPath:CommandLine.arguments[2]))

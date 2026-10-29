@@ -278,6 +278,22 @@ struct NativeInventory: View {
     }
 }
 @MainActor private var nativeModel: NativeModel?
+/// The view a Rust-opened file panel attaches to. rfd presents panels as sheets,
+/// and AppKit queues a sheet on a window that already shows one (our SwiftUI
+/// sheets), so the panel must belong to the frontmost window: the open sheet if any.
+@_cdecl("kurogane_dialog_parent_view")
+public func dialogParentView() -> UnsafeMutableRawPointer? {
+    // The address crosses the main-actor boundary as a Sendable integer.
+    let lookup = { () -> UInt in
+        MainActor.assumeIsolated {
+            guard var window = NSApp.keyWindow ?? NSApp.mainWindow ?? NSApp.windows.first else { return 0 }
+            while let sheet = window.attachedSheet { window = sheet }
+            guard let view = window.contentView else { return 0 }
+            return UInt(bitPattern: Unmanaged.passUnretained(view).toOpaque())
+        }
+    }
+    return UnsafeMutableRawPointer(bitPattern: Thread.isMainThread ? lookup() : DispatchQueue.main.sync(execute: lookup))
+}
 @_cdecl("kurogane_install_swift_shell")
 public func installShell(_ pointer: UnsafeMutableRawPointer) {
     MainActor.assumeIsolated {

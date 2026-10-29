@@ -15,7 +15,6 @@ use kurogane_sync::transport::{self, FolderTransport, Transport};
 use serde::{Deserialize, Serialize};
 use tauri::ipc::Channel;
 use tauri::{AppHandle, Emitter, Manager, State};
-use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_opener::OpenerExt;
 use zeroize::Zeroizing;
 
@@ -218,9 +217,7 @@ pub async fn connect_cloud(
     let step = on_step.clone();
     let res = tauri::async_runtime::spawn_blocking(move || -> CmdResult<Option<CloudConnect>> {
         if provider == Provider::Local {
-            let Some(picked) = a
-                .dialog()
-                .file()
+            let Some(picked) = crate::io::file_dialog(&a)
                 .set_title("Pick the vault inside your synced folder")
                 .add_filter("Kurogane vault", &["kurogane"])
                 .blocking_pick_file()
@@ -352,7 +349,7 @@ pub async fn link_remote(
 pub async fn link_folder(app: AppHandle) -> CmdResult<Option<SyncStatusDto>> {
     let a = app.clone();
     let res = tauri::async_runtime::spawn_blocking(move || -> CmdResult<bool> {
-        let Some(dir) = a.dialog().file().set_title("Choose the synced folder").blocking_pick_folder() else { return Ok(false) };
+        let Some(dir) = crate::io::file_dialog(&a).set_title("Choose the synced folder").blocking_pick_folder() else { return Ok(false) };
         let dir = dir.into_path().map_err(err)?;
         let (file, vault_id) = vault_file_and_id(&a)?;
         let path = dir.join(&file);

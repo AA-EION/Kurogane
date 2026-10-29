@@ -14,7 +14,6 @@ use kurogane_core::session::{LockReason, SessionClock};
 use kurogane_core::vault::{self, CreateOptions, TotpEnrollment, UnlockedVault};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, State};
-use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_opener::OpenerExt;
 use zeroize::Zeroizing;
 
@@ -161,9 +160,7 @@ pub async fn create_vault(args: CreateVaultArgs, state: State<'_, AppState>) -> 
 
 #[tauri::command]
 pub async fn pick_vault_save_path(app: AppHandle) -> CmdResult<Option<String>> {
-    let picked = app
-        .dialog()
-        .file()
+    let picked = crate::io::file_dialog(&app)
         .set_title("Create Kurogane vault")
         .set_file_name("infrastructure.kurogane")
         .add_filter("Kurogane vault", &["kurogane"])
@@ -175,7 +172,10 @@ pub async fn pick_vault_save_path(app: AppHandle) -> CmdResult<Option<String>> {
 pub async fn open_vault(path: Option<String>, app: AppHandle, state: State<'_, AppState>) -> CmdResult<Option<AppStatus>> {
     let path = match path {
         Some(p) => PathBuf::from(p),
-        None => match app.dialog().file().set_title("Open Kurogane vault").add_filter("Kurogane vault", &["kurogane"]).blocking_pick_file()
+        None => match crate::io::file_dialog(&app)
+            .set_title("Open Kurogane vault")
+            .add_filter("Kurogane vault", &["kurogane"])
+            .blocking_pick_file()
         {
             Some(p) => p.into_path().map_err(err)?,
             None => return Ok(None),

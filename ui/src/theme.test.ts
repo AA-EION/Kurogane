@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { TENANT_COLORS } from './options';
 
 const css = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
 const rgb = (hex: string) => hex.replace('#', '').match(/../g)!.map((value) => parseInt(value, 16));
@@ -15,8 +16,13 @@ describe('Readable light and dark surfaces', () => {
         expect(ratio(palette[text], palette[surface]), `${theme}: ${text} on ${surface}`).toBeGreaterThanOrEqual(4.5);
       }
     }
-    const slab = palette.steel.map((value) => Math.round(value + (255 - value) * 0.08));
-    for (const label of ['slab-text', 'slab-muted']) expect(ratio(palette[label], slab), `${theme}: ${label} on machine slab`).toBeGreaterThanOrEqual(4.5);
+    // Graph nodes: machine cards, workload chips, and company panels tinted 7% with any company colour.
+    const mix = (color: number[], base: number[], amount: number) => base.map((value, index) => Math.round(value + (color[index] - value) * amount));
+    const surfaces: [string, number[]][] = [['node-host', palette['node-host']], ['node-chip', palette['node-chip']], ['node-group', palette['node-group']]];
+    for (const color of TENANT_COLORS) surfaces.push([`node-group + ${color}`, mix(rgb(color), palette['node-group'], 0.07)]);
+    for (const [name, surface] of surfaces)
+      for (const text of ['text', 'text-2', 'text-3', 'ok', 'warn', 'danger', 'info'])
+        expect(ratio(palette[text], surface), `${theme}: ${text} on ${name}`).toBeGreaterThanOrEqual(4.5);
     for (const surface of ['primary-top', 'primary-bottom']) expect(ratio(palette['primary-ink'], palette[surface]), `${theme}: primary button`).toBeGreaterThanOrEqual(4.5);
   });
 });

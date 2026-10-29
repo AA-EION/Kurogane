@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { CredentialMeta, Host } from '../api/types';
-import { primaryIp } from '../canvas/layout';
+import { primaryIp } from '../model';
 import { CREDENTIAL_KINDS, labelOf } from '../options';
 import { useRun, useStore } from '../store';
 import { Icon } from './Icon';
@@ -27,7 +27,7 @@ export function Sidebar() {
 }
 
 function Inventory({ q }: { q: string }) {
-  const { topo, scene, selected, focus, openModal } = useStore();
+  const { topo, graph, selected, focus, openModal } = useStore();
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const toggle = (id: string) => setCollapsed((c) => {
     const n = new Set(c);
@@ -40,8 +40,8 @@ function Inventory({ q }: { q: string }) {
     match(h.name, h.fqdn, ...h.interfaces.flatMap((n) => [n.internalIp, n.publicIp])) ||
     topo.services.some((s) => s.hostId === h.id && match(s.name, s.image)) ||
     topo.proxies.some((p) => p.hostId === h.id && (match(p.name) || p.routes.some((r) => match(r.domain))));
-  const node = (ref: string) => scene.refToNode.get(ref);
-  const glyph = (ref: string) => scene.byId.get(node(ref) ?? '')?.glyph ?? 'server';
+  const node = (ref: string) => graph.refToNode.get(ref);
+  const glyph = (ref: string) => graph.byId.get(node(ref) ?? '')?.glyph ?? 'server';
 
   return (
     <div className="tree">

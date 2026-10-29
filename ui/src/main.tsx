@@ -6,7 +6,7 @@ import { NativeGraph } from './NativeGraph';
 import './styles.css';
 import './theme';
 
-// macOS embeds only the proven topology renderer inside the SwiftUI workspace.
+// macOS embeds only the topology view inside the SwiftUI workspace.
 const nativeGraph = window.__KUROGANE_NATIVE_GRAPH__ || (isTauri() && /Mac/.test(navigator.platform));
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

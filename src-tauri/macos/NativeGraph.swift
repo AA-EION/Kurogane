@@ -30,7 +30,7 @@ import WebKit
     }
     func clear() { lastState = ""; exportID = nil; update() }
     func export(_ format: String) {
-        guard let model, !model.busy, !model.graphExporting, model.graphReady else { return }
+        guard let model, ["png","svg"].contains(format), !model.busy, !model.graphExporting, model.graphReady else { return }
         model.graphExporting = true
         let id = UUID().uuidString; exportID = id
         webView?.evaluateJavaScript("window.kuroganeGraph.export('\(format)','\(id)'); undefined") { [weak self] _,error in
@@ -47,7 +47,7 @@ import WebKit
             if item.isEmpty { model.selected = nil }
             else if model.rows(kind).contains(where: { $0.entityID == id }) { model.selected = NativeItem(kind:kind,id:id) }
         case "file":
-            guard model.unlocked, model.graphExporting, body.text("id") == exportID, ["png","svg","json"].contains(body.text("format")) else { return }
+            guard model.unlocked, model.graphExporting, body.text("id") == exportID, ["png","svg"].contains(body.text("format")) else { return }
             guard !model.busy else { model.graphExporting = false; model.error = "Finish the current operation, then export the map again."; return }
             let format = body.text("format")
             model.perform {

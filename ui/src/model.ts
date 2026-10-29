@@ -1,5 +1,13 @@
 import type { CredentialMeta, Host, ProxyRoute, ReverseProxy, Service, Tenant, Topology } from './api/types';
-import { primaryIp, publicIp } from './canvas/layout';
+
+export function primaryIp(h: Host): string | undefined {
+  const nic = h.interfaces.find((n) => n.isPrimary) ?? h.interfaces[0];
+  return nic?.internalIp ?? undefined;
+}
+
+export function publicIp(h: Host): string | undefined {
+  return h.interfaces.find((n) => n.publicIp)?.publicIp ?? undefined;
+}
 
 /** Indexed view over a topology for the drawer and the operations HUD. */
 export interface Lookup {

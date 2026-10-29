@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext } from 'react';
 import type { Backend } from './api/backend';
 import type { CredentialMeta, EntityKind, Host, Network, OwnerKind, ReverseProxy, Service, SyncStatus, Tenant, Topology } from './api/types';
-import type { Scene } from './canvas/layout';
+import type { GraphModel } from './graph/build';
 import type { Lookup } from './model';
 
 export type ModalSpec =
@@ -20,7 +20,7 @@ export type SettingsTab = 'general' | 'security' | 'sync' | 'data' | 'about';
 export interface Store {
   backend: Backend;
   topo: Topology;
-  scene: Scene;
+  graph: GraphModel;
   lookup: Lookup;
   sync: SyncStatus | null;
   setSync: (s: SyncStatus) => void;
@@ -28,7 +28,7 @@ export interface Store {
   applyTopology: (t: Topology, focusRef?: string) => void;
   selected: string | null;
   select: (nodeId: string | null) => void;
-  /** Pan the map to a scene node/zone id and select it. */
+  /** Pan the map to a graph node id and select it. */
   focus: (nodeId: string) => void;
   focusRef: (recordId: string) => void;
   toast: (msg: string, tone?: 'ok' | 'warn' | 'error') => void;

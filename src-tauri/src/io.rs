@@ -1,5 +1,5 @@
 //! Import / export: Excel template, Excel/JSON data, encrypted backup and
-//! arbitrary files produced by the UI (map PNG/SVG, FossFLOW JSON).
+//! arbitrary files produced by the UI (map PNG/SVG).
 
 use std::path::PathBuf;
 
@@ -159,7 +159,7 @@ pub fn import_apply(state: State<'_, AppState>) -> CmdResult<ImportResult> {
     Ok(ImportResult { report, topology })
 }
 
-/// Save bytes produced by the UI (PNG/SVG map, FossFLOW JSON).
+/// Save bytes produced by the UI (PNG/SVG map).
 #[tauri::command]
 pub async fn save_file(
     suggested_name: String,

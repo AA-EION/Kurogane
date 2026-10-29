@@ -110,7 +110,7 @@ import SwiftUI
                 window.contentView = NSHostingView(rootView:NativeVaultScreen(model:model).background(Color(nsColor:.windowBackgroundColor)))
                 try await Task.sleep(nanoseconds:350_000_000)
                 try await capture(window,folder+"/locked-vault.png")
-                print("Native validation passed: original isometric graph, compact window, real attached sheets in both themes and 34 captures")
+                print("Native validation passed: React Flow topology graph, compact window, real attached sheets in both themes and 34 captures")
                 exit(0)
             } catch { fputs("Native preview failed: \(error)\n",stderr); exit(1) }
         }

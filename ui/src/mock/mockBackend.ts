@@ -4,7 +4,7 @@ import type {
   SyncStatus, Topology,
 } from '../api/types';
 import { verifyTotp } from './totp';
-import demo from '../canvas/__fixtures__/demo-topology.json';
+import demo from '../graph/__fixtures__/demo-topology.json';
 
 /**
  * In-memory stand-in for the native core, used only by `npm run dev` in a

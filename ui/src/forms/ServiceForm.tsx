@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import type { ProxyRoute, Service, ServicePort } from '../api/types';
 import { Icon } from '../components/Icon';
 import { Button, Field, FormError, GroupedSelect, Modal, NumberInput, Section, Select, Text, TextArea } from '../components/ui';
-import { primaryIp } from '../canvas/layout';
+import { primaryIp } from '../model';
 import { INBOUND, PROTOCOLS, RUNTIMES, SCHEMES, TLS_MODES } from '../options';
 import { errorText, useStore } from '../store';
 import { blank } from './common';

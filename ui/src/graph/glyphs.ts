@@ -1,5 +1,5 @@
 // 24×24 monochrome pictograms (original artwork, stroke-based, no vendor logos).
-// Shared by the canvas renderer, the drawer and the FossFLOW exporter.
+// Shared by the topology view, the drawer, the sidebar and <Icon>.
 
 export const GLYPHS: Record<string, string> = {
   globe: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM3 12h18M12 3c2.5 2.5 3.8 5.5 3.8 9s-1.3 6.5-3.8 9M12 3c-2.5 2.5-3.8 5.5-3.8 9s1.3 6.5 3.8 9',
@@ -53,8 +53,3 @@ export const GLYPHS: Record<string, string> = {
   linux: 'M12 3c-2 0-3.2 1.8-3.2 4.2 0 1.4.4 2.3.4 3.1-.9 1.2-3.2 3.6-3.2 6.2 0 1.1.6 1.6 1.4 1.8M12 3c2 0 3.2 1.8 3.2 4.2 0 1.4-.4 2.3-.4 3.1.9 1.2 3.2 3.6 3.2 6.2 0 1.1-.6 1.6-1.4 1.8M8 20c1.2.7 2.5 1 4 1s2.8-.3 4-1M10.5 7h.01M13.5 7h.01',
   apple: 'M15.5 3c0 1.5-1.2 3-2.8 3 0-1.5 1.3-3 2.8-3zM12 7.5c1-.5 2-.8 3-.8 1.8 0 3 1 3.6 2.2-1.6 1-2.4 2.3-2.4 4 0 2 1.2 3.4 2.4 3.9-.6 1.6-2 4.2-3.6 4.2-1.2 0-1.6-.7-3-.7s-1.9.7-3 .7C7.2 21 5 17 5 13.5 5 10 7.2 7 9.6 7c.9 0 1.6.3 2.4.5z',
 };
-
-export function glyphSvg(name: string, color = '#e9ecef'): string {
-  const d = GLYPHS[name] ?? GLYPHS.server;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
-}

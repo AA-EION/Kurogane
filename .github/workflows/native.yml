@@ -38,7 +38,7 @@ jobs:
         run: |
           xcrun swiftc -D NATIVE_PREVIEW -parse-as-library -target arm64-apple-macosx13.0 src-tauri/macos/*.swift src-tauri/tests/NativePreview.swift -o /tmp/kurogane-native-preview
           mkdir -p native-screenshots
-          KUROGANE_NATIVE_GRAPH_URL=http://127.0.0.1:1420 /tmp/kurogane-native-preview "$PWD/native-screenshots" "$PWD/ui/src/canvas/__fixtures__/demo-topology.json"
+          KUROGANE_NATIVE_GRAPH_URL=http://127.0.0.1:1420 /tmp/kurogane-native-preview "$PWD/native-screenshots" "$PWD/ui/src/graph/__fixtures__/demo-topology.json"
       - uses: actions/upload-artifact@v4
         with:
           name: native-ui-review

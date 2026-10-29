@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { CredentialMeta, Host, OwnerKind, ProxyRoute, ReverseProxy, SecretField } from '../api/types';
-import { publicIp, tlsState } from '../canvas/layout';
-import { CATEGORY_LABEL, CRED_KIND_LABEL, daysUntil, routeUrl, serviceEndpoints, traceFor } from '../model';
+import { tlsState } from '../graph/describe';
+import { CATEGORY_LABEL, CRED_KIND_LABEL, daysUntil, publicIp, routeUrl, serviceEndpoints, traceFor } from '../model';
 import { ENVIRONMENTS, OS_FAMILIES, RUNTIMES, labelOf } from '../options';
 import { useRun, useStore } from '../store';
 import { Icon } from './Icon';
@@ -164,11 +164,10 @@ function TlsChip({ route }: { route: ProxyRoute }) {
 }
 
 export function Drawer() {
-  const { backend, scene, lookup, selected, select, focus, focusRef, openModal, toast } = useStore();
+  const { backend, graph, lookup, selected, select, focus, focusRef, openModal, toast } = useStore();
   const run = useRun();
   if (!selected) return null;
-  const node = scene.byId.get(selected);
-  const zone = scene.zones.find((z) => z.id === selected);
+  const node = graph.byId.get(selected);
 
   const ssh = (h: Host, credId?: string) => run(async () => toast(await backend.launchSsh(h.id, credId), 'ok'));
   const rdp = (h: Host, credId?: string) => run(async () => toast(await backend.launchRdp(h.id, credId), 'ok'));
@@ -193,8 +192,8 @@ export function Drawer() {
   let actions: React.ReactNode = null;
   let body: React.ReactNode = null;
 
-  if (zone) {
-    const t = lookup.tenant.get(zone.refId)!;
+  if (node?.kind === 'tenant') {
+    const t = lookup.tenant.get(node.refId)!;
     const hosts = lookup.topo.hosts.filter((h) => h.tenantId === t.id);
     title = t.name;
     kicker = `Company · ${t.environmentLabel || labelOf(ENVIRONMENTS, t.environment)}`;
@@ -224,7 +223,7 @@ export function Drawer() {
             {hosts.map((h) => (
               <li key={h.id}>
                 <button onClick={() => focus(`host:${h.id}`)}>
-                  <Icon name={scene.byId.get(`host:${h.id}`)?.glyph ?? 'server'} size={14} />
+                  <Icon name={graph.byId.get(`host:${h.id}`)?.glyph ?? 'server'} size={14} />
                   <span>{h.name}</span>
                   <span className="mono dim">{h.interfaces.find((n) => n.isPrimary)?.internalIp ?? h.interfaces[0]?.internalIp}</span>
                 </button>
@@ -324,7 +323,7 @@ export function Drawer() {
               {services.map((s) => (
                 <li key={s.id}>
                   <button onClick={() => focusRef(s.id)}>
-                    <Icon name={scene.byId.get(scene.refToNode.get(s.id)!)?.glyph ?? 'container'} size={14} />
+                    <Icon name={graph.byId.get(graph.refToNode.get(s.id)!)?.glyph ?? 'container'} size={14} />
                     <span>{s.name}</span>
                     <span className="mono dim">{s.ports.map((p) => (p.hostPort ? `${p.hostPort}→${p.containerPort}` : p.containerPort)).join(', ')}</span>
                   </button>

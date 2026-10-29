@@ -1,0 +1,187 @@
+/* Topology view. Theme tokens only; both appearances come from styles.css. */
+
+.graph-wrap { position: absolute; inset: 0; --lod-scale: 1; }
+.graph-wrap .react-flow {
+  --xy-background-color: var(--bg);
+  --xy-background-pattern-dots-color: var(--graph-dot);
+  --xy-node-border-radius: 12px;
+  --xy-edge-stroke: var(--ingress);
+  --xy-attribution-background-color: transparent;
+  --xy-minimap-background-color: var(--panel);
+  --xy-minimap-mask-background-color: var(--graph-mask);
+  --xy-minimap-mask-stroke-color: var(--line-2);
+  --xy-minimap-node-background-color: var(--line-2);
+  --xy-handle-background-color: transparent;
+  background: var(--bg);
+  font-family: var(--sans);
+  color: var(--text);
+}
+.graph-wrap .react-flow__pane { cursor: grab; }
+.graph-wrap .react-flow__pane.dragging { cursor: grabbing; }
+.graph-wrap .react-flow__node { cursor: pointer; border-radius: 12px; transition: opacity .2s; }
+.graph-wrap .react-flow__node:focus { outline: none; }
+.graph-wrap .react-flow__node:focus-visible { outline: 2px solid var(--info); outline-offset: 3px; }
+.graph-wrap .react-flow__node.is-dim { opacity: .2; }
+.graph-wrap .react-flow__node-company.is-dim { opacity: .55; }
+.graph-wrap .react-flow__attribution { font-size: 10px; opacity: .55; padding: 2px 6px; }
+.graph-wrap .react-flow__attribution a { color: var(--text-3); }
+.graph-wrap .react-flow__edges, .graph-wrap .react-flow__edge { pointer-events: none; }
+.g-handle { width: 1px !important; height: 1px !important; min-width: 0 !important; min-height: 0 !important; border: 0 !important; background: transparent !important; opacity: 0; pointer-events: none !important; }
+
+/* shared text */
+.g-titles { min-width: 0; flex: 1 1 auto; }
+.g-sub { font-size: 11px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.35; }
+.g-sub.mono { font-family: var(--mono); font-size: 11px; }
+.g-glyph { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; display: block; }
+
+/* badges */
+/* Badges that do not fit wrap onto a hidden second line instead of being cut in half. */
+.g-badges { display: flex; gap: 4px; flex-wrap: wrap; height: 18px; overflow: hidden; min-width: 0; }
+.g-badge {
+  display: inline-flex; align-items: center; gap: 4px; flex: none; white-space: nowrap;
+  font: 600 11px/16px var(--sans); padding: 0 7px; border-radius: 99px;
+  border: 1px solid var(--line-2); background: var(--node-chip); color: var(--text-2);
+}
+.g-badge.tone-ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); }
+.g-badge.tone-warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 60%, var(--line)); background: color-mix(in srgb, var(--warn) 9%, var(--node-chip)); }
+.g-badge.tone-danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 60%, var(--line)); background: color-mix(in srgb, var(--danger) 9%, var(--node-chip)); }
+.g-badge.tone-info { color: var(--info); border-color: color-mix(in srgb, var(--info) 40%, var(--line)); }
+.g-badge.kind-ip, .g-badge.kind-port { font-family: var(--mono); font-weight: 500; }
+.g-owner-dot { width: 7px; height: 7px; border-radius: 2px; transform: rotate(45deg); flex: none; }
+
+/* company: soft tinted panel with a tenant-colour header strip */
+.g-company {
+  width: 100%; height: 100%; border-radius: 16px; position: relative;
+  background: color-mix(in srgb, var(--tc) 7%, var(--node-group));
+  border: 1px solid color-mix(in srgb, var(--tc) 32%, var(--line));
+  box-shadow: inset 0 1px 0 var(--sheen);
+}
+.g-company::before { content: ''; position: absolute; left: -1px; right: -1px; top: -1px; height: 5px; border-radius: 16px 16px 0 0; background: var(--tc); }
+.g-company-head { display: flex; align-items: center; gap: 12px; padding: 18px 24px 0; height: 68px; }
+.g-company-mark { width: 12px; height: 12px; border-radius: 3px; transform: rotate(45deg); background: var(--tc); flex: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--tc) 22%, transparent); }
+.g-company-name { font: 700 17px/1.2 var(--sans); letter-spacing: .01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+.g-company-sub { font-size: 12px; color: var(--text-2); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.g-company.lod-overview .g-company-name { font-size: calc(17px * var(--lod-scale)); }
+.g-company.is-selected { border-color: var(--tc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--tc) 35%, transparent), inset 0 1px 0 var(--sheen); }
+.g-empty { margin: 12px 24px; padding: 22px; border: 1px dashed var(--line-2); border-radius: 12px; text-align: center; color: var(--text-3); font-size: 12px; }
+
+/* machine: raised card */
+.g-host {
+  width: 100%; height: 100%; border-radius: 12px;
+  background: var(--node-host);
+  border: 1px solid var(--line);
+  box-shadow: var(--raised), 0 6px 16px -10px var(--shadow-ink);
+}
+.g-host-head { display: flex; align-items: center; gap: 10px; padding: 0 12px 0 14px; height: 58px; min-width: 0; }
+.g-host .g-icon {
+  width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; flex: none;
+  background: var(--node-chip); color: var(--text-2); box-shadow: var(--inset);
+  border-left: 3px solid var(--tc);
+}
+.g-host-name { font: 700 14px/1.25 var(--sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+.g-host-head .g-titles { min-width: 92px; }
+.g-host-badges { flex: 0 1 auto; justify-content: flex-end; max-width: 60%; }
+.g-host.lod-overview .g-host-name { font-size: calc(14px * var(--lod-scale)); }
+.g-host.is-appliance { border-style: solid; }
+.g-host.is-appliance .g-host-head { height: 100%; }
+.g-host.is-appliance .g-icon { width: 28px; height: 28px; }
+.g-host.is-appliance .g-host-name { font-size: 13px; }
+.g-host.is-appliance.lod-overview .g-host-name { font-size: calc(13px * min(var(--lod-scale), 1.6)); }
+.g-host.is-selected { border-color: var(--tc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--tc) 40%, transparent), var(--raised); }
+
+/* workload: compact chip with glyph and accent */
+.g-chip {
+  width: 100%; height: 100%; border-radius: 10px; display: flex; align-items: center; gap: 10px; padding: 0 10px; position: relative; overflow: hidden;
+  background: var(--node-chip); border: 1px solid var(--line);
+  box-shadow: inset 0 1px 2px var(--shadow-ink);
+}
+.g-chip::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--accent); }
+.g-chip.is-owned::after { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 4px; background: var(--oc); }
+.g-chip-icon {
+  width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; flex: none;
+  background: color-mix(in srgb, var(--accent) 16%, var(--node-host));
+  color: color-mix(in srgb, var(--accent) 45%, var(--text));
+}
+.g-chip-body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.g-chip-name { font: 650 13px/1.25 var(--sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+.g-chip.lod-overview { justify-content: center; }
+.g-chip.lod-overview .g-chip-icon { width: 48px; height: 48px; border-radius: 12px; }
+.g-chip.kind-proxy { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+.g-chip.is-selected { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 40%, transparent); }
+.g-alert-dot { position: absolute; top: 8px; right: 8px; width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--node-chip); }
+.g-alert-dot.tone-warn { background: var(--warn); }
+.g-alert-dot.tone-danger { background: var(--danger); }
+
+/* the Internet */
+.g-internet {
+  width: 100%; height: 100%; border-radius: 99px; display: flex; align-items: center; gap: 12px; padding: 0 22px 0 14px;
+  background: linear-gradient(var(--surface-top), var(--surface-bottom)); border: 1px solid var(--line-2);
+  box-shadow: var(--raised), 0 10px 24px -14px var(--shadow-ink);
+}
+.g-internet-icon { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: var(--node-chip); color: var(--text-2); box-shadow: var(--inset); flex: none; }
+.g-internet-name { font: 700 15px/1.25 var(--sans); letter-spacing: .02em; color: var(--text); }
+.g-internet .g-sub { font-size: 12px; color: var(--text-2); }
+.g-internet.is-selected { border-color: var(--ingress); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ingress) 40%, transparent), var(--raised); }
+
+/* edges */
+.g-edge { fill: none; stroke-linejoin: round; stroke-linecap: round; transition: opacity .2s; }
+.react-flow__edge-path.g-edge { stroke-width: 2; }
+.react-flow__edge-path.g-edge.tone-secure { stroke: var(--route); }
+.react-flow__edge-path.g-edge.tone-plain { stroke: var(--warn); }
+.react-flow__edge-path.g-edge.tone-ingress { stroke: var(--ingress); stroke-width: 1.6; }
+.react-flow__edge-path.g-edge.tone-parent { stroke: var(--text-3); stroke-width: 1.4; opacity: .7; }
+.react-flow__edge-path.g-edge.is-dashed { stroke-dasharray: 5 6; }
+.react-flow__edge-path.g-edge.tone-parent.is-dashed { stroke-dasharray: 6 6; }
+.react-flow__edge.kind-ingress .g-edge { opacity: .55; }
+.react-flow__edge.is-dim .g-edge { opacity: .14; }
+.react-flow__edge.is-lit .react-flow__edge-path.g-edge { opacity: 1; stroke-width: 3; }
+.g-edge-flow { stroke-width: 3; stroke-dasharray: 3 14; stroke-linecap: round; animation: g-flow .9s linear infinite; pointer-events: none; }
+.g-edge-flow.tone-secure { stroke: var(--route); }
+.g-edge-flow.tone-plain { stroke: var(--warn); }
+.g-edge-flow.tone-ingress { stroke: var(--ingress); }
+.g-edge-flow.tone-parent { stroke: var(--text-3); }
+@keyframes g-flow { to { stroke-dashoffset: -17; } }
+.g-edge-label {
+  position: absolute; pointer-events: none; z-index: 10;
+  font: 600 11px/1 var(--mono); color: var(--text); white-space: nowrap;
+  background: var(--panel); border: 1px solid var(--line-2); border-radius: 6px; padding: 5px 8px;
+  box-shadow: var(--shadow);
+}
+.g-edge-label.tone-secure { border-color: color-mix(in srgb, var(--route) 55%, var(--line)); }
+.g-edge-label.tone-plain { border-color: color-mix(in srgb, var(--warn) 60%, var(--line)); }
+
+/* controls, legend, minimap */
+.g-panel { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin: 20px !important; }
+.g-controls, .g-legend { background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.g-controls { display: flex; align-items: center; gap: 4px; border-radius: 10px; padding: 4px; }
+.g-controls button { width: 30px; height: 30px; border-radius: 7px; border: 0; background: transparent; box-shadow: none; display: grid; place-items: center; color: var(--text-2); }
+.g-controls button:hover { background: var(--panel-2); color: var(--text); }
+.g-controls button.on { background: var(--panel-2); color: var(--text); box-shadow: var(--inset); }
+.g-controls svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.g-zoom-readout { font: 600 11px var(--mono); color: var(--text-3); padding: 0 6px; min-width: 44px; text-align: center; font-variant-numeric: tabular-nums; }
+.g-legend { display: flex; flex-direction: column; gap: 5px; font-size: 11px; color: var(--text-2); border-radius: 8px; padding: 8px 10px; }
+.g-legend span { display: flex; align-items: center; gap: 8px; }
+.g-legend .sw { width: 20px; height: 3px; border-radius: 2px; display: inline-block; }
+.g-legend .sw.tone-secure { background: var(--route); }
+.g-legend .sw.tone-plain { background: var(--warn); }
+.g-legend .sw.tone-ingress { background: repeating-linear-gradient(90deg, var(--ingress) 0 4px, transparent 4px 8px); }
+.g-legend .sw.tone-parent { background: repeating-linear-gradient(90deg, var(--text-3) 0 4px, transparent 4px 8px); }
+.graph-wrap .react-flow__minimap { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); margin-bottom: 20px; }
+.graph-wrap .react-flow__minimap .mm-company { opacity: .22; }
+.graph-wrap .react-flow__minimap .mm-host { opacity: .55; }
+
+/* export capture: no chrome, no motion */
+.graph-wrap.is-capturing .g-edge-flow { display: none; }
+
+@media (max-width: 700px) {
+  .g-legend { display: none; }
+  .g-panel { margin: 12px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .g-edge-flow { animation: none; stroke-dasharray: none; opacity: .35; }
+  .graph-wrap .react-flow__node { transition: none; }
+}
+
+/* The Internet keeps a readable label as the camera pulls back. */
+.g-internet-name { font-size: calc(15px * min(var(--lod-scale), 1.7)); white-space: nowrap; }
+.g-internet .g-sub { font-size: calc(12px * min(var(--lod-scale), 1.3)); }

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { CloudStep, Settings, TotpEnrollment } from '../api/types';
-import { toFossflowModel } from '../canvas/fossflowExport';
-import { mapToSvg, svgToPng } from '../canvas/mapExport';
+import { exportGraphImage } from '../graph/exportImage';
 import { errorText, type SettingsTab, useRun, useStore } from '../store';
 import { Icon } from './Icon';
 import { setAppearance, useAppearance, type Appearance } from '../theme';
@@ -302,7 +301,7 @@ function SyncTab() {
 }
 
 function DataTab() {
-  const { backend, toast, topo, scene, openModal } = useStore();
+  const { backend, toast, topo, openModal } = useStore();
   const run = useRun();
   const [withPw, setWithPw] = useState(false);
   const [pw, setPw] = useState('');
@@ -340,17 +339,11 @@ function DataTab() {
         <h3>Map</h3>
         <div className="row left">
           <Button icon="image" disabled={!topo.tenants.length} onClick={() => run(async () => {
-            const { svg, width, height } = mapToSvg(scene);
-            saved(await backend.saveFile(`kurogane-map-${stamp}.png`, await svgToPng(svg, width, height), 'PNG image', ['png']));
+            saved(await backend.saveFile(`kurogane-map-${stamp}.png`, await exportGraphImage('png'), 'PNG image', ['png']));
           })}>PNG image</Button>
           <Button icon="image" disabled={!topo.tenants.length} onClick={() => run(async () => {
-            const { svg } = mapToSvg(scene);
-            saved(await backend.saveFile(`kurogane-map-${stamp}.svg`, new Blob([svg], { type: 'image/svg+xml' }), 'SVG image', ['svg']));
+            saved(await backend.saveFile(`kurogane-map-${stamp}.svg`, await exportGraphImage('svg'), 'SVG image', ['svg']));
           })}>SVG (vector)</Button>
-          <Button icon="map" disabled={!topo.tenants.length} onClick={() => run(async () => {
-            const json = JSON.stringify(toFossflowModel(topo, scene), null, 2);
-            saved(await backend.saveFile(`kurogane-${stamp}.fossflow.json`, new Blob([json], { type: 'application/json' }), 'FossFLOW diagram', ['json']));
-          })}>FossFLOW diagram</Button>
         </div>
         <p className="muted small">Map exports never contain passwords.</p>
       </section>
@@ -374,7 +367,7 @@ function About({ s }: { s: Settings }) {
         Encryption: Argon2id ({Math.round(s.kdf.mCostKib / 1024)} MiB) → AES-256-GCM container → SQLCipher database → per-field AES-256-GCM for secrets.
         {!s.kdfMeetsFloor && <b> Key derivation is below the recommended strength — change it under Security.</b>}
       </p>
-      <p className="small muted">Map projection adapted from Isoflow / FossFLOW (MIT). Sync engine: rclone (MIT).</p>
+      <p className="small muted">Graph view built with React Flow (MIT). Sync engine: rclone (MIT).</p>
     </div>
   );
 }

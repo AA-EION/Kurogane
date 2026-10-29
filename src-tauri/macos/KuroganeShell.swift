@@ -244,7 +244,6 @@ struct NativeWorkspace: View {
                         Menu("Export") {
                             Button("Map as PNG…") { model.graph.export("png") }.disabled(!model.mapMode || !model.graphReady || model.graphExporting)
                             Button("Map as SVG…") { model.graph.export("svg") }.disabled(!model.mapMode || !model.graphReady || model.graphExporting)
-                            Button("FossFLOW JSON…") { model.graph.export("json") }.disabled(!model.mapMode || !model.graphReady || model.graphExporting)
                             Divider(); Button("Inventory…") { model.sheet = NativeSheet(kind: "export") }
                         }
                     }.padding(12)

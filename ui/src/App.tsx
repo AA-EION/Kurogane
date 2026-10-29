@@ -2,8 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Backend } from './api/backend';
 import { getBackend } from './api/backend';
 import type { AppStatus, SyncStatus, Topology } from './api/types';
-import { IsoCanvas } from './canvas/IsoCanvas';
-import { layoutTopology } from './canvas/layout';
+import { ReactFlowProvider } from '@xyflow/react';
+import { buildGraph } from './graph/build';
+import { TopologyView } from './graph/TopologyView';
 import { ConflictBanner } from './components/ConflictBanner';
 import { DeleteDialog } from './components/DeleteDialog';
 import { Drawer } from './components/Drawer';
@@ -136,9 +137,9 @@ export function App() {
     return () => (evs.forEach((e) => window.removeEventListener(e, onActivity)), clearInterval(timer));
   }, [backend, status?.stage, status?.lockTimeoutSecs]);
 
-  const scene = useMemo(() => (topo ? layoutTopology(topo) : null), [topo]);
+  const graph = useMemo(() => (topo ? buildGraph(topo) : null), [topo]);
   const lookup = useMemo(() => (topo ? buildLookup(topo) : null), [topo]);
-  const index = useMemo(() => (topo && scene ? buildIndex(topo, scene) : []), [topo, scene]);
+  const index = useMemo(() => (topo && graph ? buildIndex(topo, graph) : []), [topo, graph]);
 
   const focus = useCallback((id: string) => {
     setSelected(id);
@@ -147,13 +148,13 @@ export function App() {
 
   // After a save, focus the record that was just created/edited.
   useEffect(() => {
-    if (!pendingFocusRef || !scene || !topo) return;
+    if (!pendingFocusRef || !graph || !topo) return;
     // Accounts are not drawn on the map: focus what they belong to.
     const owner = topo.credentials.find((c) => c.id === pendingFocusRef)?.owner.id;
-    const id = scene.refToNode.get(pendingFocusRef) ?? (owner ? scene.refToNode.get(owner) : undefined);
+    const id = graph.refToNode.get(pendingFocusRef) ?? (owner ? graph.refToNode.get(owner) : undefined);
     if (id) focus(id);
     setPendingFocusRef(null);
-  }, [scene, topo, pendingFocusRef, focus]);
+  }, [graph, topo, pendingFocusRef, focus]);
 
   const lock = useCallback(async () => {
     try { await backend?.lock(); } catch (error) { toast(String(error), 'error'); }
@@ -199,12 +200,12 @@ export function App() {
     );
 
   if (topologyError) return <div className="boot error-screen"><div><p>{topologyError}</p><button className="btn" onClick={() => { setTopologyError(null); backend.topology().then(setTopo).catch((e) => setTopologyError(String(e))); }}>Try again</button></div></div>;
-  if (!topo || !scene || !lookup) return <div className="boot" role="status" aria-label="Loading inventory"><span className="spinner" /></div>;
+  if (!topo || !graph || !lookup) return <div className="boot" role="status" aria-label="Loading inventory"><span className="spinner" /></div>;
 
   const store: Store = {
     backend,
     topo,
-    scene,
+    graph,
     lookup,
     sync,
     setSync,
@@ -216,7 +217,7 @@ export function App() {
     select: setSelected,
     focus,
     focusRef: (ref) => {
-      const id = scene.refToNode.get(ref);
+      const id = graph.refToNode.get(ref);
       if (id) focus(id);
     },
     toast,
@@ -233,7 +234,7 @@ export function App() {
           {!empty && <Sidebar />}
           <main className="stage">
             <ConflictBanner />
-            {empty ? <EmptyState /> : <IsoCanvas scene={scene} selected={selected} onSelect={setSelected} focus={focusReq} dimmedTenants={new Set()} />}
+            {empty ? <EmptyState /> : <ReactFlowProvider><TopologyView model={graph} selected={selected} onSelect={setSelected} focus={focusReq} /></ReactFlowProvider>}
             {!empty && selected && <Drawer key={selected} />}
           </main>
         </div>

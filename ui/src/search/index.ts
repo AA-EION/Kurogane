@@ -1,13 +1,13 @@
 import type { Topology } from '../api/types';
-import type { Scene } from '../canvas/layout';
-import { primaryIp } from '../canvas/layout';
+import type { GraphIndex } from '../graph/build';
+import { primaryIp } from '../model';
 import { bestOf } from './fuzzy';
 
 export type HitKind = 'tenant' | 'host' | 'service' | 'proxy' | 'route' | 'network' | 'credential' | 'ip';
 
 export interface SearchEntry {
   kind: HitKind;
-  /** Scene node or zone to focus. */
+  /** Graph node to focus. */
   target: string;
   title: string;
   subtitle: string;
@@ -21,8 +21,8 @@ export interface SearchHit extends SearchEntry {
 }
 
 /** Everything the omnibox can find: companies, IPs, ports, domains, services, credential labels. */
-export function buildIndex(topo: Topology, scene: Scene): SearchEntry[] {
-  const node = (ref: string) => scene.refToNode.get(ref);
+export function buildIndex(topo: Topology, graph: GraphIndex): SearchEntry[] {
+  const node = (ref: string) => graph.refToNode.get(ref);
   const tenantName = new Map(topo.tenants.map((t) => [t.id, t.name]));
   const hostById = new Map(topo.hosts.map((h) => [h.id, h]));
   const out: SearchEntry[] = [];

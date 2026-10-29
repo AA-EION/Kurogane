@@ -1,4 +1,4 @@
-import { GLYPHS } from '../canvas/glyphs';
+import { GLYPHS } from '../graph/glyphs';
 
 export function Icon({ name, size = 16, className }: { name: string; size?: number; className?: string }) {
   return (

@@ -4,7 +4,7 @@ You are working in the Kurogane repo (`AA-EION/Kurogane`): an offline, encrypted
 
 **Goal:** replace the isometric SVG renderer with a clean, readable 2D topology view built on **React Flow (`@xyflow/react` v12)**. Remove every trace of the isometric implementation. The result should look like a polished product: easy to read at a glance, fast to navigate, and consistent in the light and dark themes that already exist. Do not change the data model, the vault, the forms, or any Rust behaviour.
 
-**Base branch:** start from `codex/tactile-ui-macos-sync`, or from the default branch once that branch has been merged into it. It holds the light/dark theme, the macOS native graph bridge, and the license audit. Do not start from the older `claude/*` branches.
+**Base branch:** `claude/relaxed-knuth-ewf6bf` (the default branch). It already contains the light/dark theme, the macOS native graph bridge, and the license audit from the former `codex/tactile-ui-macos-sync` branch.
 
 ---
 
@@ -197,5 +197,5 @@ Places that currently need edits:
 
 ## 10. Delivery
 
-- Work on a feature branch off the base named at the top. Make small, reviewable commits: (1) graph model, layout and tests; (2) React Flow view, wired in, with the isometric code deleted; (3) export and macOS bridge; (4) docs, notices and screenshots.
+- Work on `claude/relaxed-dirac-sk2hnu`, which is the default branch plus this prompt. Make small, reviewable commits: (1) graph model, layout and tests; (2) React Flow view, wired in, with the isometric code deleted; (3) export and macOS bridge; (4) docs, notices and screenshots.
 - Do not open a PR unless asked. In your final report, list what you removed, what you added, the test and build output, the screenshots, and anything you could not verify (for example, the Swift build or the macOS capture).

@@ -27,16 +27,18 @@ async function shot(page: Page, info: TestInfo, name: string) {
   await info.attach(name, { path: file, contentType: 'image/png' });
 }
 
-/** Wait until the camera stops moving (fit and focus animate). */
+/** Wait until the camera stops moving (fit and focus animate, and may start a frame late). */
 async function settle(page: Page) {
   let last = '';
-  for (let i = 0; i < 40; i++) {
-    const now = await page.locator('.react-flow__viewport').getAttribute('style');
-    if (now && now === last) return;
-    last = now ?? '';
+  let stable = 0;
+  for (let i = 0; i < 60 && stable < 3; i++) {
     await page.waitForTimeout(150);
+    const now = (await page.locator('.react-flow__viewport').getAttribute('style')) ?? '';
+    stable = now && now === last ? stable + 1 : 0;
+    last = now;
   }
 }
+const zoom = async (page: Page) => parseInt((await page.locator('.g-zoom-readout').textContent()) ?? '0', 10);
 
 async function open(page: Page, which: '1' | 'multi', theme: 'light' | 'dark' = 'light') {
   const errors: string[] = [];
@@ -82,8 +84,8 @@ test.describe('single-company vault', () => {
     await node(page, 'Service gitea').click();
     await expect(drawerTitle(page)).toHaveText('gitea');
     await settle(page);
-    expect(await page.locator('.react-flow__edge.is-lit').count()).toBeGreaterThanOrEqual(2);
-    expect(await page.locator('.react-flow__node.is-dim').count()).toBeGreaterThan(0);
+    await expect.poll(() => page.locator('.react-flow__edge.is-lit').count()).toBeGreaterThanOrEqual(2);
+    await expect.poll(() => page.locator('.react-flow__node.is-dim').count()).toBeGreaterThan(0);
     const drawer = await box(page.locator('.drawer'));
     const chip = await box(node(page, 'Service gitea'));
     expect(chip.x + chip.width, 'selected node is not under the inspector').toBeLessThanOrEqual(drawer.x);
@@ -104,9 +106,7 @@ test.describe('single-company vault', () => {
     await page.keyboard.type('jellyfin');
     await page.keyboard.press('Enter');
     await expect(drawerTitle(page)).toHaveText('jellyfin');
-    await settle(page);
-    const zoom = parseInt((await page.locator('.g-zoom-readout').textContent()) ?? '0', 10);
-    expect(zoom, 'leaves are focused at 100%').toBeGreaterThanOrEqual(99);
+    await expect.poll(() => zoom(page), { message: 'leaves are focused at 100%' }).toBeGreaterThanOrEqual(99);
     await shot(page, info, '03-search-focus');
     await page.keyboard.press('Escape');
     await expect(page.locator('.drawer')).toHaveCount(0);
@@ -189,7 +189,7 @@ test.describe('multi-company vault', () => {
 
     await node(page, 'Service tracking-api').click();
     await expect(drawerTitle(page)).toHaveText('tracking-api');
-    expect(await page.locator('.react-flow__edge.is-lit').count()).toBe(2);
+    await expect(page.locator('.react-flow__edge.is-lit')).toHaveCount(2);
     await shot(page, info, '07-filter-guest-trace');
 
     // Jumping to a record outside the slice shows every company again.

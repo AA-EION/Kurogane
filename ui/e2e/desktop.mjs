@@ -141,8 +141,7 @@ try {
   await step('selecting a service lights its trace and opens the inspector', async () => {
     await d.exec(() => document.querySelector('.react-flow__node[aria-label^="Service gitea"]').click());
     await until(d, 'inspector', () => document.querySelector('.drawer h2')?.textContent === 'gitea');
-    const lit = await d.exec(() => document.querySelectorAll('.react-flow__edge.is-lit').length);
-    if (lit < 2) throw new Error(`expected a lit trace, got ${lit} edges`);
+    await until(d, 'a lit trace (2+ edges)', () => document.querySelectorAll('.react-flow__edge.is-lit').length >= 2);
     await shot(d, '02-service-trace');
   });
 

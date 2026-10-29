@@ -1,11 +1,16 @@
 // Manual audit for the runtime observed in the Linux installer evidence.
 // On upgrade, verify the upstream build log and update these exact versions.
+// fedfad5 (2026-10-29): the only change since the previously reviewed 8f39b89
+// is a reproducible-build compiler flag (-ffile-prefix-map). The downloaded
+// runtime-x86_64 reports fedfad5 and embeds libfuse 3.15.0, squashfuse 0.5.2,
+// zstd 1.5.6 and zlib 1.3.2; musl and mimalloc come from the unchanged
+// Alpine 3.21 build image.
 import fs from 'node:fs/promises';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 
 const sources = [
-  ['type2-runtime-8f39b89.tar.gz', 'https://codeload.github.com/AppImage/type2-runtime/tar.gz/8f39b89e2ac31e1640b3d3f7e9a5108e6ce805fa', 'MIT'],
+  ['type2-runtime-fedfad5.tar.gz', 'https://codeload.github.com/AppImage/type2-runtime/tar.gz/fedfad51acc2860b2916a1eef32ba4a500ff31ef', 'MIT'],
   ['fuse-3.15.0.tar.xz', 'https://github.com/libfuse/libfuse/releases/download/fuse-3.15.0/fuse-3.15.0.tar.xz', 'LGPL-2.1-or-later'],
   ['squashfuse-0.5.2.tar.gz', 'https://github.com/vasi/squashfuse/archive/0.5.2.tar.gz', 'BSD-2-Clause'],
   ['musl-1.2.5.tar.gz', 'https://musl.libc.org/releases/musl-1.2.5.tar.gz', 'MIT and embedded permissive notices'],
@@ -43,9 +48,9 @@ for (const [file, url, license] of sources) {
 notices = notices.trimEnd() + '\n';
 await fs.writeFile('docs/legal/appimage-NOTICES.txt', notices);
 await fs.writeFile('docs/legal/appimage-source-inventory.json', JSON.stringify({
-  runtimeCommit: '8f39b89e2ac31e1640b3d3f7e9a5108e6ce805fa',
-  buildEvidence: 'https://github.com/AppImage/type2-runtime/actions/runs/36463736478',
-  runtimeVersion: 'AppImage runtime version: https://github.com/AppImage/type2-runtime/commit/8f39b89',
+  runtimeCommit: 'fedfad51acc2860b2916a1eef32ba4a500ff31ef',
+  buildEvidence: 'https://github.com/AppImage/type2-runtime/compare/8f39b89...fedfad5',
+  runtimeVersion: 'AppImage runtime version: https://github.com/AppImage/type2-runtime/commit/fedfad5',
   noticesSha256: crypto.createHash('sha256').update(notices.replaceAll('\r\n', '\n')).digest('hex'),
   sources: records,
 }, null, 2) + '\n');

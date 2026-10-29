@@ -136,6 +136,23 @@ jobs:
         run: |
           target/release/kurogane demo-vault "$RUNNER_TEMP/demo.kurogane"
           target/release/kurogane unlock "$RUNNER_TEMP/demo.kurogane" --json > "$RUNNER_TEMP/topology.json"
+      - name: Launch check (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # Evidence for the WebDriver run: does the app start, stay up and paint a window?
+          New-Item -ItemType Directory -Force desktop-screenshots/windows | Out-Null
+          $app = Start-Process -FilePath "target/release/${{ matrix.bin }}" -ArgumentList "`"$env:RUNNER_TEMP\demo.kurogane`"" -PassThru
+          Start-Sleep -Seconds 20
+          Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+          $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+          $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
+          [System.Drawing.Graphics]::FromImage($bmp).CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
+          $bmp.Save("desktop-screenshots/windows/00-launch-check.png")
+          Get-Process | Where-Object { $_.ProcessName -match 'kurogane|msedgewebview2' } | Format-Table ProcessName, Id, MainWindowTitle -AutoSize | Out-String | Tee-Object desktop-screenshots/windows/launch-processes.txt
+          Write-Host "app exited: $($app.HasExited) code: $(if ($app.HasExited) { $app.ExitCode })"
+          if (-not $app.HasExited) { Stop-Process -Id $app.Id -Force }
+          Get-Process msedgewebview2 -ErrorAction SilentlyContinue | Stop-Process -Force
       - name: Drive the real app
         run: |
           cmd=(node ui/e2e/desktop.mjs --app "target/release/${{ matrix.bin }}" --vault "$RUNNER_TEMP/demo.kurogane" \

@@ -124,9 +124,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-Embedded runtime component: type2-runtime-8f39b89.tar.gz
-Source: https://codeload.github.com/AppImage/type2-runtime/tar.gz/8f39b89e2ac31e1640b3d3f7e9a5108e6ce805fa
-Original file: type2-runtime-8f39b89e2ac31e1640b3d3f7e9a5108e6ce805fa/LICENSE
+Embedded runtime component: type2-runtime-fedfad5.tar.gz
+Source: https://codeload.github.com/AppImage/type2-runtime/tar.gz/fedfad51acc2860b2916a1eef32ba4a500ff31ef
+Original file: type2-runtime-fedfad51acc2860b2916a1eef32ba4a500ff31ef/LICENSE
 
 MIT License
 

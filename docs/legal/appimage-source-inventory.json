@@ -1,15 +1,16 @@
 {
-  "runtimeCommit": "8f39b89e2ac31e1640b3d3f7e9a5108e6ce805fa",
-  "buildEvidence": "https://github.com/AppImage/type2-runtime/actions/runs/36463736478",
-  "runtimeVersion": "AppImage runtime version: https://github.com/AppImage/type2-runtime/commit/8f39b89",
+  "runtimeCommit": "fedfad51acc2860b2916a1eef32ba4a500ff31ef",
+  "buildEvidence": "https://github.com/AppImage/type2-runtime/compare/8f39b89...fedfad5",
+  "runtimeVersion": "AppImage runtime version: https://github.com/AppImage/type2-runtime/commit/fedfad5",
+  "noticesSha256": "1a0988e011ff10232a49eda75acd03d28b529384e46262367fb56a8af0e2f0df",
   "sources": [
     {
-      "file": "type2-runtime-8f39b89.tar.gz",
-      "url": "https://codeload.github.com/AppImage/type2-runtime/tar.gz/8f39b89e2ac31e1640b3d3f7e9a5108e6ce805fa",
-      "sha256": "c449eb42c2190820872631f5e22f8e15b1e985a36dc4a9e2de3585bb7536c785",
+      "file": "type2-runtime-fedfad5.tar.gz",
+      "url": "https://codeload.github.com/AppImage/type2-runtime/tar.gz/fedfad51acc2860b2916a1eef32ba4a500ff31ef",
+      "sha256": "e27ea3c837e9c660e1a9a2993b673ae93bbb53077330efba8654031e302d4e8e",
       "license": "MIT",
       "noticeFiles": [
-        "type2-runtime-8f39b89e2ac31e1640b3d3f7e9a5108e6ce805fa/LICENSE"
+        "type2-runtime-fedfad51acc2860b2916a1eef32ba4a500ff31ef/LICENSE"
       ]
     },
     {
@@ -70,6 +71,5 @@
         "mimalloc-2.1.7/LICENSE"
       ]
     }
-  ],
-  "noticesSha256": "4a12934f221f2447a3e1447802f5e8ff7b24ebee68ed607c8ae50f1aa83ed1cc"
+  ]
 }
